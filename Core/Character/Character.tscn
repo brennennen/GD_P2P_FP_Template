@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://bls01ev08bgiv"]
+
+[ext_resource type="Script" uid="uid://v53j1q7ma85g" path="res://Core/Character/Character.gd" id="1_3421y"]
+
+[node name="Character" type="CharacterBody3D"]
+script = ExtResource("1_3421y")

@@ -1,0 +1,124 @@
+[gd_scene load_steps=2 format=3 uid="uid://0o82fl54j1uq"]
+
+[ext_resource type="Script" uid="uid://gt7dl3rubg8d" path="res://Maps/Menus/DirectConnectMenus/DirectConnectJoinMenu.gd" id="1_gw7ps"]
+
+[node name="DirectConnectJoinMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_gw7ps")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -233.0
+offset_top = -136.0
+offset_right = 233.0
+offset_bottom = 136.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Direct Connect: Join"
+
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="AddressHBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/AddressHBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Server Address"
+
+[node name="AddressLineEdit" type="LineEdit" parent="MarginContainer/VBoxContainer/AddressHBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "localhost"
+placeholder_text = "192.168.0.1"
+
+[node name="PortBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/PortBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Port"
+
+[node name="PortLineEdit" type="LineEdit" parent="MarginContainer/VBoxContainer/PortBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "7999"
+placeholder_text = "7999"
+
+[node name="PasswordHBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/PasswordHBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Password"
+
+[node name="PasswordLineEdit" type="LineEdit" parent="MarginContainer/VBoxContainer/PasswordHBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="JoinButton" type="Button" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 4
+text = "Join"
+
+[node name="HSeparator2" type="HSeparator" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="BackButton" type="Button" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "Back
+"
+
+[node name="StatusMarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -53.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 15
+
+[node name="StatusRichTextLabel" type="RichTextLabel" parent="StatusMarginContainer"]
+layout_mode = 2
+fit_content = true
+
+[node name="ColorRect" type="ColorRect" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[connection signal="pressed" from="MarginContainer/VBoxContainer/JoinButton" to="." method="_on_join_button_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/BackButton" to="." method="_on_back_button_pressed"]

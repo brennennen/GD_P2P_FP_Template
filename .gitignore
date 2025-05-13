@@ -1,0 +1,16 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+
+Logs
+*.tmp
+
+# Excluding the addons folder to reduce repo size. Read the readme for
+# addons to install.
+addons
+
+# TEMPORARY - excluding art assets until things are further along to prevent
+# bloating the lfs repo size.
+# for the assets folder, email me: {github_user_name}atgmaildotcom
+*.svg
+Assets

@@ -1,0 +1,48 @@
+[gd_scene load_steps=10 format=3 uid="uid://cpolls353icbp"]
+
+[ext_resource type="Script" uid="uid://b3v5yjnh12pbb" path="res://Core/GameInstance.gd" id="1_kfnhb"]
+[ext_resource type="Script" uid="uid://c0m62b2bys0a2" path="res://Core/Gameplay/GameMode.gd" id="2_260b4"]
+[ext_resource type="Script" uid="uid://cajtj3u33lhvs" path="res://Core/Networking/Networking.gd" id="2_gaito"]
+[ext_resource type="Script" uid="uid://7lgfoarrlxb6" path="res://Core/Networking/ClientNetworking.gd" id="3_h3teu"]
+[ext_resource type="Script" uid="uid://ctyae7stktnwq" path="res://Core/Networking/ServerNetworking.gd" id="4_q6w5n"]
+[ext_resource type="Script" uid="uid://dnkfb2cd1vv2m" path="res://Core/Networking/NetworkClock.gd" id="5_0c0u2"]
+[ext_resource type="Script" uid="uid://dnl10jx6xkkwb" path="res://Core/Networking/InEditorLobby.gd" id="6_260b4"]
+[ext_resource type="Script" uid="uid://bcrrosf4j2ugd" path="res://Core/Networking/DirectConnectLobby.gd" id="8_p8qfo"]
+[ext_resource type="Script" uid="uid://dt5n0jpml4p85" path="res://Core/Networking/SteamLobby.gd" id="9_dqerq"]
+
+[node name="GameInstance" type="Node"]
+script = ExtResource("1_kfnhb")
+
+[node name="GameMode" type="Node" parent="."]
+script = ExtResource("2_260b4")
+
+[node name="Networking" type="Node" parent="."]
+script = ExtResource("2_gaito")
+
+[node name="ClientNetworking" type="Node" parent="Networking"]
+script = ExtResource("3_h3teu")
+
+[node name="ServerNetworking" type="Node" parent="Networking"]
+script = ExtResource("4_q6w5n")
+
+[node name="NetworkClock" type="Node" parent="Networking"]
+script = ExtResource("5_0c0u2")
+
+[node name="InEditorLobby" type="Node" parent="Networking"]
+script = ExtResource("6_260b4")
+
+[node name="DirectConnectLobby" type="Node" parent="Networking"]
+script = ExtResource("8_p8qfo")
+
+[node name="SteamLobby" type="Node" parent="Networking"]
+script = ExtResource("9_dqerq")
+
+[node name="Players" type="Node3D" parent="."]
+
+[node name="Items" type="Node3D" parent="."]
+
+[node name="NPCs" type="Node3D" parent="."]
+
+[node name="DebugLogTimer" type="Timer" parent="."]
+
+[connection signal="timeout" from="DebugLogTimer" to="." method="_on_debug_log_timer_timeout"]

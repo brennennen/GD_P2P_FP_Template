@@ -1,0 +1,71 @@
+[gd_scene load_steps=2 format=3 uid="uid://dn0n5ci8vhewt"]
+
+[ext_resource type="Script" uid="uid://ktrhw54kiq8d" path="res://Maps/Menus/MainMenu.gd" id="1_quj26"]
+
+[node name="MainMenu" type="Node3D"]
+script = ExtResource("1_quj26")
+
+[node name="MainMenuControl" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="GameNameMarginContainer" type="MarginContainer" parent="MainMenuControl"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+grow_horizontal = 2
+
+[node name="Label" type="Label" parent="MainMenuControl/GameNameMarginContainer"]
+layout_mode = 2
+text = "
+Casual Multiplayer Demo"
+
+[node name="ButtonsMarginContainer" type="MarginContainer" parent="MainMenuControl"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.5
+offset_top = -20.0
+offset_right = 20.5
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MainMenuControl/ButtonsMarginContainer"]
+layout_mode = 2
+
+[node name="PlayButton" type="Button" parent="MainMenuControl/ButtonsMarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Play"
+
+[node name="OptionsButton" type="Button" parent="MainMenuControl/ButtonsMarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Options"
+
+[node name="QuitButton" type="Button" parent="MainMenuControl/ButtonsMarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Quit"
+
+[node name="ColorRect" type="ColorRect" parent="MainMenuControl"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[node name="Audio" type="Node" parent="."]
+
+[connection signal="pressed" from="MainMenuControl/ButtonsMarginContainer/VBoxContainer/PlayButton" to="." method="_on_play_button_pressed"]
+[connection signal="pressed" from="MainMenuControl/ButtonsMarginContainer/VBoxContainer/QuitButton" to="." method="_on_quit_button_pressed"]

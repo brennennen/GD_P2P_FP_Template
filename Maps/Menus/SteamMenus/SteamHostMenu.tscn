@@ -1,0 +1,116 @@
+[gd_scene load_steps=2 format=3 uid="uid://ciftsfq2g671v"]
+
+[ext_resource type="Script" uid="uid://u55w1xt8tnir" path="res://Maps/Menus/SteamMenus/SteamHostMenu.gd" id="1_xcos3"]
+
+[node name="SteamHostMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_xcos3")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -257.0
+offset_top = -50.0
+offset_right = 257.0
+offset_bottom = 51.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CenterVBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/CenterVBoxContainer"]
+layout_mode = 2
+text = "Host Lobby"
+
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/CenterVBoxContainer"]
+layout_mode = 2
+
+[node name="LobbyNameHBoxContainer" type="HBoxContainer" parent="MarginContainer/CenterVBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/CenterVBoxContainer/LobbyNameHBoxContainer"]
+layout_mode = 2
+text = "Lobby Name"
+
+[node name="LineEdit" type="LineEdit" parent="MarginContainer/CenterVBoxContainer/LobbyNameHBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="LobbyTypeHBoxContainer" type="HBoxContainer" parent="MarginContainer/CenterVBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/CenterVBoxContainer/LobbyTypeHBoxContainer"]
+layout_mode = 2
+text = "Lobby Type"
+
+[node name="LobbyTypeOptionButton" type="OptionButton" parent="MarginContainer/CenterVBoxContainer/LobbyTypeHBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MaxPlayersHBoxContainer" type="HBoxContainer" parent="MarginContainer/CenterVBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/CenterVBoxContainer/MaxPlayersHBoxContainer"]
+layout_mode = 2
+text = "Max Players"
+
+[node name="MaxPlayersLineEdit" type="LineEdit" parent="MarginContainer/CenterVBoxContainer/MaxPlayersHBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HSeparator2" type="HSeparator" parent="MarginContainer/CenterVBoxContainer"]
+layout_mode = 2
+
+[node name="HostButton" type="Button" parent="MarginContainer/CenterVBoxContainer"]
+layout_mode = 2
+text = "Host"
+
+[node name="HSeparator3" type="HSeparator" parent="MarginContainer/CenterVBoxContainer"]
+layout_mode = 2
+
+[node name="BackButton" type="Button" parent="MarginContainer/CenterVBoxContainer"]
+layout_mode = 2
+text = "Back"
+
+[node name="StatusPanel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -188.0
+offset_top = 60.0
+offset_right = 188.0
+offset_bottom = 100.0
+grow_horizontal = 2
+
+[node name="StatusLabel" type="RichTextLabel" parent="StatusPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ColorRect" type="ColorRect" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[connection signal="pressed" from="MarginContainer/CenterVBoxContainer/HostButton" to="." method="_on_host_button_pressed"]
+[connection signal="pressed" from="MarginContainer/CenterVBoxContainer/BackButton" to="." method="_on_back_button_pressed"]

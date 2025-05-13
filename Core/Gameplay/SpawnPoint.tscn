@@ -1,0 +1,28 @@
+[gd_scene load_steps=4 format=3 uid="uid://dq3k1gmfnaxit"]
+
+[ext_resource type="Script" uid="uid://dxkyltkpyhdmr" path="res://Core/Gameplay/SpawnPoint.gd" id="1_fto36"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_srhly"]
+radius = 0.25
+height = 1.778
+
+[sub_resource type="PrismMesh" id="PrismMesh_srhly"]
+size = Vector3(0.333, 0.2, 0.1)
+
+[node name="SpawnPoint" type="Node3D"]
+script = ExtResource("1_fto36")
+
+[node name="Marker3D" type="Marker3D" parent="."]
+
+[node name="Area3D" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_srhly")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(-1, -8.74228e-08, 3.82137e-15, 0, -4.37114e-08, -1, 8.74228e-08, -1, 4.37114e-08, 0, 0, -0.3)
+mesh = SubResource("PrismMesh_srhly")
+
+[connection signal="body_entered" from="Area3D" to="." method="_on_area_3d_body_entered"]
+[connection signal="body_exited" from="Area3D" to="." method="_on_area_3d_body_exited"]
