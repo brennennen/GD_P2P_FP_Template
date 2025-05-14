@@ -4,7 +4,7 @@ class_name SteamLobby
 
 @export var steam_lobby_match_list_callback: Callable
 
-var lobby_name: String = "Bright Forest Lobby"
+var lobby_name: String = "My Game Lobby"
 var lobby_type: Steam.LobbyType = Steam.LOBBY_TYPE_PUBLIC
 var max_members: int = 4
 
@@ -13,6 +13,7 @@ var steam_id: int = 0
 var steam_lobby_id: int = 0
 var steam_lobby_members: Array = []
 var steam_lobby_members_max: int = 10
+var steam_username: String
 
 # Used to filter out games not the same.
 # TODO: use the version (and if is_demo?) of the game here so different game versions can't see each other.
@@ -61,7 +62,7 @@ func initialize_steam():
 		var is_on_steam_deck: bool = Steam.isSteamRunningOnSteamDeck()
 		var is_online: bool = Steam.loggedOn()
 		var is_owned: bool = Steam.isSubscribed()
-		var steam_username: String = Steam.getPersonaName()
+		steam_username = Steam.getPersonaName()
 		Logger.info("user: %s, online: %d, owned: %d, steamid: %d, steam_deck: %d" \
 			% [ steam_username, int(is_online), int(is_owned), Steam.getSteamID(), int(is_on_steam_deck) ] )
 		#if is_owned == false:
@@ -205,3 +206,6 @@ func refresh_lobby_list() -> void:
 func join_lobby(lobby_id: int):
 	steam_lobby_members.clear()
 	Steam.joinLobby(lobby_id)
+
+func debug_imgui_append_steam_debug_window(_delta):
+	ImGui.Text("username: %s" % [ str(steam_username) ]);

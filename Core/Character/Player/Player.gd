@@ -36,7 +36,6 @@ enum WalkingSubMovementMode { NONE, CROUCHING, SPRINTING }
 @onready var pause_menu: Control = $PauseMenu
 @onready var hud_health: Label = $HUD/MarginContainer/VBoxContainer/HealthHBoxContainer/HealthValue
 @onready var hud_stamina: Label = $HUD/MarginContainer/VBoxContainer/StaminaHBoxContainer/StaminaValue
-
 # ... inventory, health/status bars, interactable menus, etc.
 
 # # Movement
@@ -98,6 +97,7 @@ var last_sent_velocity: Vector3
 
 # # Misc
 var is_paused: bool = false
+var is_movement_locked: bool = false
 
 # Functions
 
@@ -108,7 +108,7 @@ func _enter_tree():
 func _ready():
 	 # hide any menus that might have been left visible
 	pause_menu.visible = false
-	
+
 	jump_velocity = sqrt(jump_height * gravity * 2)
 	# Needs to interpolate/reach the target by the next sync packet (received every network tick)
 	network_movement_interpolation_rate = (1.0 / Engine.physics_ticks_per_second) / GameInstance.networking.network_tick_rate
@@ -207,15 +207,36 @@ func toggle_pause():
 
 @onready var player_list: VBoxContainer = $PauseMenu/PlayerListMarginContainer/PlayerListVBoxContainer/PlayerListScrollContainer/PlayerListVBoxContainer
 
-func load_player_list():	
+func load_player_list():
 	for player_label in player_list.get_children():
 		player_label.queue_free()
-	
 	for id: int in GameInstance.networking.player_id_list:
 		var player_label := Label.new()
-		var ping = 999 # TODO: store ping
-		player_label.text = "%s   %s ms" % [str(id), str(ping)]
+		if id == 1:
+			var ping = GameInstance.networking.client_networking.client_latency_ms
+			player_label.text = "%s   %s ms" % [str(id), str(ping)]
+		else:
+			player_label.text = "%s" % [str(id)]
 		player_list.add_child(player_label)
+
+@rpc("any_peer", "call_local", "reliable")
+func lock_movement() -> void:
+	Logger.info("lock_movement: %s" % [str(name)])
+	is_movement_locked = true
+
+@rpc("any_peer", "call_local", "reliable")
+func unlock_movement() -> void:
+	Logger.info("unlock_movement")
+	is_movement_locked = false
+
+func ghost_level_camera() -> void:
+	# reparent? or just move?
+	#camera.global_position
+	pass
+
+func reconnect_camera_to_player() -> void:
+	camera.global_position = camera_pivot.global_position
+	pass
 
 func _input(event):
 	if is_multiplayer_authority():
@@ -254,6 +275,10 @@ func set_spawn_rotation(new_rotation: Vector3):
 	player_rotation = Vector3(0.0, new_rotation.y, 0.0)
 	mouse_rotation = Vector3(0.0, new_rotation.y, 0.0)
 
+func _process(delta) -> void:
+	if is_paused:
+		load_player_list()
+
 func _physics_process(delta):
 	# delay when just spawned in for a bit to give godot a second to not spaz out
 	if delay_physics:
@@ -270,8 +295,9 @@ func _physics_process(delta):
 	if not is_multiplayer_authority():
 		network_controller.remote_pawn_physics_process(delta)
 		return
+	if is_movement_locked:
+		return
 	movement_mode = determine_movement_mode(delta, movement_mode)
-
 	update_camera(delta)
 
 	# Handle Jump.
@@ -419,7 +445,7 @@ func send_move_data():
 
 	if global_position != last_sent_location:
 		sent_one_extra_no_move_data_packet = false
-	
+
 	if sent_one_extra_no_move_data_packet == false and global_position == last_sent_location:
 		print("sent sent_one_extra_no_move_data_packet")
 		sent_one_extra_no_move_data_packet = true
@@ -429,6 +455,7 @@ func send_move_data():
 	GameInstance.networking.client_networking.client_send_player_movement(name.to_int(), 
 		global_position, global_rotation_degrees.y, camera.global_rotation_degrees.x,
 		inputs1, movement_states_bitmap)
+	Logger.info("global_position: %v" % [ global_position ])
 	last_sent_location = global_position
 	last_sent_rotation_degrees_y = global_rotation_degrees.y
 	last_sent_velocity = velocity
@@ -460,7 +487,6 @@ func movement_mode_transition_falling_to_walking():
 	# TODO: turn off jump animation
 	#third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/on_ground", is_on_floor())
 	#third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/jump", false)
-	
 	play_footstep_audio()
 
 func play_footstep_audio():
@@ -488,6 +514,19 @@ func play_footstep_audio():
 		footstep_animation_player.speed_scale = 1.2
 	footstep_audio_player.play()
 	last_foostep_stream_index = footstep_index
+
+func respawn():
+	#self.health = health_max
+	#self.is_alive = true
+	#hud.visible = true
+	#dead_hud.visible = false
+	#heart_beat_audio.stop()
+	fade_from_black(1.0)
+	
+	#if is_multiplayer_authority():
+		#first_person.visible = true
+	#else:
+		#third_person.visible = true
 
 var black_screen_tween: Tween = null
 func fade_from_black(duration: float):

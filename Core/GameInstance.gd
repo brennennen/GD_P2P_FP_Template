@@ -63,8 +63,13 @@ static func parse_command_line_arguments(arguments_raw: PackedStringArray) -> Di
 			arguments_dict[key] = value
 	return arguments_dict
 
-#func _process(_delta) -> void:
-	#pass
+func _process(delta: float) -> void:
+	pass
+
+func debug_imgui_game_instance_window(_delta: float) -> void:
+	ImGui.Begin("GameInstance")
+	ImGui.Text("hello from GDScript")
+	ImGui.End()
 
 func initialize_game_mode():
 	if !game_mode:
@@ -138,17 +143,16 @@ func debug_position_all_instance_windows():
 	if launch_arguments.has("server0"):
 		print("server0: setting window.position to 0,0")
 		window.title = "server0"
-		window.position = Vector2(100, 0)
-		#window.size =
+		window.position = Vector2(0, 30)
 	elif launch_arguments.has("client1"):
 		window.title = "Client1"
-		window.position = Vector2(1360, 30)
+		window.position = Vector2(1300, 30)
 	elif launch_arguments.has("client2"):
 		window.title = "Client2"
 		window.position = Vector2(0, 730)
 	elif launch_arguments.has("client3"):
 		window.title = "Client3"
-		window.position = Vector2(1360,  730)
+		window.position = Vector2(1300,  730)
 	#await get_tree().create_timer(0.1).timeout
 
 ## Changes to the loading scene and then loads the requested scene
@@ -262,6 +266,7 @@ func remove_all_players():
 	for player in GameInstance.get_node("Players").get_children():
 		player.queue_free()
 	networking.player_id_list = []
+	networking.peer_list = []
 	networking.player_list = []
 
 @rpc("any_peer", "call_local", "reliable")

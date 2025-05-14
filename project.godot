@@ -10,7 +10,7 @@ config_version=5
 
 [application]
 
-config/name="CasualMultiplayer"
+config/name="GD_P2P_FP_Template"
 run/main_scene="uid://cyj4xovhso1m6"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
@@ -19,6 +19,11 @@ config/icon="res://icon.svg"
 
 Logger="*res://Core/Infrastructure/Logger.gd"
 GameInstance="*res://Core/GameInstance.tscn"
+ImGuiRoot="*res://addons/imgui-godot/data/ImGuiRoot.tscn"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/imgui-godot/plugin.cfg")
 
 [input]
 

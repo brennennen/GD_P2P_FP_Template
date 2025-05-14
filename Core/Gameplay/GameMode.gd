@@ -72,14 +72,26 @@ func spawn_player(peer_id) -> Player:
 	player.set_owner(get_tree().get_edited_scene_root())
 	player.set_spawn_rotation(spawn_point_rotation)
 	player.global_position = spawn_point_global_position
+	player.network_target_position = spawn_point_global_position
 	return player
+
+func get_spawn_point() -> SpawnPoint:
+	#spawn_points.shuffle()
+	for child  in spawn_points.get_children():
+		var spawn_point = child as SpawnPoint
+		if !spawn_point.is_occupied():
+			return spawn_point
+	return null
 
 func respawn_player(player: Player):
 	# TODO: get unoccupied spawn point
 	if is_instance_valid(spawn_points) and spawn_points.get_children().size() > 0:
-		var spawn_points_list = spawn_points.get_children()
-		var spawn_point = spawn_points_list.pick_random()
-		player.global_position = spawn_point.global_position + Vector3(0.0, 10.0, 0.0)
+		#var spawn_points_list = spawn_points.get_children()
+		#var spawn_point = spawn_points_list.pick_random() as SpawnPoint
+		var spawn_point = get_spawn_point()
+		
+		player.global_position = spawn_point.global_position # + Vector3(0.0, 10.0, 0.0)
+		player.network_target_position = spawn_point.global_position # + Vector3(0.0, 10.0, 0.0)
 		player.respawn()
 	else:
 		Logger.error("%s:respawn_player: NO VALID SPAWN POINTS!" % [name])

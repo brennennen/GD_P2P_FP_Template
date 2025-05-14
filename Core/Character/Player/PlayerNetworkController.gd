@@ -85,13 +85,13 @@ func remote_pawn_physics_process(_delta):
 	var back =  player.network_inputs1 & INPUTS1_BACK_MASK
 	var right = player.network_inputs1 & INPUTS1_RIGHT_MASK
 	var left = player.network_inputs1 & INPUTS1_LEFT_MASK
-	var sprint = player.network_inputs1 & INPUTS1_SPRINT_MASK
-	var input_crouch = player.network_inputs1 & INPUTS1_CROUCH_MASK
+	var sprint = true if (player.network_inputs1 & INPUTS1_SPRINT_MASK > 0) else false
+	var input_crouch = true if (player.network_inputs1 & INPUTS1_CROUCH_MASK > 0) else false
 	#var lean_right = player.network_inputs1 & INPUTS1_LEAN_RIGHT_MASK
 	#var lean_left = player.network_inputs1 & INPUTS1_LEAN_LEFT_MASK
-	
-	var is_on_ground = player.network_movement_status_bitmap & MOVEMENT_STATES_ON_GROUND_MASK
-	
+
+	var is_on_ground = true if (player.network_movement_status_bitmap & MOVEMENT_STATES_ON_GROUND_MASK > 0) else false
+
 	var ground_locomotion_blend_position = Vector2(0.0, 0.0)
 	if forward:
 		ground_locomotion_blend_position.y = 1.0 # -z is forward
@@ -108,7 +108,6 @@ func remote_pawn_physics_process(_delta):
 	#third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/on_ground", is_on_floor())
 	if (!is_on_ground and player.third_person_animation_tree.get("parameters/LocomotionStateMachine/conditions/jump")):
 		player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/jump", false)
-	player.third_person_animation_tree.get("parameters/LocomotionStateMachine/conditions/jump")
 	player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/on_ground", is_on_ground)
 	player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/crouched", input_crouch)
 

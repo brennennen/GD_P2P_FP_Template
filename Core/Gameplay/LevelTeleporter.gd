@@ -7,7 +7,6 @@ class_name LevelTeleporter
 
 func _ready() -> void:
 	$Label3D.text = label_name
-	pass
 
 func _on_area_3d_body_entered(body: Node3D) -> void:
 	if GameInstance.networking.is_server():

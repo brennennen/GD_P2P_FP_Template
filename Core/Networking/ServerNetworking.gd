@@ -8,6 +8,9 @@ var networking: Networking
 var player_movement_sync_tick_rate: float = 0.066666 # 15 fps # 0.0333333 # 30 fps
 var player_movement_sync_running_delta: float = 0.0
 
+func debug_imgui_append_server_networking_debug_window(_delta: float) -> void:
+	ImGui.Text("server");
+
 func initialize(p_networking: Networking):
 	networking = p_networking
 
@@ -157,30 +160,25 @@ func on_receive_client_player_movement(from_peer_id: int, packet: PackedByteArra
 	var pos_y = packet.decode_float(9)
 	var pos_z = packet.decode_float(13)
 	var new_position = Vector3(pos_x, pos_y, pos_z)
-	#var rot_y_degrees = packet.decode_float(17)
 	var rot_y_mapped = packet.decode_u8(17)
 	var rot_y_degrees = (rot_y_mapped * (360.0 / 256)) - 180
 	var rot_x_mapped = packet.decode_u8(18)
 	var rot_x_degrees = (rot_x_mapped * (360.0 / 256)) - 180
 	var inputs1 = packet.decode_u8(19)
 	var movement_status_bitmap = packet.decode_u8(20)
-	
-	#var new_rotation = Vector3(rot_x, rot_y, rot_z)
-	#print("%v" % new_rotation)
 	var player = networking.get_player(from_peer_id)
-	#Logger.info("%v" % new_position)
 	player.network_target_position = new_position
 	player.network_target_rotation_degrees_y = rot_y_degrees
 	player.network_target_rotation_degrees_x = rot_x_degrees
-	#Logger.info("receive client player movement - %d - %d" % [from_peer_id, inputs1])
 	player.network_inputs1 = inputs1
 	player.network_movement_status_bitmap = movement_status_bitmap
-	
-	#player.global_position = new_position
-	#player.global_rotation_degrees.y = rot_y_degrees
 
 func on_receive_ping(from_peer_id: int, packet: PackedByteArray):
 	var ping_send_time = packet.decode_s32(1)
+	
+	var time_delta = Time.get_ticks_msec() - ping_send_time
+	# TODO: store time delta
+	
 	networking.send_ping_response(from_peer_id, ping_send_time)
 
 ## 
@@ -190,7 +188,6 @@ func server_synchronize_player_movement(delta: float) -> void:
 		player_movement_sync_running_delta = 0.0
 		# TODO: send all player movements in a single packet, less overhead from many small packets
 		#print("player_list size: %d" % networking.player_list.size())
-		
 		for i in range(0, networking.player_list.size() - 1):
 			if (	networking.player_list[i].global_position == networking.player_last_broadcast_position[i] \
 					and networking.player_list[i].global_rotation_degrees.y == networking.player_last_broadcast_rotation_degrees_y[i] \

@@ -85,12 +85,13 @@ var network_fixed_physics_tick_rate: float = 5.0 # not important data
 # TODO: setup a network clock
 # TODO: setup packet loss emulation
 var debug_emulate_latency: bool = false
-var debug_emulate_latency_seconds: float = 0.5
+var debug_emulate_latency_seconds: float = 0.500 # 500ms?
 var debug_emulate_latency_running_delta: float = 0.0
 var debug_emulate_packet_loss: bool = true
 var debug_emulate_packet_loss_percent: float = 0.10 # 10%?
 
 var player_id_list: Array[int] = []
+var peer_list: Array[PeerMetadata] = []
 var player_list: Array[Player] = []
 var player_pawn_data: Dictionary = {}
 var player_last_broadcast_position: Array[Vector3] = []
@@ -126,6 +127,22 @@ func _ready():
 	server_networking.initialize(self)
 	game_network_state["scene_path"] = null
 
+func debug_imgui_handle_network_window(delta: float) -> void:
+	ImGui.Begin("Networking")
+	if is_server():
+		server_networking.debug_imgui_append_server_networking_debug_window(delta)
+	else:
+		client_networking.debug_imgui_append_client_networking_debug_window(delta)
+	ImGui.Text("peers %s" % [ JSON.stringify(player_id_list) ]);
+	ImGui.Text("tick %d" % [ network_tick ]);
+	# TODO: estimated packet loss?
+	# TODO: estimated download/receive byte count
+	# TODO: estimated 
+
+	if multiplayer_mode == MultiplayerMode.STEAM:
+		steam_lobby.debug_imgui_append_steam_debug_window(delta)
+	ImGui.End()
+
 ## Initialize high level multiplayer api signals. Currently only supports "SceneMultiplayer"
 func initialize_networking_signals():
 	multiplayer.peer_connected.connect(on_peer_connected)
@@ -149,6 +166,7 @@ func _process(delta):
 		tick(network_tick_running_delta)
 		network_tick_running_delta = 0.0
 	calculate_network_metrics(delta)
+	debug_imgui_handle_network_window(delta)
 
 ## Network tick that occurs on a well defined tick rate.
 func tick(delta):
@@ -173,8 +191,11 @@ func multiplayer_poll(delta):
 func host_game() -> Error:
 	game_network_state["scene_path"] = GameInstance.current_level_path
 	player_id_list.append(1)
+	var new_peer = PeerMetadata.new()
+	new_peer.peer_id = 1
+	peer_list.append(new_peer)
 	player_pawn_data[1] = GameInstance.my_pawn_data
-	Logger.info("host_game, player_id_list: %s" % [JSON.stringify(player_id_list)])
+	Logger.info("host_game, peer_list: %s" % [JSON.stringify(peer_list)])
 	_is_server = true
 	if multiplayer_mode == MultiplayerMode.DIRECT_CONNECT:
 		return direct_connect_lobby.host_game()
@@ -234,9 +255,10 @@ func send_bytes(bytes: PackedByteArray, id: int = 0, mode: MultiplayerPeer.Trans
 	scene_multiplayer.send_bytes(bytes, id, mode, channel)
 
 func send_ping(peer_id: int):
+	#Logger.info("send_ping: %d" % [ peer_id ])
 	var ping_send_ticks_ms = Time.get_ticks_msec()
 	Logger.debug("sending: %s, to: %d, initial_ping_send_time: %d" % [
-		Networking.NetworkMessageId.keys()[NetworkMessageId.PING], peer_id, ping_send_ticks_ms
+		Networking.NetworkMessageId.keys()[ NetworkMessageId.PING ], peer_id, ping_send_ticks_ms
 	])
 	var packet_bytes: PackedByteArray = [ 
 		Networking.NetworkMessageId.PING,

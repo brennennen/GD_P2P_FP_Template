@@ -83,10 +83,20 @@ var initial_synchronization = {
 var client_tick: int = 0
 var out_of_sync_tolerance: int = 5
 var client_latency_ms: int = 0
+var client_latency_history: Array[int] = []
+var client_latency_history_index: int = 0
 
 var client_ping_running_delta: float = 5.0
 var client_process_running_delta: float = 0.0
 
+func _ready() -> void:
+	client_latency_history.resize(100)
+
+func debug_imgui_append_client_networking_debug_window(_delta: float): 
+	ImGui.Text("client_id: %s" % [ networking.get_multiplayer_id() ]);
+	ImGui.Text("latency: %d" % [ client_latency_ms ]);
+	ImGui.PlotLines("latency", client_latency_history, 100);
+	# TODO: estimated packet loss?
 
 func initialize(p_networking: Networking):
 	networking = p_networking
@@ -179,6 +189,7 @@ func client_manage_initial_synchronization() -> void:
 		done_initial_synchronization = true
 
 func periodic_ping(delta):
+	#print("periodic_ping: %f" % [ client_ping_running_delta ])
 	client_ping_running_delta += delta
 	if client_ping_running_delta >= 5.0:
 		client_ping_running_delta = 0.0
@@ -246,9 +257,12 @@ func on_receive_initial_game_state(from_peer_id: int, packet: PackedByteArray):
 		var player_id = packet.decode_s32(offset)
 		offset += 4
 		networking.player_id_list.append(player_id)
-	Logger.info("received: %s, data: server_scene: %s, player_count: %d, player_id_list: %s" % [
+		var new_peer = PeerMetadata.new()
+		new_peer.peer_id = player_id
+		networking.peer_list.append(new_peer)
+	Logger.info("received: %s, data: server_scene: %s, player_count: %d, peer_list: %s" % [
 		Networking.NetworkMessageId_str(message_id), scene_path_string, player_id_list_count,
-		JSON.stringify(networking.player_id_list)
+		JSON.stringify(networking.peer_list)
 	])
 	if initial_synchronization["current_state"] == ClientSyncState.SYNCING_START:
 		GameInstance.load_and_change_scene(scene_path_string)
@@ -300,11 +314,11 @@ func on_receive_player_initial_state(_from_peer_id: int, packet: PackedByteArray
 	var rot_y_degrees = (rot_y_mapped * (360.0 / 256)) - 180
 	var color_packed = packet.decode_s32(19)
 	var color: Color = Color(color_packed)
-	
+
 	Logger.info("received: %s, data: peer_id: %d, pos: %v, rot.y: %f" % [ 
 		Networking.NetworkMessageId_str(packet_id), peer_id, peer_position, rot_y_degrees 
 	])
-	
+
 	if networking.player_pawn_exists(peer_id):
 		Logger.info("on_receive_player_initial_state: player already exists, ignoring message.")
 		return
@@ -314,7 +328,7 @@ func on_receive_player_initial_state(_from_peer_id: int, packet: PackedByteArray
 	networking.player_pawn_data[peer_id]["color"] = color
 	#var color: Color = networking.player_pawn_data[peer_id]["color"]
 	#response_packet.encode_s32(22, color.to_rgba32())
-	
+
 	var player = client_add_peer_player(peer_id, peer_position, rot_y_degrees)
 	networking.player_list.append(player)
 	
@@ -364,6 +378,7 @@ func on_recieve_player_id_list(_from_peer_id: int, packet: PackedByteArray):
 		Networking.NetworkMessageId_str(message_id), JSON.stringify(new_player_id_list)
 	])
 	for peer_id in new_player_id_list:
+		# TODO: use peer_list here instead
 		if !networking.player_id_list.has(peer_id):
 			send_request_player_initial_state(peer_id)
 
@@ -402,6 +417,8 @@ func on_receive_ping_response(_from_peer_id: int, packet: PackedByteArray):
 		Networking.NetworkMessageId_str(Networking.NetworkMessageId.PING_RESPONSE), current_tick, sent_tick, ping_delta
 	])
 	client_latency_ms = int(ping_delta / 2.0) # round trip ping, not the most accurate, but good enough for now
+	client_latency_history[client_latency_history_index] = client_latency_ms
+	client_latency_history_index = client_latency_history_index + 1 % 99
 
 func client_send_player_movement(peer_id: int, position: Vector3, rotation_degrees_y: float, camera_rotation_degrees_x: float, inputs1: int, movement_states_bitmap: int):
 	var packet: PackedByteArray = [ Networking.NetworkMessageId.CLIENT_SEND_PLAYER_MOVEMENT, 
