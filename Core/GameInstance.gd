@@ -35,6 +35,10 @@ var debug_input: bool = false
 var debug_draw: bool = false
 var debug_draw_mask: int = 0xFF
 
+var fps_history: Array[float] = []
+var fps_history_index: int = 0
+var session_min_fps: float = 60.0
+
 var arguments: Dictionary = {}
 
 #func _enter_tree() -> void:
@@ -49,6 +53,7 @@ func _ready() -> void:
 		$DebugLogTimer.wait_time = 10
 		$DebugLogTimer.start()
 	Logger.set_multiplayer_id(networking.get_multiplayer_id())
+	fps_history.resize(60 * 10) # assume 60 fps for 10 seconds
 	
 	initialize_game_mode()
 	get_tree().set_multiplayer_poll_enabled(false)
@@ -64,11 +69,21 @@ static func parse_command_line_arguments(arguments_raw: PackedStringArray) -> Di
 	return arguments_dict
 
 func _process(delta: float) -> void:
-	pass
+	process_fps_history()
+	debug_imgui_game_instance_window(delta)
+
+func process_fps_history() -> void:
+	var fps = Engine.get_frames_per_second()
+	fps_history_index = (fps_history_index + 1) % (fps_history.size() - 1)
+	fps_history[fps_history_index] = fps
+	if fps < session_min_fps:
+		session_min_fps = fps
 
 func debug_imgui_game_instance_window(_delta: float) -> void:
 	ImGui.Begin("GameInstance")
-	ImGui.Text("hello from GDScript")
+	ImGui.Text("fps: %f" % [ Engine.get_frames_per_second() ])
+	ImGui.Text("min fps: %f" % [session_min_fps ])
+	ImGui.PlotLines("fps", fps_history, fps_history.size())
 	ImGui.End()
 
 func initialize_game_mode():
