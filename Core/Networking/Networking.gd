@@ -283,7 +283,7 @@ func add_player(peer_id):
 	var player = GameInstance.game_mode.spawn_player(peer_id)
 	player_id_list.append(peer_id)
 	player_list.append(player)
-	player_last_broadcast_position.append(Vector3(0, 0, 0))
+	player_last_broadcast_position.append(player.global_position)
 	player_last_broadcast_rotation_degrees_y.append(0)
 	player_last_broadcast_rotation_degrees_x.append(0)
 
