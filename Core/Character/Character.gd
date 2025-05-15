@@ -59,8 +59,6 @@ var raycast_debug_draw_layer: int = 0x01
 
 func _ready():
 	GameInstance.debug_run_current_scene(self)
-	
-	pass
 
 #func _process(delta: float) -> void:
 	#if !visible:

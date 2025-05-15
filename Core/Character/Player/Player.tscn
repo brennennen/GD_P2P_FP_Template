@@ -1,7 +1,8 @@
-[gd_scene load_steps=72 format=3 uid="uid://cocjcfyfohygh"]
+[gd_scene load_steps=84 format=3 uid="uid://cocjcfyfohygh"]
 
 [ext_resource type="Script" uid="uid://d0khrbuso5v4x" path="res://Core/Character/Player/Player.gd" id="1_3iyr4"]
 [ext_resource type="PackedScene" uid="uid://do6ant083dr48" path="res://Assets/Characters/Mannequin/mannequin.glb" id="2_c077b"]
+[ext_resource type="Script" uid="uid://pf4noo7loeo6" path="res://Core/Character/Player/PlayerThirdPerson.gd" id="2_msr7a"]
 [ext_resource type="AudioStream" uid="uid://dmrn1ld4lvhcf" path="res://Assets/Audio/Foley/Footsteps/LightStep01.wav" id="3_v5qmy"]
 [ext_resource type="Script" uid="uid://cgsqd3kpbu6ev" path="res://Core/Character/Player/MovementController.gd" id="4_pgm6y"]
 [ext_resource type="Script" uid="uid://b7d38jqjr7ta7" path="res://Core/Character/Player/PlayerNetworkController.gd" id="5_1v8y3"]
@@ -186,7 +187,6 @@ advance_condition = &"jump"
 
 [sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_66t6e"]
 advance_mode = 2
-advance_expression = "not on_ground"
 
 [sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_wg0br"]
 advance_mode = 2
@@ -223,7 +223,7 @@ states/jump/position = Vector2(686, -57)
 states/stand-up/node = SubResource("AnimationNodeAnimation_kq0sc")
 states/stand-up/position = Vector2(70, 39)
 transitions = ["Start", "WalkBlendSpace2D", SubResource("AnimationNodeStateMachineTransition_vppbi"), "WalkBlendSpace2D", "jump", SubResource("AnimationNodeStateMachineTransition_e086f"), "jump", "FallingBlendSpace2D", SubResource("AnimationNodeStateMachineTransition_1v8y3"), "FallingBlendSpace2D", "WalkBlendSpace2D", SubResource("AnimationNodeStateMachineTransition_msr7a"), "WalkBlendSpace2D", "FallingBlendSpace2D", SubResource("AnimationNodeStateMachineTransition_85pgx"), "CrouchBlendSpace2D", "jump", SubResource("AnimationNodeStateMachineTransition_pk38b"), "CrouchBlendSpace2D", "FallingBlendSpace2D", SubResource("AnimationNodeStateMachineTransition_66t6e"), "FallingBlendSpace2D", "CrouchBlendSpace2D", SubResource("AnimationNodeStateMachineTransition_wg0br"), "WalkBlendSpace2D", "crouch", SubResource("AnimationNodeStateMachineTransition_kq0sc"), "crouch", "CrouchBlendSpace2D", SubResource("AnimationNodeStateMachineTransition_dkj7p"), "CrouchBlendSpace2D", "stand-up", SubResource("AnimationNodeStateMachineTransition_wceqr"), "stand-up", "WalkBlendSpace2D", SubResource("AnimationNodeStateMachineTransition_mnljj")]
-graph_offset = Vector2(-619, -205)
+graph_offset = Vector2(-630, -221)
 
 [sub_resource type="AnimationNodeBlend2" id="AnimationNodeBlend2_1v8y3"]
 filter_enabled = true
@@ -233,8 +233,14 @@ filters = ["", "Armature/Skeleton3D:ctrl_all_fingers_rot.L", "Armature/Skeleton3
 filter_enabled = true
 filters = ["", "Armature/Skeleton3D:ctrl_all_fingers_rot.L", "Armature/Skeleton3D:ctrl_all_fingers_rot.R", "Armature/Skeleton3D:ctrl_rot_finger_a.L", "Armature/Skeleton3D:ctrl_rot_finger_a.R", "Armature/Skeleton3D:ctrl_rot_finger_b.L", "Armature/Skeleton3D:ctrl_rot_finger_b.R", "Armature/Skeleton3D:ctrl_rot_finger_c.L", "Armature/Skeleton3D:ctrl_rot_finger_c.R", "Armature/Skeleton3D:ctrl_rot_finger_d.L", "Armature/Skeleton3D:ctrl_rot_finger_d.R", "Armature/Skeleton3D:ctrl_rot_thumb.L", "Armature/Skeleton3D:ctrl_rot_thumb.R", "Armature/Skeleton3D:def_arm.L.001", "Armature/Skeleton3D:def_arm.L.002", "Armature/Skeleton3D:def_arm.R.001", "Armature/Skeleton3D:def_arm.R.002", "Armature/Skeleton3D:def_brow_ridge", "Armature/Skeleton3D:def_ear.L.001", "Armature/Skeleton3D:def_ear.L.002", "Armature/Skeleton3D:def_ear.R.001", "Armature/Skeleton3D:def_ear.R.002", "Armature/Skeleton3D:def_eyebrow.L.001", "Armature/Skeleton3D:def_eyebrow.L.002", "Armature/Skeleton3D:def_eyebrow.L.004", "Armature/Skeleton3D:def_eyebrow.R.001", "Armature/Skeleton3D:def_eyebrow.R.002", "Armature/Skeleton3D:def_eyebrow.R.004", "Armature/Skeleton3D:def_finger_a.L.001", "Armature/Skeleton3D:def_finger_a.L.002", "Armature/Skeleton3D:def_finger_a.L.003", "Armature/Skeleton3D:def_finger_a.R.001", "Armature/Skeleton3D:def_finger_a.R.002", "Armature/Skeleton3D:def_finger_a.R.003", "Armature/Skeleton3D:def_finger_b.L.001", "Armature/Skeleton3D:def_finger_b.L.002", "Armature/Skeleton3D:def_finger_b.L.003", "Armature/Skeleton3D:def_finger_b.R.001", "Armature/Skeleton3D:def_finger_b.R.002", "Armature/Skeleton3D:def_finger_b.R.003", "Armature/Skeleton3D:def_finger_c.L.001", "Armature/Skeleton3D:def_finger_c.L.002", "Armature/Skeleton3D:def_finger_c.L.003", "Armature/Skeleton3D:def_finger_c.R.001", "Armature/Skeleton3D:def_finger_c.R.002", "Armature/Skeleton3D:def_finger_c.R.003", "Armature/Skeleton3D:def_finger_d.L.001", "Armature/Skeleton3D:def_finger_d.L.002", "Armature/Skeleton3D:def_finger_d.L.003", "Armature/Skeleton3D:def_finger_d.R.001", "Armature/Skeleton3D:def_finger_d.R.002", "Armature/Skeleton3D:def_finger_d.R.003", "Armature/Skeleton3D:def_forearm.L.001", "Armature/Skeleton3D:def_forearm.L.002", "Armature/Skeleton3D:def_forearm.R.001", "Armature/Skeleton3D:def_forearm.R.002", "Armature/Skeleton3D:def_hand.L", "Armature/Skeleton3D:def_hand.R", "Armature/Skeleton3D:def_head", "Armature/Skeleton3D:def_jaw", "Armature/Skeleton3D:def_neck", "Armature/Skeleton3D:def_nose", "Armature/Skeleton3D:def_palm_a.L", "Armature/Skeleton3D:def_palm_a.R", "Armature/Skeleton3D:def_palm_b.L", "Armature/Skeleton3D:def_palm_b.R", "Armature/Skeleton3D:def_palm_c.L", "Armature/Skeleton3D:def_palm_c.R", "Armature/Skeleton3D:def_palm_d.L", "Armature/Skeleton3D:def_palm_d.R", "Armature/Skeleton3D:def_shoulder.L", "Armature/Skeleton3D:def_shoulder.R", "Armature/Skeleton3D:def_spine.001", "Armature/Skeleton3D:def_spine.002", "Armature/Skeleton3D:def_spine.003", "Armature/Skeleton3D:def_thumb.L.001", "Armature/Skeleton3D:def_thumb.L.002", "Armature/Skeleton3D:def_thumb.L.003", "Armature/Skeleton3D:def_thumb.R.001", "Armature/Skeleton3D:def_thumb.R.002", "Armature/Skeleton3D:def_thumb.R.003"]
 
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_utvr7"]
+animation = &"boxing-guard"
+
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_dkj7p"]
 animation = &"boxing-idle"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_y1s54"]
+animation = &"boxing-punch-right "
 
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_wceqr"]
 animation = &"carrying-fishing-pole-idle"
@@ -245,46 +251,77 @@ animation = &"cast-fishing-pole"
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_f5fy3"]
 animation = &"fishing-reel-in"
 
-[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_y1s54"]
-animation = &"punch-from-boxing"
-
-[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_erof0"]
-advance_mode = 2
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_erof0"]
+animation = &"base-pose"
 
 [sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_utvr7"]
 advance_mode = 2
-
-[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_08yyq"]
-advance_mode = 2
-advance_condition = &"boxing"
-
-[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_oj66p"]
-advance_mode = 2
+advance_condition = &"fishing_pole_cast"
 
 [sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_sm22x"]
+switch_mode = 2
+advance_mode = 2
+advance_condition = &"fishing_pole_reel_in"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_66hbm"]
+advance_mode = 2
+advance_condition = &"equip_fists"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_k0uq3"]
+advance_mode = 2
+advance_condition = &"equip_fishing_pole"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_oj66p"]
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_x5sq3"]
+switch_mode = 2
 advance_mode = 2
 
-[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_ov5xw"]
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_uiiri"]
 advance_mode = 2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_nxf5o"]
+advance_mode = 2
+advance_condition = &"equip_fists"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_2ry6e"]
+advance_mode = 2
+advance_condition = &"equip_fishing_pole"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_mmdfy"]
+advance_mode = 2
+advance_condition = &"equip_none"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_ipo8y"]
+advance_mode = 2
+advance_condition = &"equip_none"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_kq0yq"]
+advance_mode = 2
+advance_condition = &"fishing_pole_caught_fish"
 
 [sub_resource type="AnimationNodeStateMachine" id="AnimationNodeStateMachine_msr7a"]
 states/End/position = Vector2(1265, 102)
-states/Start/position = Vector2(165, 88)
+states/Start/position = Vector2(40, 67)
+states/boxing-guard/node = SubResource("AnimationNodeAnimation_utvr7")
+states/boxing-guard/position = Vector2(580, -288)
 states/boxing-idle/node = SubResource("AnimationNodeAnimation_dkj7p")
-states/boxing-idle/position = Vector2(466, -29)
+states/boxing-idle/position = Vector2(467, -126)
+states/boxing-punch-right/node = SubResource("AnimationNodeAnimation_y1s54")
+states/boxing-punch-right/position = Vector2(729, -132)
 states/carrying-fishing-pole-idle/node = SubResource("AnimationNodeAnimation_wceqr")
-states/carrying-fishing-pole-idle/position = Vector2(466, 177)
+states/carrying-fishing-pole-idle/position = Vector2(460, 258)
 states/cast-fishing-pole/node = SubResource("AnimationNodeAnimation_mnljj")
-states/cast-fishing-pole/position = Vector2(730, 177)
+states/cast-fishing-pole/position = Vector2(720, 166)
 states/fishing-reel-in/node = SubResource("AnimationNodeAnimation_f5fy3")
-states/fishing-reel-in/position = Vector2(932, 177)
-states/punch-from-boxing/node = SubResource("AnimationNodeAnimation_y1s54")
-states/punch-from-boxing/position = Vector2(697, -29)
-transitions = ["Start", "carrying-fishing-pole-idle", SubResource("AnimationNodeStateMachineTransition_erof0"), "carrying-fishing-pole-idle", "cast-fishing-pole", SubResource("AnimationNodeStateMachineTransition_utvr7"), "Start", "boxing-idle", SubResource("AnimationNodeStateMachineTransition_08yyq"), "boxing-idle", "punch-from-boxing", SubResource("AnimationNodeStateMachineTransition_oj66p"), "cast-fishing-pole", "fishing-reel-in", SubResource("AnimationNodeStateMachineTransition_sm22x"), "fishing-reel-in", "End", SubResource("AnimationNodeStateMachineTransition_ov5xw")]
-graph_offset = Vector2(-139, -124)
+states/fishing-reel-in/position = Vector2(843, 286)
+states/none-idle/node = SubResource("AnimationNodeAnimation_erof0")
+states/none-idle/position = Vector2(276, 72)
+transitions = ["carrying-fishing-pole-idle", "cast-fishing-pole", SubResource("AnimationNodeStateMachineTransition_utvr7"), "cast-fishing-pole", "fishing-reel-in", SubResource("AnimationNodeStateMachineTransition_sm22x"), "carrying-fishing-pole-idle", "boxing-idle", SubResource("AnimationNodeStateMachineTransition_66hbm"), "boxing-idle", "carrying-fishing-pole-idle", SubResource("AnimationNodeStateMachineTransition_k0uq3"), "boxing-idle", "boxing-punch-right", SubResource("AnimationNodeStateMachineTransition_oj66p"), "boxing-punch-right", "boxing-idle", SubResource("AnimationNodeStateMachineTransition_x5sq3"), "Start", "none-idle", SubResource("AnimationNodeStateMachineTransition_uiiri"), "none-idle", "boxing-idle", SubResource("AnimationNodeStateMachineTransition_nxf5o"), "none-idle", "carrying-fishing-pole-idle", SubResource("AnimationNodeStateMachineTransition_2ry6e"), "carrying-fishing-pole-idle", "none-idle", SubResource("AnimationNodeStateMachineTransition_mmdfy"), "boxing-idle", "none-idle", SubResource("AnimationNodeStateMachineTransition_ipo8y"), "fishing-reel-in", "carrying-fishing-pole-idle", SubResource("AnimationNodeStateMachineTransition_kq0yq")]
+graph_offset = Vector2(-214, -194)
 
 [sub_resource type="AnimationNodeBlendTree" id="AnimationNodeBlendTree_c077b"]
-graph_offset = Vector2(-1307.85, -481.551)
+graph_offset = Vector2(-1270.89, -312.729)
 nodes/InteractAnimation/node = SubResource("AnimationNodeAnimation_c077b")
 nodes/InteractAnimation/position = Vector2(-100, 440)
 nodes/LeanBlend2/node = SubResource("AnimationNodeBlend2_v5qmy")
@@ -305,6 +342,15 @@ node_connections = [&"LeanBlend2", 0, &"UpperBlend2", &"LeanBlend2", 1, &"LeanBl
 [sub_resource type="SphereMesh" id="SphereMesh_3iyr4"]
 radius = 0.25
 height = 0.5
+
+[sub_resource type="Gradient" id="Gradient_1v8y3"]
+offsets = PackedFloat32Array(0.48433, 1)
+colors = PackedColorArray(0.404511, 0.404511, 0.404511, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_msr7a"]
+gradient = SubResource("Gradient_1v8y3")
+fill = 1
+fill_from = Vector2(0.5, 0.5)
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_3iyr4"]
 radius = 0.25
@@ -416,6 +462,8 @@ _data = {
 &"Walk": SubResource("Animation_1v8y3")
 }
 
+[sub_resource type="SphereShape3D" id="SphereShape3D_msr7a"]
+
 [node name="Player" type="CharacterBody3D" node_paths=PackedStringArray("footstep_audio_animation", "footstep_audio_player")]
 script = ExtResource("1_3iyr4")
 footstep_audio_animation = NodePath("FootstepAnimationPlayer")
@@ -444,6 +492,7 @@ libraries = {
 }
 
 [node name="ThirdPerson" type="Node3D" parent="."]
+script = ExtResource("2_msr7a")
 
 [node name="ThirdPersonAnimationTree" type="AnimationTree" parent="ThirdPerson"]
 root_node = NodePath("../mannequin")
@@ -451,15 +500,20 @@ tree_root = SubResource("AnimationNodeBlendTree_c077b")
 anim_player = NodePath("../mannequin/AnimationPlayer")
 parameters/LeanBlend2/blend_amount = 0.0
 parameters/LeanBlendSpace1D/blend_position = 0
-parameters/LocomotionStateMachine/conditions/crouched = false
+parameters/LocomotionStateMachine/conditions/crouched = true
 parameters/LocomotionStateMachine/conditions/jump = false
 parameters/LocomotionStateMachine/conditions/on_ground = false
 parameters/LocomotionStateMachine/CrouchBlendSpace2D/blend_position = Vector2(-0.00114155, -0.470852)
 parameters/LocomotionStateMachine/FallingBlendSpace2D/blend_position = Vector2(-0.00200135, 0.0118577)
-parameters/LocomotionStateMachine/WalkBlendSpace2D/blend_position = Vector2(-0.00114155, -1.00897)
+parameters/LocomotionStateMachine/WalkBlendSpace2D/blend_position = Vector2(0.00364077, 0.54902)
 parameters/UpperBlend2/blend_amount = 1.0
 parameters/UpperBodyBlend2/blend_amount = 0.0
-parameters/UpperBodyStateMachine/conditions/boxing = false
+parameters/UpperBodyStateMachine/conditions/equip_fishing_pole = false
+parameters/UpperBodyStateMachine/conditions/equip_fists = true
+parameters/UpperBodyStateMachine/conditions/equip_none = false
+parameters/UpperBodyStateMachine/conditions/fishing_pole_cast = false
+parameters/UpperBodyStateMachine/conditions/fishing_pole_caught_fish = false
+parameters/UpperBodyStateMachine/conditions/fishing_pole_reel_in = false
 
 [node name="mannequin" parent="ThirdPerson" instance=ExtResource("2_c077b")]
 transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0.02, 0)
@@ -787,6 +841,101 @@ text = "Stamina:"
 layout_mode = 2
 text = "100"
 
+[node name="EquipmentBar" type="MarginContainer" parent="HUD"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="HUD/EquipmentBar"]
+layout_mode = 2
+
+[node name="TextureRect7" type="TextureRect" parent="HUD/EquipmentBar/HBoxContainer"]
+layout_mode = 2
+texture = SubResource("GradientTexture2D_msr7a")
+
+[node name="Label" type="Label" parent="HUD/EquipmentBar/HBoxContainer/TextureRect7"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+text = "1
+Empty"
+
+[node name="TextureRect" type="TextureRect" parent="HUD/EquipmentBar/HBoxContainer"]
+layout_mode = 2
+texture = SubResource("GradientTexture2D_msr7a")
+
+[node name="Label" type="Label" parent="HUD/EquipmentBar/HBoxContainer/TextureRect"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+text = "2
+Fists"
+
+[node name="TextureRect2" type="TextureRect" parent="HUD/EquipmentBar/HBoxContainer"]
+layout_mode = 2
+texture = SubResource("GradientTexture2D_msr7a")
+
+[node name="Label" type="Label" parent="HUD/EquipmentBar/HBoxContainer/TextureRect2"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+text = "3
+Fishing.."
+
+[node name="TextureRect3" type="TextureRect" parent="HUD/EquipmentBar/HBoxContainer"]
+visible = false
+layout_mode = 2
+texture = SubResource("GradientTexture2D_msr7a")
+
+[node name="Label" type="Label" parent="HUD/EquipmentBar/HBoxContainer/TextureRect3"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+text = "3
+Swor/Shi"
+
+[node name="TextureRect4" type="TextureRect" parent="HUD/EquipmentBar/HBoxContainer"]
+visible = false
+layout_mode = 2
+texture = SubResource("GradientTexture2D_msr7a")
+
+[node name="Label" type="Label" parent="HUD/EquipmentBar/HBoxContainer/TextureRect4"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+text = "4
+2H-Swor"
+
+[node name="TextureRect5" type="TextureRect" parent="HUD/EquipmentBar/HBoxContainer"]
+visible = false
+layout_mode = 2
+texture = SubResource("GradientTexture2D_msr7a")
+
+[node name="Label" type="Label" parent="HUD/EquipmentBar/HBoxContainer/TextureRect5"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+text = "5
+Pistol"
+
+[node name="TextureRect6" type="TextureRect" parent="HUD/EquipmentBar/HBoxContainer"]
+visible = false
+layout_mode = 2
+texture = SubResource("GradientTexture2D_msr7a")
+
+[node name="Label" type="Label" parent="HUD/EquipmentBar/HBoxContainer/TextureRect6"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+text = "6
+Rifle"
+
 [node name="PauseMenu" type="Control" parent="."]
 layout_mode = 3
 anchors_preset = 15
@@ -902,7 +1051,15 @@ script = ExtResource("4_pgm6y")
 [node name="NetworkController" type="Node3D" parent="."]
 script = ExtResource("5_1v8y3")
 
+[node name="PunchHitboxArea3D" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PunchHitboxArea3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, -0.5)
+shape = SubResource("SphereShape3D_msr7a")
+
 [connection signal="pressed" from="PauseMenu/MarginContainer/VBoxContainer/MainMenuButton" to="." method="_on_main_menu_button_pressed"]
 [connection signal="pressed" from="PauseMenu/MarginContainer/VBoxContainer/QuitButton" to="." method="_on_quit_button_pressed"]
+[connection signal="body_entered" from="PunchHitboxArea3D" to="." method="_on_punch_hitbox_area_3d_body_entered"]
+[connection signal="body_exited" from="PunchHitboxArea3D" to="." method="_on_punch_hitbox_area_3d_body_exited"]
 
 [editable path="ThirdPerson/mannequin"]

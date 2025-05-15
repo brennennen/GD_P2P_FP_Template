@@ -18,3 +18,6 @@ A peer-to-peer first-person template for creating games in godot.
 * fade to black when changing levels?
 * fix issues around simulated proxies
 * allow multiplayer mode editor to also listen on a part like direct connect hosting 
+* add "start-falling" animation to blend the end of the jump into the falling animation
+* bug: snake people - fix: go out of boxing mode when crouching. upperbody blend is just for standing up?
+* todo: add fishing pole bones to rig and property to snap to hands

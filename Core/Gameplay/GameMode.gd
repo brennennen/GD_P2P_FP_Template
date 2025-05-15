@@ -45,6 +45,11 @@ func set_player_spawn_points(new_spawn_points: Node3D):
 func set_player_scene(player_scene_path: String):
 	player_scene = load(player_scene_path)
 
+
+#func add_player_to_spawn_queue(peer_id) -> Player:
+	#
+	#pass
+
 ## Spawns a player into the level. Only callable by the server.
 # TODO: do most of this logic in the network class, only get spawn position and set meta data
 # in the game mode class

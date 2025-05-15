@@ -6,6 +6,9 @@ class_name Player
 enum MovementMode { UNKNOWN, WALKING, FALLING, SWIMMING, DEBUG_FLY, SPECTATE }
 enum WalkingSubMovementMode { NONE, CROUCHING, SPRINTING }
 
+enum EquipmentMode { NONE, FISTS, FISHING_POLE, SWORD, PISTOL, RIFLE }
+static func EquipmentMode_str(equipment_mode: EquipmentMode):
+	return EquipmentMode.keys()[equipment_mode]
 
 # Public Members
 @export_category("Movement")
@@ -96,6 +99,7 @@ var last_sent_rotation_degrees_x: float
 var last_sent_velocity: Vector3
 
 # # Misc
+var equipment_mode: EquipmentMode = EquipmentMode.NONE
 var is_paused: bool = false
 var is_movement_locked: bool = false
 
@@ -108,7 +112,6 @@ func _enter_tree():
 func _ready():
 	 # hide any menus that might have been left visible
 	pause_menu.visible = false
-
 	jump_velocity = sqrt(jump_height * gravity * 2)
 	# Needs to interpolate/reach the target by the next sync packet (received every network tick)
 	network_movement_interpolation_rate = (1.0 / Engine.physics_ticks_per_second) / GameInstance.networking.network_tick_rate
@@ -149,6 +152,7 @@ func peer_player_ready():
 	third_person.visible = true
 	hud.hide()
 	Logger.info("spawned %s's peer, sending rpc to start syncing" % name)
+	third_person_animation_tree.set("parameters/UpperBlend2/blend_amount", 0.0)
 	notify_peer_their_player_is_spawned.rpc_id(str(name).to_int(), multiplayer.get_unique_id())
 
 @rpc("any_peer", "reliable")
@@ -164,6 +168,29 @@ func notify_peer_their_player_is_spawned(spawned_peer_id):
 	#Logger.info("voice output has stream playback: %d" % int(voice_output.has_stream_playback()))
 	#voice_output_playback = voice_output.get_stream_playback()
 	#input_threshold = Options.voice_input_threshold
+
+@rpc("any_peer", "call_local", "reliable")
+func change_equipment_mode(new_equipment_mode: EquipmentMode):
+	# TOOD: consider move to using expressions instead of conditions
+	match new_equipment_mode:
+		EquipmentMode.NONE:
+			third_person_animation_tree.set("parameters/UpperBodyStateMachine/conditions/equip_none", true)
+			third_person_animation_tree.set("parameters/UpperBodyStateMachine/conditions/equip_fists", false)
+			third_person_animation_tree.set("parameters/UpperBodyStateMachine/conditions/equip_fishing_pole", false)
+			third_person_animation_tree.set("parameters/UpperBlend2/blend_amount", 0.0)
+		EquipmentMode.FISTS:
+			third_person_animation_tree.set("parameters/UpperBodyStateMachine/conditions/equip_none", false)
+			third_person_animation_tree.set("parameters/UpperBodyStateMachine/conditions/equip_fists", true)
+			third_person_animation_tree.set("parameters/UpperBodyStateMachine/conditions/equip_fishing_pole", false)
+			third_person_animation_tree.set("parameters/UpperBlend2/blend_amount", 1.0)
+		EquipmentMode.FISHING_POLE:
+			third_person_animation_tree.set("parameters/UpperBodyStateMachine/conditions/equip_none", false)
+			third_person_animation_tree.set("parameters/UpperBodyStateMachine/conditions/equip_fishing_pole", true)
+			third_person_animation_tree.set("parameters/UpperBodyStateMachine/conditions/equip_fists", false)
+			third_person_animation_tree.set("parameters/UpperBlend2/blend_amount", 1.0)
+		_:
+			Logger.error("change_equipment_mode: '%s' not implemented" % str(new_equipment_mode))
+	equipment_mode = new_equipment_mode
 
 func set_health(new_health: float) -> void:
 	health = new_health
@@ -236,7 +263,6 @@ func ghost_level_camera() -> void:
 
 func reconnect_camera_to_player() -> void:
 	camera.global_position = camera_pivot.global_position
-	pass
 
 func _input(event):
 	if is_multiplayer_authority():
@@ -266,6 +292,15 @@ func handle_gameplay_inputs(event):
 		return
 	if is_menu_open():
 		return
+	if event.is_action_pressed("primary_action"):
+		primary_action()
+		pass
+	if event.is_action_pressed("hotbar_1"):
+		change_equipment_mode.rpc(EquipmentMode.NONE)
+	if event.is_action_pressed("hotbar_2"):
+		change_equipment_mode.rpc(EquipmentMode.FISTS)
+	if event.is_action_pressed("hotbar_3"):
+		change_equipment_mode.rpc(EquipmentMode.FISHING_POLE)
 	if event.is_action_pressed("crouch_toggle"):
 		toggle_crouch.rpc()
 	if event.is_action_pressed("debug_fly_toggle"):
@@ -275,7 +310,113 @@ func set_spawn_rotation(new_rotation: Vector3):
 	player_rotation = Vector3(0.0, new_rotation.y, 0.0)
 	mouse_rotation = Vector3(0.0, new_rotation.y, 0.0)
 
+func primary_action():
+	Logger.info("primary_action: %s" % [name])
+	primary_action_predictive() # perform visual feedback instantly if we predict the server will allow the input to make the client feel more responsive.
+	primary_action_server_request.rpc_id(1) # send the input request to the server.
+
+## Play any feedback visuals as soon as the player presses the input if we think the server
+## server would allow it (aka: we "predict" the server will allow the input and respond
+## accordingly.)
+func primary_action_predictive():
+	Logger.info("primary_action_predictive: %s" % [name])
+	match equipment_mode:
+		EquipmentMode.NONE:
+			pass
+		EquipmentMode.FISTS:
+			fists_punch_predictive()
+		EquipmentMode.FISHING_POLE:
+			pass
+		_:
+			pass
+	pass
+
+@rpc("any_peer", "call_local", "reliable")
+func primary_action_server_request():
+	Logger.info("primary_action_server_request: from: %s" % [name])
+	match equipment_mode:
+		EquipmentMode.NONE:
+			pass
+		EquipmentMode.FISTS:
+			fists_punch_server_request()
+		EquipmentMode.FISHING_POLE:
+			pass
+		_:
+			pass
+	pass
+
+func fists_punch_predictive():
+	# TODO: play first person punch animation!
+	pass
+	
+
+func fists_punch_server_request():
+	Logger.info("fists_punch_server_request");
+	# TODO: determine if the punch is allowed or not?
+	fists_punch_third_person_visuals.rpc()
+	
+	for player in players_in_punch_hitbox:
+		player.receive_punch.rpc(global_position)
+	pass
+
+@rpc("any_peer", "call_local", "reliable")
+func fists_punch_third_person_visuals():
+	third_person_animation_tree.set("parameters/UpperBodyStateMachine/conditions/punch", true)
+	var upper_body_state_machine_playback = third_person_animation_tree.get("parameters/UpperBodyStateMachine/playback") as AnimationNodeStateMachinePlayback
+	upper_body_state_machine_playback.travel("boxing-punch-right")
+	pass
+
+# TODO: split punch into visual and functional
+# network visuals
+
+#@rpc("any_peer", "call_local", "reliable")
+func fists_punch() -> void:
+	Logger.info("fists_punch - players_in_punch_hitbox: %s" % [ JSON.stringify(players_in_punch_hitbox) ])
+	fists_punch_visuals()
+	#fists_punch_server.rpc(1)
+	
+	#if GameInstance.networking.is_server():
+		#fists_punch_mechanics()
+
+@rpc("any_peer", "call_local", "reliable")
+func fists_punc_server():
+	
+	pass
+
+func fists_punch_mechanics() -> void:
+	Logger.info("fists_punch_mechanics");
+	for player in players_in_punch_hitbox:
+		player.receive_punch.rpc(global_position)
+
+@rpc("any_peer", "call_local", "reliable")
+func fists_punch_visuals() -> void:
+	third_person_animation_tree.set("parameters/UpperBodyStateMachine/conditions/punch", true)
+	var upper_body_state_machine_playback = third_person_animation_tree.get("parameters/UpperBodyStateMachine/playback") as AnimationNodeStateMachinePlayback
+	upper_body_state_machine_playback.travel("boxing-punch-right")
+
+var knocked_back: bool = false
+var knocked_back_source_position: Vector3 = Vector3(0.0, 0.0, 0.0)
+var knocked_back_force: float = 10.0
+
+@rpc("any_peer", "call_local", "reliable")
+func receive_punch(puncher_position: Vector3):
+	Logger.info("receive_punch: me: %s" % [name])
+	# TODO: get vector and knock back along vector
+	#var dir = (puncher_position - global_position).normalized()
+	knocked_back = true
+	knocked_back_source_position = puncher_position
+	knocked_back_force = knocked_back_force
+	
+	#velocity += dir * 10.0
+	
+	# TODO: take damage?
+	set_health(health - 10)
+	pass
+
 func _process(delta) -> void:
+	debug_imgui_handle_player_window(delta)
+	if !is_multiplayer_authority():
+		debug_imgui_handle_3rd_person_animation_window(delta)
 	if is_paused:
 		load_player_list()
 
@@ -287,18 +428,19 @@ func _physics_process(delta):
 			collision_layer = stored_collision_layer
 			delay_physics = false
 		return
-	if is_menu_open():
-		return
 	if not self.is_alive: # If the player is dead, allow them to move the camera, but don't do much else.
 		update_camera(delta)
 		return
 	if not is_multiplayer_authority():
 		network_controller.remote_pawn_physics_process(delta)
 		return
+
+	update_camera(delta)
+
 	if is_movement_locked:
 		return
+
 	movement_mode = determine_movement_mode(delta, movement_mode)
-	update_camera(delta)
 
 	# Handle Jump.
 	var jump_pressed: bool = false
@@ -308,7 +450,7 @@ func _physics_process(delta):
 			if is_crouching == true:
 				toggle_crouch.rpc()
 			start_jump.rpc()
-	
+
 	# Handle Sprint
 	is_sprinting = false
 	if !is_paused:
@@ -323,8 +465,12 @@ func _physics_process(delta):
 			if stamina < 100.0:
 				set_stamina(stamina + 0.25)
 
+	# TODO: handle punch knockback here?
+	if knocked_back:
+		velocity += Vector3(0.0, 10.0, 0.0)
+		knocked_back = false
+
 	velocity.y -= gravity * delta
-	
 	var move_speed = movement_controller.get_movement_speed()
 	if movement_mode == MovementMode.WALKING and jump_pressed == false and !is_paused:
 		ground_movement_physics(delta, move_speed)
@@ -375,15 +521,16 @@ func update_camera(delta):
 				camera_pivot.rotation.z = lerp_angle(camera_pivot.rotation.z, deg_to_rad(0), 0.01)
 
 func ground_movement_physics(delta, move_speed):
-	var input_dir = Input.get_vector("move_left", "move_right", "move_forward", "move_backward")
-	last_input_dir = input_dir
-	var direction = (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
-	if direction:
-		velocity.x = lerp(velocity.x, direction.x * move_speed, delta * 3.0)
-		velocity.z = lerp(velocity.z, direction.z * move_speed, delta * 3.0)
-	else:
-		velocity.x = move_toward(velocity.x, 0, move_speed)
-		velocity.z = move_toward(velocity.z, 0, move_speed)
+	if !is_paused:
+		var input_dir = Input.get_vector("move_left", "move_right", "move_forward", "move_backward")
+		last_input_dir = input_dir
+		var direction = (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
+		if direction:
+			velocity.x = lerp(velocity.x, direction.x * move_speed, delta * 3.0)
+			velocity.z = lerp(velocity.z, direction.z * move_speed, delta * 3.0)
+		else:
+			velocity.x = move_toward(velocity.x, 0, move_speed)
+			velocity.z = move_toward(velocity.z, 0, move_speed)
 	move_and_slide()
 	movement_controller.move_colliding_rigid_bodies()
 
@@ -447,7 +594,7 @@ func send_move_data():
 		sent_one_extra_no_move_data_packet = false
 
 	if sent_one_extra_no_move_data_packet == false and global_position == last_sent_location:
-		print("sent sent_one_extra_no_move_data_packet")
+		#print("sent sent_one_extra_no_move_data_packet")
 		sent_one_extra_no_move_data_packet = true
 		#inputs1 = inputs1 & 0x11110000 # zero out movement (forward/back/left/right) bits
 		inputs1 = 0
@@ -455,7 +602,7 @@ func send_move_data():
 	GameInstance.networking.client_networking.client_send_player_movement(name.to_int(), 
 		global_position, global_rotation_degrees.y, camera.global_rotation_degrees.x,
 		inputs1, movement_states_bitmap)
-	Logger.info("global_position: %v" % [ global_position ])
+	#Logger.info("global_position: %v" % [ global_position ])
 	last_sent_location = global_position
 	last_sent_rotation_degrees_y = global_rotation_degrees.y
 	last_sent_velocity = velocity
@@ -539,6 +686,16 @@ func fade_from_black(duration: float):
 	black_screen_tween.tween_property(black_screen, "color", Color(0.0, 0.0, 0.0, 0.0), duration)
 	black_screen_tween.tween_callback(black_screen_tween_done)
 
+func fade_to_black(duration: float):
+	Logger.info("fade_to_black: %f" % [duration])
+	if black_screen_tween:
+		black_screen_tween.kill()
+	black_screen_tween = create_tween()
+	black_screen.color = Color.BLACK
+	black_screen.color.a = 0.0
+	black_screen_tween.tween_property(black_screen, "color", Color.BLACK, duration)
+	black_screen_tween.tween_callback(black_screen_tween_done)
+
 func black_screen_tween_done():
 	black_screen_tween = null
 
@@ -547,3 +704,43 @@ func _on_main_menu_button_pressed() -> void:
 
 func _on_quit_button_pressed() -> void:
 	GameInstance.quit()
+
+func debug_imgui_handle_player_window(_delta: float) -> void:
+	ImGui.Begin("Player-%s" % [str(name)])
+	ImGui.Text("mp_auth: %s" % [ str(get_multiplayer_authority()) ])
+	ImGui.Text("equipment_mode: %s" % [ EquipmentMode_str(equipment_mode) ])
+	ImGui.Text("knocked_back: %s" % [ str(knocked_back) ])
+	ImGui.End()
+	pass
+
+func debug_imgui_handle_3rd_person_animation_window(_delta: float) -> void:
+	# TODO: only render if debug flag set
+	ImGui.Begin("PlayerTPAnim-%s" % [str(name)])
+	ImGui.Text("Locomotion:")
+	ImGui.Text("walk_blend: %s" % [str(third_person_animation_tree.get("parameters/LocomotionStateMachine/WalkBlendSpace2D/blend_position"))])
+	ImGui.Text("jump: %s" % [str(third_person_animation_tree.get("parameters/LocomotionStateMachine/conditions/jump"))])
+	ImGui.Text("crouch: %s" % [str(third_person_animation_tree.get("parameters/LocomotionStateMachine/conditions/crouched"))])
+	ImGui.Text("UpperBody:")
+	ImGui.Text("upper_blend: %s" % [str(third_person_animation_tree.get("parameters/UpperBlend2/blend_amount"))])
+	ImGui.Text("equip_none: %s" % [str(third_person_animation_tree.get("parameters/UpperBodyStateMachine/conditions/equip_none"))])
+	ImGui.Text("equip_fists: %s" % [str(third_person_animation_tree.get("parameters/UpperBodyStateMachine/conditions/equip_fists"))])
+	ImGui.Text("equip_fishing_pole: %s" % [str(third_person_animation_tree.get("parameters/UpperBodyStateMachine/conditions/equip_fishing_pole"))])
+	# TODO: estimated packet loss?
+	# TODO: estimated download/receive byte count
+	# TODO: estimated 
+	ImGui.End()
+
+var players_in_punch_hitbox: Array[Player] = []
+func _on_punch_hitbox_area_3d_body_entered(body: Node3D) -> void:
+	if body is Player:
+		var player := body as Player
+		if player.name == name: # don't allow punching yourself
+			return
+		if player not in players_in_punch_hitbox:
+			players_in_punch_hitbox.append(player)
+
+func _on_punch_hitbox_area_3d_body_exited(body: Node3D) -> void:
+	if body is Player:
+		var player := body as Player
+		if player in players_in_punch_hitbox:
+			players_in_punch_hitbox.erase(player)

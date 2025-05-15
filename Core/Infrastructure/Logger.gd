@@ -17,7 +17,7 @@ func get_severity_name(severity : Severity):
 
 var current_log_file : FileAccess = null
 
-var minimum_severity : Severity = Severity.DEBUG
+var minimum_severity : Severity = Severity.INFO
 
 var log_folder: String = "res://Logs"
 var user_data_log_folder: String = "user://Logs"

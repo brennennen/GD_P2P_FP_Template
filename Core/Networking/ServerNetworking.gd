@@ -290,7 +290,7 @@ func debug_log() -> void:
 	var server_scene_path = networking.game_network_state["scene_path"]
 	#if networking.game_network_state["scene_path"] != null:
 	#	server_scene_path = networking.game_network_state["scene_path"]
-	Logger.info("server: my_id: %d, peers: %s, scene_path: %s, player_id_list: %s, player_list: %s, player_pawn_data: %s" % [
+	Logger.debug("server: my_id: %d, peers: %s, scene_path: %s, player_id_list: %s, player_list: %s, player_pawn_data: %s" % [
 		int(multiplayer.get_unique_id()), String(peers_string), str(server_scene_path),
 		JSON.stringify(networking.player_id_list), JSON.stringify(networking.player_list),
 		JSON.stringify(networking.player_pawn_data)

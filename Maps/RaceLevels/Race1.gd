@@ -8,8 +8,8 @@ extends Level
 @onready var pre_race_start_timer = $RacePreStartTimer
 @onready var race_start_timer = $RaceStartTimer
 
-var pre_start_timer_time: float = 20.0
-var start_timer_time: float = 10.0
+var pre_start_timer_time: float = 10.0
+var start_timer_time: float = 20.0
 
 func _ready() -> void:
 	super()

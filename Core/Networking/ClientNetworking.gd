@@ -102,7 +102,7 @@ func initialize(p_networking: Networking):
 	networking = p_networking
 
 func on_peer_connected(peer_id):
-	Logger.info("client:peer_connected: %d" % [ peer_id ])
+	Logger.debug("client:peer_connected: %d" % [ peer_id ])
 
 func on_peer_disconnected(peer_id):
 	Logger.debug("peer_disconnected: %d" % [ peer_id ])
@@ -448,7 +448,7 @@ func client_send_player_movement(peer_id: int, position: Vector3, rotation_degre
 func debug_log() -> void:
 	var peers_string: String = JSON.stringify(multiplayer.get_peers())
 	var server_scene_path = networking.game_network_state["scene_path"]
-	Logger.info("client: my_id: %d, peers: %s, scene_path: %s, player_id_list: %s, player_list: %s, player_pawn_data: %s, sync_state: %s" % [
+	Logger.debug("client: my_id: %d, peers: %s, scene_path: %s, player_id_list: %s, player_list: %s, player_pawn_data: %s, sync_state: %s" % [
 		int(multiplayer.get_unique_id()), String(peers_string), str(server_scene_path),
 		JSON.stringify(networking.player_id_list), JSON.stringify(networking.player_list),
 		JSON.stringify(networking.player_pawn_data), ClientSyncState_str(initial_synchronization["current_state"])
