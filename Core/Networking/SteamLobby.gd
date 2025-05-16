@@ -74,7 +74,7 @@ func initialize_steam():
 		print("can't connect to steam, probably not running")
 	elif initialize_result["status"] == 3:
 		print("steam out of date, todo: exit i guess?")
-	set_lobby_filters()
+	#set_lobby_filters()
 
 func steam_peer_connection_status_changed(_x, _y, _z):
 	print("steam_peer_connection_status_changed")

@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://b8lytvha5krpa" path="res://Core/Gameplay/LevelTeleporter.tscn" id="3_ff61r"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_x2hfb"]
-size = Vector3(100, 10, 100)
+size = Vector3(1000, 10, 1000)
 
 [sub_resource type="PhysicalSkyMaterial" id="PhysicalSkyMaterial_qdw5l"]
 rayleigh_color = Color(0.137575, 0.200307, 0.317419, 1)
@@ -68,6 +68,7 @@ size = Vector3(20, 5, 5)
 script = ExtResource("1_8gnua")
 player_spawn_points = NodePath("SpawnPoints")
 default_level_camera = NodePath("DefaultLevelCamera")
+end_race_return_scene_path = "res://Maps/HUBLevel/HUBLevel.tscn"
 
 [node name="SpawnPoints" type="Node3D" parent="."]
 
@@ -107,6 +108,11 @@ font_size = 128
 [node name="Label3D2" type="Label3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -29)
 text = "Finish Line"
+font_size = 128
+
+[node name="WinnerLabel3D" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -40)
+text = "Winner: ?"
 font_size = 128
 
 [node name="EnvironmentAndAtmosphere" type="Node3D" parent="."]
@@ -226,12 +232,17 @@ transform = Transform3D(-0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, -0.707107
 label_name = "HUB"
 scene_path = "res://Maps/HUBLevel/HUBLevel.tscn"
 
-[node name="RaceStartTimer" type="Timer" parent="."]
+[node name="GameStartTimer" type="Timer" parent="."]
 process_callback = 0
 wait_time = 10.0
 one_shot = true
 
-[node name="RacePreStartTimer" type="Timer" parent="."]
+[node name="GamePreStartTimer" type="Timer" parent="."]
+process_callback = 0
+wait_time = 30.0
+one_shot = true
+
+[node name="FirstCrossEndTimer" type="Timer" parent="."]
 process_callback = 0
 wait_time = 30.0
 one_shot = true

@@ -176,7 +176,7 @@ func on_receive_client_player_movement(from_peer_id: int, packet: PackedByteArra
 func on_receive_ping(from_peer_id: int, packet: PackedByteArray):
 	var ping_send_time = packet.decode_s32(1)
 	
-	var time_delta = Time.get_ticks_msec() - ping_send_time
+	#var time_delta = Time.get_ticks_msec() - ping_send_time
 	# TODO: store time delta
 	
 	networking.send_ping_response(from_peer_id, ping_send_time)

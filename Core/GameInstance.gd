@@ -128,15 +128,10 @@ func initialize_level(level_name: String, scene_path: String, game_mode_type: Ga
 			var player = game_mode.spawn_player(multiplayer.get_unique_id())
 			networking.player_list.append(player)
 		debug_position_all_instance_windows()
-	#if multiplayer.is_server():
 	if GameInstance.networking.is_server():
-		if networking.multiplayer_mode == Networking.MultiplayerMode.SINGLE_PLAYER:
-			var player = game_mode.spawn_player(multiplayer.get_unique_id())
-			networking.player_list.append(player)
-		elif networking.multiplayer_mode == Networking.MultiplayerMode.DIRECT_CONNECT:
-			var player = game_mode.spawn_player(multiplayer.get_unique_id())
-			networking.player_list.append(player)
-		elif networking.multiplayer_mode == Networking.MultiplayerMode.STEAM:
+		if networking.multiplayer_mode == Networking.MultiplayerMode.SINGLE_PLAYER \
+				or networking.multiplayer_mode == Networking.MultiplayerMode.DIRECT_CONNECT \
+				or networking.multiplayer_mode == Networking.MultiplayerMode.STEAM:
 			var player = game_mode.spawn_player(multiplayer.get_unique_id())
 			networking.player_list.append(player)
 	_on_debug_log_timer_timeout() # debug log right away

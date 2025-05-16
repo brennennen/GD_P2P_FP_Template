@@ -3,12 +3,9 @@ extends Character
 class_name Player
 
 # Enums/Structs
-enum MovementMode { UNKNOWN, WALKING, FALLING, SWIMMING, DEBUG_FLY, SPECTATE }
-enum WalkingSubMovementMode { NONE, CROUCHING, SPRINTING }
-
 enum EquipmentMode { NONE, FISTS, FISHING_POLE, SWORD, PISTOL, RIFLE }
-static func EquipmentMode_str(equipment_mode: EquipmentMode):
-	return EquipmentMode.keys()[equipment_mode]
+static func EquipmentMode_str(_equipment_mode: EquipmentMode):
+	return EquipmentMode.keys()[_equipment_mode]
 
 # Public Members
 @export_category("Movement")
@@ -62,8 +59,6 @@ var health: float = 100.0
 var stamina: float = 100.0
 
 # # Movement/Agency
-var movement_mode: MovementMode = MovementMode.WALKING
-var walking_sub_movement_mode: WalkingSubMovementMode = WalkingSubMovementMode.NONE
 var has_mouse_input : bool = false
 var mouse_rotation : Vector3
 var rotation_input : float
@@ -93,10 +88,6 @@ var physics_delay_time: float = 3.0
 var stored_collision_layer: int = 0
 var last_global_position: Vector3 = Vector3(0.0, 0.0, 0.0)
 var last_input_dir: Vector2 = Vector2(0.0, 0.0)
-var last_sent_location: Vector3
-var last_sent_rotation_degrees_y: float
-var last_sent_rotation_degrees_x: float
-var last_sent_velocity: Vector3
 
 # # Misc
 var equipment_mode: EquipmentMode = EquipmentMode.NONE
@@ -171,7 +162,8 @@ func notify_peer_their_player_is_spawned(spawned_peer_id):
 
 @rpc("any_peer", "call_local", "reliable")
 func change_equipment_mode(new_equipment_mode: EquipmentMode):
-	# TOOD: consider move to using expressions instead of conditions
+	# TOOD: consider move to using expressions or just calling travel instead of conditions?
+
 	match new_equipment_mode:
 		EquipmentMode.NONE:
 			third_person_animation_tree.set("parameters/UpperBodyStateMachine/conditions/equip_none", true)
@@ -246,14 +238,16 @@ func load_player_list():
 			player_label.text = "%s" % [str(id)]
 		player_list.add_child(player_label)
 
+# authority vs any_peer is complicated because we set authority to the local client for the player class
+# ideally this would only be callable by the server, need to work through a way to handle this...
 @rpc("any_peer", "call_local", "reliable")
-func lock_movement() -> void:
-	Logger.info("lock_movement: %s" % [str(name)])
+func server_lock_movement() -> void:
+	Logger.info("server_lock_movement: %s" % [str(name)])
 	is_movement_locked = true
 
 @rpc("any_peer", "call_local", "reliable")
 func unlock_movement() -> void:
-	Logger.info("unlock_movement")
+	Logger.info("unlock_movement: %s" % [str(name)])
 	is_movement_locked = false
 
 func ghost_level_camera() -> void:
@@ -347,14 +341,14 @@ func primary_action_server_request():
 
 func fists_punch_predictive():
 	# TODO: play first person punch animation!
+	# TODO: maybe start the "hit" animation for the player in the hitbox?
 	pass
-	
 
 func fists_punch_server_request():
 	Logger.info("fists_punch_server_request");
 	# TODO: determine if the punch is allowed or not?
 	fists_punch_third_person_visuals.rpc()
-	
+
 	for player in players_in_punch_hitbox:
 		player.receive_punch.rpc(global_position)
 	pass
@@ -366,59 +360,28 @@ func fists_punch_third_person_visuals():
 	upper_body_state_machine_playback.travel("boxing-punch-right")
 	pass
 
-# TODO: split punch into visual and functional
-# network visuals
-
-#@rpc("any_peer", "call_local", "reliable")
-func fists_punch() -> void:
-	Logger.info("fists_punch - players_in_punch_hitbox: %s" % [ JSON.stringify(players_in_punch_hitbox) ])
-	fists_punch_visuals()
-	#fists_punch_server.rpc(1)
-	
-	#if GameInstance.networking.is_server():
-		#fists_punch_mechanics()
-
-@rpc("any_peer", "call_local", "reliable")
-func fists_punc_server():
-	
-	pass
-
-func fists_punch_mechanics() -> void:
-	Logger.info("fists_punch_mechanics");
-	for player in players_in_punch_hitbox:
-		player.receive_punch.rpc(global_position)
-
-@rpc("any_peer", "call_local", "reliable")
-func fists_punch_visuals() -> void:
-	third_person_animation_tree.set("parameters/UpperBodyStateMachine/conditions/punch", true)
-	var upper_body_state_machine_playback = third_person_animation_tree.get("parameters/UpperBodyStateMachine/playback") as AnimationNodeStateMachinePlayback
-	upper_body_state_machine_playback.travel("boxing-punch-right")
-
 var knocked_back: bool = false
 var knocked_back_source_position: Vector3 = Vector3(0.0, 0.0, 0.0)
-var knocked_back_force: float = 10.0
+var knocked_back_force: float = 0.0
 
 @rpc("any_peer", "call_local", "reliable")
 func receive_punch(puncher_position: Vector3):
 	Logger.info("receive_punch: me: %s" % [name])
-	# TODO: get vector and knock back along vector
-	#var dir = (puncher_position - global_position).normalized()
 	knocked_back = true
 	knocked_back_source_position = puncher_position
-	knocked_back_force = knocked_back_force
-	
-	#velocity += dir * 10.0
-	
-	# TODO: take damage?
+	knocked_back_force = 25.0 # todo send this?
 	set_health(health - 10)
-	pass
 
 func _process(delta) -> void:
 	debug_imgui_handle_player_window(delta)
 	if !is_multiplayer_authority():
-		debug_imgui_handle_3rd_person_animation_window(delta)
+		third_person.debug_imgui_handle_3rd_person_animation_window(delta)
 	if is_paused:
 		load_player_list()
+
+func predictive_physics_process(_delta: float) -> void:
+	# TODO: move most of physics process into here
+	pass
 
 func _physics_process(delta):
 	# delay when just spawned in for a bit to give godot a second to not spaz out
@@ -440,7 +403,7 @@ func _physics_process(delta):
 	if is_movement_locked:
 		return
 
-	movement_mode = determine_movement_mode(delta, movement_mode)
+	movement_controller.movement_mode = movement_controller.determine_movement_mode(delta, movement_controller.movement_mode)
 
 	# Handle Jump.
 	var jump_pressed: bool = false
@@ -467,22 +430,25 @@ func _physics_process(delta):
 
 	# TODO: handle punch knockback here?
 	if knocked_back:
-		velocity += Vector3(0.0, 10.0, 0.0)
+		#velocity += Vector3(0.0, 1.0, 0.0)
+		var dir = (global_position - knocked_back_source_position).normalized()
+		velocity += (dir * knocked_back_force)
+		velocity += Vector3(0.0, 1.0, 0.0) # add some up
 		knocked_back = false
 
 	velocity.y -= gravity * delta
 	var move_speed = movement_controller.get_movement_speed()
-	if movement_mode == MovementMode.WALKING and jump_pressed == false and !is_paused:
+	if movement_controller.movement_mode == PlayerMovementController.MovementMode.WALKING and jump_pressed == false:
 		ground_movement_physics(delta, move_speed)
 		if velocity.length() != 0:
 			footstep_animation_player.play("Walk")
 			head_bob_animation_player.play("HeadBob")
-	elif movement_mode == MovementMode.FALLING:
+	elif movement_controller.movement_mode == PlayerMovementController.MovementMode.FALLING:
 		falling_movement_physics(delta, move_speed)
-	elif movement_mode == MovementMode.DEBUG_FLY:
+	elif movement_controller.movement_mode == PlayerMovementController.MovementMode.DEBUG_FLY:
 		movement_controller.debug_flying_physics(delta, move_speed)
 	if !GameInstance.networking.is_server() and is_multiplayer_authority():
-		send_move_data()
+		network_controller.send_move_data()
 
 var last_player_basis: Basis
 var last_mouse_rotation: Vector3
@@ -493,7 +459,7 @@ func update_camera(delta):
 	mouse_rotation.x += tilt_input * delta * mouse_sensitivity
 	mouse_rotation.x = clamp(mouse_rotation.x, tilt_lower_limit, tilt_upper_limit)
 	mouse_rotation.y += rotation_input * delta * mouse_sensitivity
-	
+
 	last_mouse_rotation_delta.x = last_mouse_rotation.x - mouse_rotation.x
 	last_mouse_rotation_delta.y = last_mouse_rotation.y - mouse_rotation.y
 	last_mouse_rotation = mouse_rotation
@@ -511,7 +477,7 @@ func update_camera(delta):
 	var input_dir = Input.get_vector("move_left", "move_right", "move_forward", "move_backward")
 
 	if !is_leaning_left and !is_leaning_right: # Don't sway if leaning
-		if movement_mode != MovementMode.DEBUG_FLY: # Don't sway if debug flying
+		if  movement_controller.movement_mode != PlayerMovementController.MovementMode.DEBUG_FLY: # Don't sway if debug flying
 			# Head sway (TODO: add speed to influence the amount of sway)
 			if input_dir.x > 0:
 				camera_pivot.rotation.z = lerp_angle(camera_pivot.rotation.z, deg_to_rad(-2.5), 0.01)
@@ -570,110 +536,18 @@ func toggle_debug_fly() -> void:
 	if is_debug_flying:
 		$CollisionShape3D.visible = false
 		$CollisionShape3D.disabled = true
-		movement_mode = MovementMode.DEBUG_FLY
+		movement_controller.movement_mode = PlayerMovementController.MovementMode.DEBUG_FLY
 	else:
 		$CollisionShape3D.visible = true
 		$CollisionShape3D.disabled = false
-		movement_mode = MovementMode.FALLING
-
-var send_move_data_ticks: int = 0
-var sent_one_extra_no_move_data_packet: bool = false
-func send_move_data():
-	if global_position == last_sent_location \
-			and global_rotation_degrees.y == last_sent_rotation_degrees_y \
-			and global_rotation_degrees.x == last_sent_rotation_degrees_x \
-			and velocity == last_sent_velocity \
-			and sent_one_extra_no_move_data_packet == true:
-		# player hasn't moved, don't waste the bandwidth
-		return
-
-	var inputs1 = network_controller.build_inputs1()
-	var movement_states_bitmap = network_controller.build_movement_states_bitmap()
-
-	if global_position != last_sent_location:
-		sent_one_extra_no_move_data_packet = false
-
-	if sent_one_extra_no_move_data_packet == false and global_position == last_sent_location:
-		#print("sent sent_one_extra_no_move_data_packet")
-		sent_one_extra_no_move_data_packet = true
-		#inputs1 = inputs1 & 0x11110000 # zero out movement (forward/back/left/right) bits
-		inputs1 = 0
-
-	GameInstance.networking.client_networking.client_send_player_movement(name.to_int(), 
-		global_position, global_rotation_degrees.y, camera.global_rotation_degrees.x,
-		inputs1, movement_states_bitmap)
-	#Logger.info("global_position: %v" % [ global_position ])
-	last_sent_location = global_position
-	last_sent_rotation_degrees_y = global_rotation_degrees.y
-	last_sent_velocity = velocity
+		movement_controller.movement_mode = PlayerMovementController.MovementMode.FALLING
 
 @rpc("any_peer", "call_local", "reliable")
 func server_teleport_player(new_position: Vector3):
 	global_position = new_position
 
-func determine_movement_mode(_delta, last_movement_mode) -> MovementMode:
-	var new_movement_mode = last_movement_mode
-	if is_on_floor():
-		if last_movement_mode == MovementMode.FALLING:
-			movement_mode_transition_falling_to_walking()
-		new_movement_mode = MovementMode.WALKING
-		walking_sub_movement_mode = determine_walking_sub_movement_mode()
-	else:	
-		if new_movement_mode == MovementMode.WALKING:
-			new_movement_mode = MovementMode.FALLING
-	return new_movement_mode
-
-func determine_walking_sub_movement_mode() -> WalkingSubMovementMode:
-	if is_crouching:
-		return WalkingSubMovementMode.CROUCHING
-	elif is_sprinting:
-		return WalkingSubMovementMode.SPRINTING
-	return WalkingSubMovementMode.NONE
-
-func movement_mode_transition_falling_to_walking():
-	# TODO: turn off jump animation
-	#third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/on_ground", is_on_floor())
-	#third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/jump", false)
-	play_footstep_audio()
-
-func play_footstep_audio():
-	if !footstep_audio_player:
-		return
-	# Select a random footstep based on the material being walked on.
-	var footstep_index = randi_range(0, footstep_streams[ground_material].size() - 1)
-	if footstep_index == last_foostep_stream_index: # Select the next sound in the list if we select the same sound 2 times in a row.
-		footstep_index = (footstep_index + 1) % footstep_streams[ground_material].size()
-	var footstep_stream = footstep_streams[ground_material][footstep_index]
-	footstep_audio_player.stream = footstep_stream
-	# Randomize some other features to try and make the sound more organic
-	# TODO: probably better to have completely different animation players for each ground movement type to better sync up sound to foot landings
-	if walking_sub_movement_mode == WalkingSubMovementMode.NONE:
-		footstep_audio_player.volume_db = randi_range(-40, -38)
-		footstep_audio_player.pitch_scale = randf_range(.95, 1.05)
-		footstep_animation_player.speed_scale = 1.0
-	elif walking_sub_movement_mode == WalkingSubMovementMode.CROUCHING:
-		footstep_audio_player.volume_db = randi_range(-48, -46)
-		footstep_audio_player.pitch_scale = randf_range(.85, .95)
-		footstep_animation_player.speed_scale = 0.8
-	elif walking_sub_movement_mode == WalkingSubMovementMode.SPRINTING:
-		footstep_audio_player.volume_db = randi_range(-32, -30)
-		footstep_audio_player.pitch_scale = randf_range(1.1, 1.15)
-		footstep_animation_player.speed_scale = 1.2
-	footstep_audio_player.play()
-	last_foostep_stream_index = footstep_index
-
 func respawn():
-	#self.health = health_max
-	#self.is_alive = true
-	#hud.visible = true
-	#dead_hud.visible = false
-	#heart_beat_audio.stop()
 	fade_from_black(1.0)
-	
-	#if is_multiplayer_authority():
-		#first_person.visible = true
-	#else:
-		#third_person.visible = true
 
 var black_screen_tween: Tween = null
 func fade_from_black(duration: float):
@@ -706,28 +580,10 @@ func _on_quit_button_pressed() -> void:
 	GameInstance.quit()
 
 func debug_imgui_handle_player_window(_delta: float) -> void:
-	ImGui.Begin("Player-%s" % [str(name)])
+	ImGui.Begin("Player-%s" % [ GameInstance.networking.get_multiplayer_id() ])
 	ImGui.Text("mp_auth: %s" % [ str(get_multiplayer_authority()) ])
 	ImGui.Text("equipment_mode: %s" % [ EquipmentMode_str(equipment_mode) ])
 	ImGui.Text("knocked_back: %s" % [ str(knocked_back) ])
-	ImGui.End()
-	pass
-
-func debug_imgui_handle_3rd_person_animation_window(_delta: float) -> void:
-	# TODO: only render if debug flag set
-	ImGui.Begin("PlayerTPAnim-%s" % [str(name)])
-	ImGui.Text("Locomotion:")
-	ImGui.Text("walk_blend: %s" % [str(third_person_animation_tree.get("parameters/LocomotionStateMachine/WalkBlendSpace2D/blend_position"))])
-	ImGui.Text("jump: %s" % [str(third_person_animation_tree.get("parameters/LocomotionStateMachine/conditions/jump"))])
-	ImGui.Text("crouch: %s" % [str(third_person_animation_tree.get("parameters/LocomotionStateMachine/conditions/crouched"))])
-	ImGui.Text("UpperBody:")
-	ImGui.Text("upper_blend: %s" % [str(third_person_animation_tree.get("parameters/UpperBlend2/blend_amount"))])
-	ImGui.Text("equip_none: %s" % [str(third_person_animation_tree.get("parameters/UpperBodyStateMachine/conditions/equip_none"))])
-	ImGui.Text("equip_fists: %s" % [str(third_person_animation_tree.get("parameters/UpperBodyStateMachine/conditions/equip_fists"))])
-	ImGui.Text("equip_fishing_pole: %s" % [str(third_person_animation_tree.get("parameters/UpperBodyStateMachine/conditions/equip_fishing_pole"))])
-	# TODO: estimated packet loss?
-	# TODO: estimated download/receive byte count
-	# TODO: estimated 
 	ImGui.End()
 
 var players_in_punch_hitbox: Array[Player] = []

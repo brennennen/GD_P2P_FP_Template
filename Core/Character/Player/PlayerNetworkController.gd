@@ -4,10 +4,16 @@ class_name PlayerNetworkController
 
 @onready var player: Player = $".."
 
+@onready var owning_multiplayer_id: int = 0
+
+var last_sent_location: Vector3
+var last_sent_rotation_degrees_y: float
+var last_sent_rotation_degrees_x: float
+var last_sent_velocity: Vector3
+var last_sent_movement_status_bitmap: int
 
 
 func _ready() -> void:
-	
 	pass
 
 ## The locally controlled player (controlled by the local game instance) is ready
@@ -116,3 +122,35 @@ func remote_pawn_physics_process(_delta):
 	# TODO: how to set falling blend position?
 	# third_person_animation_tree["parameters/LocomotionStateMachine/FallingBlendSpace2D/blend_position"] = ???
 	player.last_global_position = player.global_position
+
+var send_move_data_ticks: int = 0
+var sent_one_extra_no_move_data_packet: bool = false
+func send_move_data():
+	var inputs1 = build_inputs1()
+	var movement_states_bitmap = build_movement_states_bitmap()
+	if global_position == last_sent_location \
+			and global_rotation_degrees.y == last_sent_rotation_degrees_y \
+			and global_rotation_degrees.x == last_sent_rotation_degrees_x \
+			and player.velocity == last_sent_velocity \
+			and movement_states_bitmap == last_sent_movement_status_bitmap \
+			and sent_one_extra_no_move_data_packet == true:
+		# player hasn't moved, don't waste the bandwidth
+		return
+
+	if global_position != last_sent_location:
+		sent_one_extra_no_move_data_packet = false
+
+	if sent_one_extra_no_move_data_packet == false and global_position == last_sent_location:
+		#print("sent sent_one_extra_no_move_data_packet")
+		sent_one_extra_no_move_data_packet = true
+		#inputs1 = inputs1 & 0x11110000 # zero out movement (forward/back/left/right) bits
+		inputs1 = 0
+
+	GameInstance.networking.client_networking.client_send_player_movement(name.to_int(),
+		player.global_position, player.global_rotation_degrees.y, player.camera.global_rotation_degrees.x,
+		inputs1, movement_states_bitmap)
+	#Logger.info("global_position: %v" % [ global_position ])
+	last_sent_location = global_position
+	last_sent_rotation_degrees_y = global_rotation_degrees.y
+	last_sent_velocity = player.velocity
+	last_sent_movement_status_bitmap = movement_states_bitmap

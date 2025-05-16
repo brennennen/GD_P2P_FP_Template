@@ -214,7 +214,6 @@ func get_multiplayer_id() -> String:
 	# for editor builds, always use the run index
 	if OS.has_feature("editor"):
 		return str(in_editor_lobby.get_multiplayer_id())
-
 	if GameInstance.network.multiplayer_mode == Networking.MultiplayerMode.IN_EDITOR:
 		return str(in_editor_lobby.get_multiplayer_id())
 	else:

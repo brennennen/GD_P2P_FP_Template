@@ -418,7 +418,7 @@ func on_receive_ping_response(_from_peer_id: int, packet: PackedByteArray):
 	])
 	client_latency_ms = int(ping_delta / 2.0) # round trip ping, not the most accurate, but good enough for now
 	client_latency_history[client_latency_history_index] = client_latency_ms
-	client_latency_history_index = client_latency_history_index + 1 % 99
+	client_latency_history_index = (client_latency_history_index + 1) % 99
 
 func client_send_player_movement(peer_id: int, position: Vector3, rotation_degrees_y: float, camera_rotation_degrees_x: float, inputs1: int, movement_states_bitmap: int):
 	var packet: PackedByteArray = [ Networking.NetworkMessageId.CLIENT_SEND_PLAYER_MOVEMENT, 

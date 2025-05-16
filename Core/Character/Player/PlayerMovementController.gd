@@ -2,6 +2,9 @@ extends Node3D
 
 class_name PlayerMovementController
 
+enum MovementMode { UNKNOWN, WALKING, FALLING, SWIMMING, DEBUG_FLY, SPECTATE }
+enum WalkingSubMovementMode { NONE, CROUCHING, SPRINTING }
+
 @onready var player = $".."
 
 @export_category("Movement")
@@ -18,8 +21,36 @@ var jump_velocity: float = 0.0
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 
 
+var movement_mode: MovementMode = MovementMode.WALKING
+var walking_sub_movement_mode: WalkingSubMovementMode = WalkingSubMovementMode.NONE
+
 func _ready() -> void:
 	jump_velocity = sqrt(jump_height * gravity * 2)
+
+func determine_movement_mode(_delta, last_movement_mode) -> MovementMode:
+	var new_movement_mode = last_movement_mode
+	if player.is_on_floor():
+		if last_movement_mode == MovementMode.FALLING:
+			movement_mode_transition_falling_to_walking()
+		new_movement_mode = MovementMode.WALKING
+		walking_sub_movement_mode = determine_walking_sub_movement_mode()
+	else:
+		if new_movement_mode == MovementMode.WALKING:
+			new_movement_mode = MovementMode.FALLING
+	return new_movement_mode
+
+func determine_walking_sub_movement_mode() -> WalkingSubMovementMode:
+	if player.is_crouching:
+		return WalkingSubMovementMode.CROUCHING
+	elif player.is_sprinting:
+		return WalkingSubMovementMode.SPRINTING
+	return WalkingSubMovementMode.NONE
+
+func movement_mode_transition_falling_to_walking():
+	# TODO: turn off jump animation
+	#third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/on_ground", is_on_floor())
+	#third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/jump", false)
+	player.play_footstep_audio()
 
 func get_movement_speed() -> float:
 	var movement_speed = walk_speed
