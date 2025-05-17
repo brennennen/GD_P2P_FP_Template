@@ -54,7 +54,7 @@ func _ready() -> void:
 		$DebugLogTimer.start()
 	Logger.set_multiplayer_id(networking.get_multiplayer_id())
 	fps_history.resize(60 * 10) # assume 60 fps for 10 seconds
-	
+
 	initialize_game_mode()
 	get_tree().set_multiplayer_poll_enabled(false)
 
@@ -151,7 +151,6 @@ func debug_position_all_instance_windows():
 	window.size = new_window_size
 
 	if launch_arguments.has("server0"):
-		print("server0: setting window.position to 0,0")
 		window.title = "server0"
 		window.position = Vector2(0, 30)
 	elif launch_arguments.has("client1"):

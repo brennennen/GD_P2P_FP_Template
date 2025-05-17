@@ -2,7 +2,7 @@ extends Node
 
 class_name GameMode
 
-enum GameModeType { DEFAULT, HORROR }
+enum GameModeType { DEFAULT, HUB, RACE, LAST_MAN_STANDING }
 
 var game_mode_type: GameModeType
 var players: Node
@@ -69,7 +69,22 @@ func get_spawn_point() -> SpawnPoint:
 			return spawn_point
 	return spawn_points.get_children().pick_random() # if all spawn points are occupied, pick a random one
 
+# TODO: create a spawn queue? respawning adds players to the spawn queue, only spawn 1 player per physics tick?
+
+
+func handle_player_death(player: Player):
+	Logger.info("handle_player_death: %s" % [ player.name ])
+	match(game_mode_type):
+		GameModeType.LAST_MAN_STANDING:
+			player.die()
+			# TODO: start spectate mode after x seconds...
+		_:
+			player.die()
+			# TODO: respawn after x seconds...
+			respawn_player(player)
+
 func respawn_player(player: Player):
+	Logger.info("respawn_player: %s" % [ player.name ])
 	if is_instance_valid(spawn_points) and spawn_points.get_children().size() > 0:
 		var spawn_point = get_spawn_point()
 		player.global_position = spawn_point.global_position

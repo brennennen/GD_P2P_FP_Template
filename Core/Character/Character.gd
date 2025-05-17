@@ -35,12 +35,12 @@ var ground_material = "default"
 var last_foostep_stream_index = -1
 var footstep_streams = {
 	"default": [
-		preload("res://Assets/Audio/Foley/Footsteps/LightStep01.wav"),
-		preload("res://Assets/Audio/Foley/Footsteps/LightStep02.wav"),
-		preload("res://Assets/Audio/Foley/Footsteps/LightStep03.wav"),
-		preload("res://Assets/Audio/Foley/Footsteps/LightStep04.wav"),
-		preload("res://Assets/Audio/Foley/Footsteps/LightStep05.wav"),
-		preload("res://Assets/Audio/Foley/Footsteps/LightStep06.wav"),
+		preload("res://Assets/Audio/Foley/Footsteps/step1.mp3"),
+		preload("res://Assets/Audio/Foley/Footsteps/step2.mp3"),
+		preload("res://Assets/Audio/Foley/Footsteps/step3.mp3"),
+		preload("res://Assets/Audio/Foley/Footsteps/step4.mp3"),
+		preload("res://Assets/Audio/Foley/Footsteps/step5.mp3"),
+		preload("res://Assets/Audio/Foley/Footsteps/step6.mp3"),
 	]
 	# TODO: more materials: metal/plastic/??? maybe make an enum?
 }
@@ -59,11 +59,6 @@ var raycast_debug_draw_layer: int = 0x01
 
 func _ready():
 	GameInstance.debug_run_current_scene(self)
-
-#func _process(delta: float) -> void:
-	#if !visible:
-		#return
-	#pass
 
 ## Simple raycast helper function that should really be built into godot...
 func raycast(start: Vector3, end: Vector3) -> Dictionary:

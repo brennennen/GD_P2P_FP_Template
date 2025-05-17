@@ -52,6 +52,7 @@ static func EquipmentMode_str(_equipment_mode: EquipmentMode):
 @onready var first_person = $CameraPivot/FirstPerson
 @onready var debug_label_3d = $DebugLabel3D
 @onready var network_controller: PlayerNetworkController = $NetworkController
+@onready var alive: bool = true
 
 # Data Members
 # # Status
@@ -162,8 +163,6 @@ func notify_peer_their_player_is_spawned(spawned_peer_id):
 
 @rpc("any_peer", "call_local", "reliable")
 func change_equipment_mode(new_equipment_mode: EquipmentMode):
-	# TOOD: consider move to using expressions or just calling travel instead of conditions?
-
 	match new_equipment_mode:
 		EquipmentMode.NONE:
 			third_person_animation_tree.set("parameters/UpperBodyStateMachine/conditions/equip_none", true)
@@ -196,6 +195,13 @@ func set_stamina(new_stamina: float) -> void:
 	if stamina <= 25.0:
 		# TODO: lerp into a heavy breathing sound for a bit
 		pass
+
+@rpc("any_peer", "call_local", "reliable")
+func die():
+	# TODO: hide all visuals, still allow rotating camera? spectating? etc?
+	velocity = Vector3(0.0, 0.0, 0.0)
+	third_person.hide()
+	alive = false
 
 func is_menu_open() -> bool:
 	if pause_menu.visible == true: # or options menu, or interactable menu, etc.
@@ -432,8 +438,9 @@ func _physics_process(delta):
 	if knocked_back:
 		#velocity += Vector3(0.0, 1.0, 0.0)
 		var dir = (global_position - knocked_back_source_position).normalized()
+		# TODO: just get XZ direction and apply a fixed Y/UP force when punched?
 		velocity += (dir * knocked_back_force)
-		velocity += Vector3(0.0, 1.0, 0.0) # add some up
+		velocity += Vector3(0.0, 5.0, 0.0) # add some up
 		knocked_back = false
 
 	velocity.y -= gravity * delta
@@ -513,7 +520,8 @@ func _on_animation_player_animation_started(anim_name):
 func start_jump():
 	Logger.info("%s:start_jump" % [name])
 	velocity.y = jump_velocity
-	third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/jump", true)
+	#third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/jump", true)
+	third_person.jump_third_person_visuals()
 	play_footstep_audio()
 
 func end_jump():

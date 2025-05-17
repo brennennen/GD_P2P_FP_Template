@@ -6,7 +6,7 @@ extends Level
 
 @onready var kill_box = $KillBoxArea3D
 @onready var start_timer_label_3d = $StartTimerLabel3D
-@onready var pre_start_timer = $GamePreStartTime
+@onready var pre_start_timer = $GamePreStartTimer
 @onready var start_timer = $GameStartTimer
 @onready var first_cross_end_timer = $FirstCrossEndTimer
 

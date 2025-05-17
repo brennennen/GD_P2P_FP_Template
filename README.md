@@ -14,7 +14,6 @@ A peer-to-peer first-person template for creating games in godot.
 * fix issues around initial spawning with running animation and teleporting to 0,0,0 visually
 * imgui: add count of sent messages? received messages? packet loss? sent bytes? received bytes?
 * remove and re-spawn player pawns when loading new scenes? or just move them?
-* locking player movement for non-server peers is not working
 * fade to black when changing levels?
 * fix issues around simulated proxies
 * allow multiplayer mode editor to also listen on a part like direct connect hosting 

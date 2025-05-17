@@ -15,7 +15,7 @@ var start_timer_time: float = 10.0
 
 func _ready() -> void:
 	super()
-	GameInstance.initialize_level(name, scene_file_path, GameMode.GameModeType.DEFAULT, player_spawn_points, default_level_camera)
+	GameInstance.initialize_level(name, scene_file_path, GameMode.GameModeType.LAST_MAN_STANDING, player_spawn_points, default_level_camera)
 	pre_start_timer.connect("timeout", _on_pre_start_timer_timeout)
 	start_timer.connect("timeout", _on_start_timer_timeout)
 	if GameInstance.networking.is_server():
@@ -64,7 +64,9 @@ func _on_kill_box_area_3d_body_entered(body: Node3D) -> void:
 			Logger.info("player: %s entered killbox" % [str(player.name)])
 			# TODO: do not respawn player, instead move dead player to 0,0,0 and start "spectate" mode?
 			# TODO: trigger checking for game end state
-			player.server_teleport_player.rpc(Vector3(0.0, 0.0, 0.0))
+			#player.server_teleport_player.rpc(Vector3(0.0, 0.0, 0.0))
+			#GameInstance.game_mode.respawn_player(player)
+			GameInstance.game_mode.handle_player_death(player)
 
 func debug_imgui_last_man_window(_delta: float) -> void:
 	ImGui.Begin("LastMan")
