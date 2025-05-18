@@ -69,7 +69,6 @@ script = ExtResource("1_8gnua")
 player_spawn_points = NodePath("SpawnPoints")
 default_level_camera = NodePath("DefaultLevelCamera")
 end_race_return_scene_path = "res://Maps/HUBLevel/HUBLevel.tscn"
-color = Color(0.65, 0.696667, 1, 1)
 
 [node name="SpawnPoints" type="Node3D" parent="."]
 

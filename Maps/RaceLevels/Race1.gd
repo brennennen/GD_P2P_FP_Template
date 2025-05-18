@@ -50,6 +50,7 @@ func _on_pre_start_timer_timeout() -> void:
 
 func _on_start_timer_timeout() -> void:
 	Logger.info("Start timer timeout! race starting!")
+	
 	if GameInstance.networking.is_server():
 		for player in GameInstance.get_players():
 			player.unlock_movement.rpc()
@@ -64,6 +65,8 @@ func start_race() -> void:
 	start_timer.stop()
 	pre_start_timer.stop()
 	start_timer_label_3d.text = "GO!"
+	Logger.warn("test warn log!")
+	Logger.error("test error log!")
 
 func _on_finish_area_3d_body_entered(body: Node3D) -> void:
 	if GameInstance.networking.is_server():

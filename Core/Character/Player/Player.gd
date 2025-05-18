@@ -79,6 +79,8 @@ var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 var interpolate_networked_movement: bool = true
 var network_movement_interpolation_rate: float = 0.5
 var network_target_position: Vector3
+var server_last_valid_target_position: Vector3
+var server_last_valid_on_ground_target_position: Vector3
 var network_target_rotation_degrees_y: float
 var network_target_rotation_degrees_x: float
 var network_inputs1: int
@@ -455,7 +457,7 @@ func _physics_process(delta):
 	elif movement_controller.movement_mode == PlayerMovementController.MovementMode.DEBUG_FLY:
 		movement_controller.debug_flying_physics(delta, move_speed)
 	if !GameInstance.networking.is_server() and is_multiplayer_authority():
-		network_controller.send_move_data()
+		network_controller.client_send_move_data()
 
 var last_player_basis: Basis
 var last_mouse_rotation: Vector3
@@ -518,7 +520,7 @@ func _on_animation_player_animation_started(anim_name):
 
 @rpc("any_peer", "call_local", "reliable")
 func start_jump():
-	Logger.info("%s:start_jump" % [name])
+	#Logger.info("%s:start_jump" % [name])
 	velocity.y = jump_velocity
 	#third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/jump", true)
 	third_person.jump_third_person_visuals()

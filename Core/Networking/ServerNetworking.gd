@@ -166,12 +166,44 @@ func on_receive_client_player_movement(from_peer_id: int, packet: PackedByteArra
 	var rot_x_degrees = (rot_x_mapped * (360.0 / 256)) - 180
 	var inputs1 = packet.decode_u8(19)
 	var movement_status_bitmap = packet.decode_u8(20)
-	var player = networking.get_player(from_peer_id)
-	player.network_target_position = new_position
-	player.network_target_rotation_degrees_y = rot_y_degrees
-	player.network_target_rotation_degrees_x = rot_x_degrees
-	player.network_inputs1 = inputs1
-	player.network_movement_status_bitmap = movement_status_bitmap
+	
+	# TODO: simulate movement based on inputs?
+	
+	# TODO: don't allow movement through solid objects
+	var player: Player = networking.get_player(from_peer_id)
+	
+	# todo check collisions? if there is a collision with a wall? then move em back to last_valid_target_position
+	# TODO: is this subtraction correct? order or operands correct? 
+	var motion = new_position - player.server_last_valid_target_position
+	# TODO: simulate the move on a physics tick? also move all this to PlayerNetworking class
+	var collision: KinematicCollision3D = player.move_and_collide(motion, true)
+	if collision:
+		# TODO: maybe only make this "ground level" distance (no vertical distance).
+		var distance = player.server_last_valid_target_position.distance_to(new_position)
+		#Logger.info("Server detected collision for player: %s, dist: %f" % [player.name, distance])
+		if distance > 0.25:
+			Logger.info("Server detected collision for player and distance out of tolerance: %s, dist: %f" % [player.name, distance])
+			# TODO: rate limit?
+			# send message to move player back to last valid target position if they are out of tolerance (reconciliation)
+			#server_send_client_player_movement_reconciliation(from_peer_id, player.server_last_valid_target_position)
+			server_send_client_player_movement_reconciliation(from_peer_id, player.server_last_valid_on_ground_target_position)
+			player.server_last_valid_target_position = player.server_last_valid_on_ground_target_position
+			# TODO: add a count of reconciliation events and do special stuff if the player is stuck or something weird
+	else:
+		# Only allow server pawn to move if they are not colliding.
+		
+		# TODO: have both server_last_valid_target_position and server_last_valid_on_ground_target_position
+		# try and use server_last_valid_target_position first, then fall back to on_ground version if it fails?
+		player.server_last_valid_target_position = player.network_target_position # TODO: only set this when the player is on the ground
+		if (player.network_movement_status_bitmap & player.network_controller.MOVEMENT_STATES_ON_GROUND_MASK) == 1:
+			#Logger.info("player: %s last on ground, updating server_last_valid_on_ground_target_position: %v" % [ str(from_peer_id), player.network_target_position ])
+			player.server_last_valid_on_ground_target_position = player.network_target_position
+		player.network_target_position = new_position
+		player.network_target_rotation_degrees_y = rot_y_degrees
+		player.network_target_rotation_degrees_x = rot_x_degrees
+		player.network_inputs1 = inputs1
+		player.network_movement_status_bitmap = movement_status_bitmap
+	
 
 func on_receive_ping(from_peer_id: int, packet: PackedByteArray):
 	var ping_send_time = packet.decode_s32(1)
@@ -231,7 +263,6 @@ func server_broadcast_all_player_movement():
 			# Player hasn't moved, save the bandwidth
 			break
 		else:
-			pass
 			packet.resize(offset + 13)
 			packet.encode_s32(offset, networking.player_list[i].get_multiplayer_authority())
 			server_broadcast_player_movement(networking.player_list[i].get_multiplayer_authority())
@@ -281,8 +312,42 @@ func server_broadcast_player_movement(peer_id: int):
 	#])
 	networking.send_bytes(packet, 0, MultiplayerPeer.TRANSFER_MODE_UNRELIABLE_ORDERED, 0)
 
+func server_send_client_player_movement_reconciliation(peer_id: int, last_valid_position: Vector3) -> void:
+	# SERVER_SEND_CLIENT_PLAYER_MOVEMENT_RECONCILIATION
+	var packet: PackedByteArray = [ networking.NetworkMessageId.SERVER_SEND_CLIENT_PLAYER_MOVEMENT_RECONCILIATION, 
+		0x00, 0x00, 0x00, 0x00, # peer id (TODO: sync indicies and just send 1 byte player index)
+		0x00, 0x00, 0x00, 0x00, # pos.x
+		0x00, 0x00, 0x00, 0x00, # pos.y
+		0x00, 0x00, 0x00, 0x00, # pos.z
+		0x00, # rot.y
+		0x00, # rot.x
+		#0x00, 0x00, 0x00, 0x00, # velocity
+		#0x00, 0x00, 0x00, 0x00, # input.x
+		#0x00, 0x00, 0x00, 0x00, # input.y
+		0x00, # inputs1
+		0x00 # movement status bitmap
+	]
+	var peer_index = networking.get_player_index(peer_id)
+	if peer_index == null:
+		return
+
+	packet.encode_s32(1, peer_id)
+	packet.encode_float(5, last_valid_position.x)
+	packet.encode_float(9, last_valid_position.y)
+	packet.encode_float(13, last_valid_position.z)
+	# 1 byte y rotation: starting rot_y range: -180 - 180, add 180 to change range to 0 - 360, then multiply by 256/360 to squish range to: 0 - 255
+	var rot_y_mapped: int = int((networking.player_list[peer_index].global_rotation_degrees.y + 180) * (256.0 / 360))
+	packet.encode_u8(17, rot_y_mapped)
+	# 1 byte x rotation: starting rot_x range: -180 - 180, add 180 to change range to 0 - 360, then multiply by 256/360 to squish range to: 0 - 255
+	# TODO: get camera x rotation
+	var rot_x_mapped: int = int((networking.player_list[peer_index].camera.global_rotation_degrees.x + 180) * (256.0 / 360))
+	packet.encode_u8(18, rot_x_mapped)
+	packet.encode_u8(19, networking.player_list[peer_index].network_controller.build_inputs1())
+	packet.encode_u8(20, networking.player_list[peer_index].network_controller.build_movement_states_bitmap())
+	Logger.info("sending: %s, peer: %d" % [ Networking.NetworkMessageId_str(packet[0]), peer_id ])
+	networking.send_bytes(packet, peer_id, MultiplayerPeer.TRANSFER_MODE_RELIABLE, 0) # send reliably
+
 func reset_server_networking() -> void:
-	
 	pass
 
 func debug_log() -> void:

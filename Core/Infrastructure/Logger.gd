@@ -35,7 +35,7 @@ func _ready() -> void:
 
 func set_multiplayer_id(new_id: String) -> void:
 	multiplayer_id = new_id
-	init_log_color()
+	set_default_log_color()
 
 func set_logs_folder(folder : String) -> void:
 	log_folder = folder
@@ -63,10 +63,10 @@ func error(message: String) -> void:
 	log_message(message, Severity.ERROR)
 
 var log_color: Color = Color.WHITE_SMOKE
-func init_log_color() -> void:
+func set_default_log_color() -> void:
 	if multiplayer_id == "1":
 		log_color = Color.WHITE_SMOKE
-	else:
+	else:  
 		var multiplayer_id_int := hash(multiplayer_id)
 		log_color.s = 0.20
 		log_color.v = 1.0
@@ -75,15 +75,16 @@ func init_log_color() -> void:
 
 func log_message(message : String, severity : Severity) -> void:
 	if (minimum_severity <= severity):
-		# TODO: figure out how to add the function name?
-		var datetime_string = Time.get_datetime_string_from_system(true)
+		var time_string = Time.get_time_string_from_system(false)
 		var formatted_message : String = "%s|%s|%s|%s" % \
-			[ datetime_string, get_severity_name(severity), multiplayer_id, message ]
+			[ time_string, get_severity_name(severity), multiplayer_id, message ]
 		match severity:
 			Severity.WARN:
-				print_rich("[color=yellow]" + formatted_message + "[/color]")
+				print_rich("[color=%s]%s|%s|%s|[/color][color=yellow]%s[/color]" % \
+					[ log_color.to_html(), time_string, get_severity_name(severity), multiplayer_id, message ])
 			Severity.ERROR:
-				print_rich("[color=red]" + formatted_message + "[/color]")
+				print_rich("[color=%s]%s|%s|%s|[/color][color=red]%s[/color]" % \
+					[ log_color.to_html(), time_string, get_severity_name(severity), multiplayer_id, message ])
 			_:
 				print_rich("[color=%s]" % [log_color.to_html()] + formatted_message + "[/color]")
 		write_to_file(formatted_message)
@@ -92,7 +93,7 @@ func print_log_message(message : String) -> void:
 	print(message)
 
 func write_to_file(message : String) -> void:
-	# Don't write logs for production yet, TODO: figure out how to rotate smartly
+	# Don't write logs for production yet, TODO: figure out how to rotate smartly before tackling this
 	if !OS.has_feature("editor"):
 		return
 
@@ -100,5 +101,5 @@ func write_to_file(message : String) -> void:
 		create_log_file()
 	if current_log_file != null: # create_log_file() doesn't work with linux file system for some reason
 		current_log_file.store_string(message + "\n")
-		current_log_file.flush()
+		current_log_file.flush() # TODO: consider not flushing every log for performance considerations
 		# TODO: log file rolling!

@@ -3,9 +3,16 @@ extends Level
 @export var player_spawn_points: Node3D
 @export var default_level_camera: Camera3D
 
+
 func _ready() -> void:
 	super()
 	GameInstance.initialize_level(name, scene_file_path, GameMode.GameModeType.DEFAULT, player_spawn_points, default_level_camera)
+	
+	# Delete a box on client's to easily test de-sync issues (client walks through box, "predicting"
+	# the server will allow it). When the server sees the movement, it sees a box in the way and
+	# snaps/rubber bands the player back if outside of some distance tolerance.
+	if !GameInstance.networking.is_server():
+		$World/ServerSideOnlyBox.queue_free()
 
 func _process(delta) -> void:
 	debug_imgui_hub_level_window(delta)

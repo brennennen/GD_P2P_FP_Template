@@ -13,8 +13,6 @@ var last_sent_velocity: Vector3
 var last_sent_movement_status_bitmap: int
 
 
-func _ready() -> void:
-	pass
 
 ## The locally controlled player (controlled by the local game instance) is ready
 func authoritative_player_ready():
@@ -127,7 +125,7 @@ func remote_pawn_physics_process(_delta):
 
 var send_move_data_ticks: int = 0
 var sent_one_extra_no_move_data_packet: bool = false
-func send_move_data():
+func client_send_move_data():
 	var inputs1 = build_inputs1()
 	var movement_states_bitmap = build_movement_states_bitmap()
 	if global_position == last_sent_location \
@@ -156,3 +154,7 @@ func send_move_data():
 	last_sent_rotation_degrees_y = global_rotation_degrees.y
 	last_sent_velocity = player.velocity
 	last_sent_movement_status_bitmap = movement_states_bitmap
+
+func client_handle_server_movement_reconciliation(server_position: Vector3):
+	player.position = server_position
+	pass
