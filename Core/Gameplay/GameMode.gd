@@ -58,7 +58,7 @@ func spawn_player(peer_id) -> Player:
 	player.set_owner(get_tree().get_edited_scene_root())
 	player.set_spawn_rotation(spawn_point_rotation)
 	player.global_position = spawn_point_global_position
-	player.network_target_position = spawn_point_global_position
+	player.network_controller.network_target_position = spawn_point_global_position
 	return player
 
 func get_spawn_point() -> SpawnPoint:
@@ -88,7 +88,7 @@ func respawn_player(player: Player):
 	if is_instance_valid(spawn_points) and spawn_points.get_children().size() > 0:
 		var spawn_point = get_spawn_point()
 		player.global_position = spawn_point.global_position
-		player.network_target_position = spawn_point.global_position
+		player.network_controller.network_target_position = spawn_point.global_position
 		player.respawn()
 	else:
 		Logger.error("%s:respawn_player: NO VALID SPAWN POINTS!" % [name])

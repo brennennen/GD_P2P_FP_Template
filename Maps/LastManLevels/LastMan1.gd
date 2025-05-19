@@ -72,5 +72,4 @@ func debug_imgui_last_man_window(_delta: float) -> void:
 	ImGui.Begin("LastMan")
 	ImGui.Text("pre_start_timer: %f" % pre_start_timer.time_left)
 	ImGui.Text("start_timer: %f" % start_timer.time_left)
-	#ImGui.Text("first_cross_end_timer: %f" % first_cross_end_timer.time_left)
 	ImGui.End()

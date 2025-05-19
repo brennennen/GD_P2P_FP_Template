@@ -50,7 +50,6 @@ static func EquipmentMode_str(_equipment_mode: EquipmentMode):
 @onready var third_person = $ThirdPerson
 @onready var third_person_animation_tree: AnimationTree = $ThirdPerson/ThirdPersonAnimationTree
 @onready var first_person = $CameraPivot/FirstPerson
-@onready var debug_label_3d = $DebugLabel3D
 @onready var network_controller: PlayerNetworkController = $NetworkController
 @onready var alive: bool = true
 
@@ -76,15 +75,6 @@ var jump_velocity: float = 0.0
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 
 # # Networking
-var interpolate_networked_movement: bool = true
-var network_movement_interpolation_rate: float = 0.5
-var network_target_position: Vector3
-var server_last_valid_target_position: Vector3
-var server_last_valid_on_ground_target_position: Vector3
-var network_target_rotation_degrees_y: float
-var network_target_rotation_degrees_x: float
-var network_inputs1: int
-var network_movement_status_bitmap: int
 var delay_physics: bool = true
 var physics_delay_running_delta: float = 0.0
 var physics_delay_time: float = 3.0
@@ -107,26 +97,11 @@ func _ready():
 	 # hide any menus that might have been left visible
 	pause_menu.visible = false
 	jump_velocity = sqrt(jump_height * gravity * 2)
-	# Needs to interpolate/reach the target by the next sync packet (received every network tick)
-	network_movement_interpolation_rate = (1.0 / Engine.physics_ticks_per_second) / GameInstance.networking.network_tick_rate
-	network_movement_interpolation_rate *= 0.8 # still needs to be tinkered with emperically
 	stored_collision_layer = collision_layer
 	if is_multiplayer_authority():
 		authoritative_player_ready() # TODO rename this to something about "autonomouse proxy"
 	else:
 		peer_player_ready()
-	set_debug_label_3d()
-
-func set_debug_label_3d():
-	var net_auth_mode = "???"
-	if !is_multiplayer_authority():
-		if str(name).to_int() == 1:
-			net_auth_mode = "Authority"
-		elif GameInstance.networking.is_server():
-			net_auth_mode = "Autonomous"
-		else:
-			net_auth_mode = "Simulated"
-	debug_label_3d.text = "%s\n%s" % [ str(name).to_int(), net_auth_mode]
 
 ## The locally controlled player (controlled by the local game instance) is ready
 func authoritative_player_ready():

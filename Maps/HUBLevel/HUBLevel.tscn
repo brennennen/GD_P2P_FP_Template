@@ -4,16 +4,6 @@
 [ext_resource type="Script" uid="uid://wqb1mmmb8bln" path="res://Maps/HUBLevel/HUBLevel.gd" id="1_kb0kb"]
 [ext_resource type="PackedScene" uid="uid://b8lytvha5krpa" path="res://Core/Gameplay/LevelTeleporter.tscn" id="3_84xh2"]
 
-[sub_resource type="BoxMesh" id="BoxMesh_obda4"]
-size = Vector3(20, 0.5, 20)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kb0kb"]
-albedo_color = Color(0.099986, 0.099986, 0.099986, 1)
-roughness = 0.3
-
-[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_kb0kb"]
-data = PackedVector3Array(-10, 0.25, 10, 10, 0.25, 10, -10, -0.25, 10, 10, 0.25, 10, 10, -0.25, 10, -10, -0.25, 10, 10, 0.25, -10, -10, 0.25, -10, 10, -0.25, -10, -10, 0.25, -10, -10, -0.25, -10, 10, -0.25, -10, 10, 0.25, 10, 10, 0.25, -10, 10, -0.25, 10, 10, 0.25, -10, 10, -0.25, -10, 10, -0.25, 10, -10, 0.25, -10, -10, 0.25, 10, -10, -0.25, -10, -10, 0.25, 10, -10, -0.25, 10, -10, -0.25, -10, 10, 0.25, 10, -10, 0.25, 10, 10, 0.25, -10, -10, 0.25, 10, -10, 0.25, -10, 10, 0.25, -10, -10, -0.25, 10, 10, -0.25, 10, -10, -0.25, -10, 10, -0.25, 10, 10, -0.25, -10, -10, -0.25, -10)
-
 [sub_resource type="BoxShape3D" id="BoxShape3D_kb0kb"]
 size = Vector3(1000, 10, 1000)
 
@@ -72,20 +62,20 @@ size = Vector3(3, 3, 3)
 [sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_5txvh"]
 data = PackedVector3Array(-1.5, 1.5, 1.5, 1.5, 1.5, 1.5, -1.5, -1.5, 1.5, 1.5, 1.5, 1.5, 1.5, -1.5, 1.5, -1.5, -1.5, 1.5, 1.5, 1.5, -1.5, -1.5, 1.5, -1.5, 1.5, -1.5, -1.5, -1.5, 1.5, -1.5, -1.5, -1.5, -1.5, 1.5, -1.5, -1.5, 1.5, 1.5, 1.5, 1.5, 1.5, -1.5, 1.5, -1.5, 1.5, 1.5, 1.5, -1.5, 1.5, -1.5, -1.5, 1.5, -1.5, 1.5, -1.5, 1.5, -1.5, -1.5, 1.5, 1.5, -1.5, -1.5, -1.5, -1.5, 1.5, 1.5, -1.5, -1.5, 1.5, -1.5, -1.5, -1.5, 1.5, 1.5, 1.5, -1.5, 1.5, 1.5, 1.5, 1.5, -1.5, -1.5, 1.5, 1.5, -1.5, 1.5, -1.5, 1.5, 1.5, -1.5, -1.5, -1.5, 1.5, 1.5, -1.5, 1.5, -1.5, -1.5, -1.5, 1.5, -1.5, 1.5, 1.5, -1.5, -1.5, -1.5, -1.5, -1.5)
 
+[sub_resource type="BoxMesh" id="BoxMesh_obda4"]
+size = Vector3(20, 0.5, 20)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kb0kb"]
+albedo_color = Color(0.099986, 0.099986, 0.099986, 1)
+roughness = 0.3
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_kb0kb"]
+data = PackedVector3Array(-10, 0.25, 10, 10, 0.25, 10, -10, -0.25, 10, 10, 0.25, 10, 10, -0.25, 10, -10, -0.25, 10, 10, 0.25, -10, -10, 0.25, -10, 10, -0.25, -10, -10, 0.25, -10, -10, -0.25, -10, 10, -0.25, -10, 10, 0.25, 10, 10, 0.25, -10, 10, -0.25, 10, 10, 0.25, -10, 10, -0.25, -10, 10, -0.25, 10, -10, 0.25, -10, -10, 0.25, 10, -10, -0.25, -10, -10, 0.25, 10, -10, -0.25, 10, -10, -0.25, -10, 10, 0.25, 10, -10, 0.25, 10, 10, 0.25, -10, -10, 0.25, 10, -10, 0.25, -10, 10, 0.25, -10, -10, -0.25, 10, 10, -0.25, 10, -10, -0.25, -10, 10, -0.25, 10, 10, -0.25, -10, -10, -0.25, -10)
+
 [node name="HubLevel" type="Node3D" node_paths=PackedStringArray("player_spawn_points", "default_level_camera")]
 script = ExtResource("1_kb0kb")
 player_spawn_points = NodePath("SpawnPoints")
 default_level_camera = NodePath("DefaultLevelCamera")
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
-mesh = SubResource("BoxMesh_obda4")
-surface_material_override/0 = SubResource("StandardMaterial3D_kb0kb")
-
-[node name="StaticBody3D" type="StaticBody3D" parent="MeshInstance3D"]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshInstance3D/StaticBody3D"]
-shape = SubResource("ConcavePolygonShape3D_kb0kb")
 
 [node name="SpawnPoints" type="Node3D" parent="."]
 
@@ -111,10 +101,20 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -25, 0)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.3, 0)
 shape = SubResource("BoxShape3D_kb0kb")
 
-[node name="Label3D" type="Label3D" parent="."]
+[node name="SceneLabel3D" type="Label3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -10)
 text = "HUB Level"
 font_size = 128
+
+[node name="InstructionsLabel3D" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, -10)
+text = "* server/host picks level by stepping on level pads
+* WASD - move
+* mouse - camera
+* space - jump
+* 1/2/3 - equip hotbar item
+* left click - use equipped item
+* esc - pause"
 
 [node name="EnvironmentAndAtmosphere" type="Node3D" parent="."]
 
@@ -188,13 +188,31 @@ text = "Server side only box
 (should stop clients)
 (may cause rubber banding)"
 
-[node name="LevelTeleporter" parent="." instance=ExtResource("3_84xh2")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, -8)
+[node name="MeshInstance3D" type="MeshInstance3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
+mesh = SubResource("BoxMesh_obda4")
+skeleton = NodePath("../..")
+surface_material_override/0 = SubResource("StandardMaterial3D_kb0kb")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="World/MeshInstance3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="World/MeshInstance3D/StaticBody3D"]
+shape = SubResource("ConcavePolygonShape3D_kb0kb")
+
+[node name="Teleporters" type="Node3D" parent="."]
+
+[node name="LevelTeleporter3" parent="Teleporters" instance=ExtResource("3_84xh2")]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -8, 0, -4)
+visible = false
+label_name = "Race 2"
+
+[node name="Race1LevelTeleporter" parent="Teleporters" instance=ExtResource("3_84xh2")]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -8, 0, -6)
 label_name = "Race1"
 scene_path = "res://Maps/RaceLevels/Race1.tscn"
 
-[node name="LevelTeleporter2" parent="." instance=ExtResource("3_84xh2")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, -8)
+[node name="Sumo1LevelTeleporter" parent="Teleporters" instance=ExtResource("3_84xh2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, -8)
 label_name = "SUMO!"
 scene_path = "res://Maps/LastManLevels/LastMan1.tscn"
 

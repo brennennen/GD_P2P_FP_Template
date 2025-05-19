@@ -4,7 +4,7 @@ class_name PlayerNetworkController
 
 @onready var player: Player = $".."
 
-@onready var owning_multiplayer_id: int = 0
+@onready var debug_label_3d = $DebugLabel3D
 
 var last_sent_location: Vector3
 var last_sent_rotation_degrees_y: float
@@ -12,7 +12,34 @@ var last_sent_rotation_degrees_x: float
 var last_sent_velocity: Vector3
 var last_sent_movement_status_bitmap: int
 
+var interpolate_networked_movement: bool = true
+var network_movement_interpolation_rate: float = 0.5
 
+var network_target_position: Vector3
+var server_last_valid_target_position: Vector3
+var server_last_valid_on_ground_target_position: Vector3
+var network_target_rotation_degrees_y: float
+var network_target_rotation_degrees_x: float
+var network_inputs1: int
+var network_movement_status_bitmap: int
+
+
+func _ready() -> void:
+	# Needs to interpolate/reach the target by the next sync packet (received every network tick)
+	network_movement_interpolation_rate = (1.0 / Engine.physics_ticks_per_second) / GameInstance.networking.network_tick_rate
+	network_movement_interpolation_rate *= 0.8 # still needs to be tinkered with emperically
+	set_debug_label_3d()
+
+func set_debug_label_3d():
+	var net_auth_mode = "???"
+	if !is_multiplayer_authority():
+		if str(name).to_int() == 1:
+			net_auth_mode = "Authority"
+		elif GameInstance.networking.is_server():
+			net_auth_mode = "Autonomous"
+		else:
+			net_auth_mode = "Simulated"
+	debug_label_3d.text = "%s\n%s" % [ str(name).to_int(), net_auth_mode]
 
 ## The locally controlled player (controlled by the local game instance) is ready
 func authoritative_player_ready():
@@ -75,26 +102,27 @@ func build_movement_states_bitmap():
 func remote_pawn_physics_process(_delta):
 	if is_multiplayer_authority():
 		return
-	if player.global_position != player.network_target_position:
-		if player.interpolate_networked_movement:
-			player.global_position = lerp(player.global_position, player.network_target_position, player.network_movement_interpolation_rate)
+	if player.global_position != network_target_position:
+		if interpolate_networked_movement:
+			# TODO: don't lerp? slerp or bicubic interpolation? 
+			player.global_position = lerp(player.global_position, network_target_position, network_movement_interpolation_rate)
 		else:
-			player.global_position = player.network_target_position
-	if player.global_rotation_degrees.y != player.network_target_rotation_degrees_y:
-		player.global_rotation_degrees.y = player.network_target_rotation_degrees_y
-	if player.camera.global_rotation_degrees.x != player.network_target_rotation_degrees_x:
-		player.camera.global_rotation_degrees.x = player.network_target_rotation_degrees_x
+			player.global_position = network_target_position
+	if player.global_rotation_degrees.y != network_target_rotation_degrees_y:
+		player.global_rotation_degrees.y = network_target_rotation_degrees_y
+	if player.camera.global_rotation_degrees.x != network_target_rotation_degrees_x:
+		player.camera.global_rotation_degrees.x = network_target_rotation_degrees_x
 
-	var forward = player.network_inputs1 & INPUTS1_FORWARD_MASK
-	var back =  player.network_inputs1 & INPUTS1_BACK_MASK
-	var right = player.network_inputs1 & INPUTS1_RIGHT_MASK
-	var left = player.network_inputs1 & INPUTS1_LEFT_MASK
-	var sprint = true if (player.network_inputs1 & INPUTS1_SPRINT_MASK > 0) else false
-	var input_crouch = true if (player.network_inputs1 & INPUTS1_CROUCH_MASK > 0) else false
-	#var lean_right = player.network_inputs1 & INPUTS1_LEAN_RIGHT_MASK
-	#var lean_left = player.network_inputs1 & INPUTS1_LEAN_LEFT_MASK
+	var forward = network_inputs1 & INPUTS1_FORWARD_MASK
+	var back =  network_inputs1 & INPUTS1_BACK_MASK
+	var right = network_inputs1 & INPUTS1_RIGHT_MASK
+	var left = network_inputs1 & INPUTS1_LEFT_MASK
+	var sprint = true if (network_inputs1 & INPUTS1_SPRINT_MASK > 0) else false
+	var input_crouch = true if (network_inputs1 & INPUTS1_CROUCH_MASK > 0) else false
+	#var lean_right = network_inputs1 & INPUTS1_LEAN_RIGHT_MASK
+	#var lean_left = network_inputs1 & INPUTS1_LEAN_LEFT_MASK
 
-	var is_on_ground = true if (player.network_movement_status_bitmap & MOVEMENT_STATES_ON_GROUND_MASK > 0) else false
+	var is_on_ground = true if (network_movement_status_bitmap & MOVEMENT_STATES_ON_GROUND_MASK > 0) else false
 
 	var ground_locomotion_blend_position = Vector2(0.0, 0.0)
 	if forward:
@@ -154,6 +182,48 @@ func client_send_move_data():
 	last_sent_rotation_degrees_y = global_rotation_degrees.y
 	last_sent_velocity = player.velocity
 	last_sent_movement_status_bitmap = movement_states_bitmap
+
+## Server on receiving a client player movement packet
+## Whenever the server is notified a client's pawn moved, try and simulate that move on the server
+## to make sure the client is not clipping through geometry or fly/move speed hacking. Reconcile the
+## client's position if it is out of a tolerance of where the server thinks the player should be.
+func server_handle_client_pawn_movement(peer_id: int, new_position: Vector3, rot_y_degrees: float, rot_x_degrees: float, inputs1: int, movement_status_bitmap: int):
+	var motion = new_position - server_last_valid_target_position
+	# TODO: simulate the move on a physics tick? also move all this to PlayerNetworking class
+	var collision: KinematicCollision3D = player.move_and_collide(motion, true)
+	# TODO: only detect collision on geometry, not area3ds
+	# TODO: speed and fly hack checking
+	if collision:
+		Logger.info("server detected player collided: %s" % [ collision.get_collider() ])
+		# TODO: maybe only make this "ground level" distance (no vertical distance).
+		var distance = player.network_controller.server_last_valid_target_position.distance_to(new_position)
+		#Logger.info("Server detected collision for player: %s, dist: %f" % [player.name, distance])
+		if distance > 0.25:
+			Logger.info("Server detected collision for player and distance out of tolerance: %s, dist: %f" % [player.name, distance])
+			# TODO: rate limit?
+			# send message to move player back to last valid target position if they are out of tolerance (reconciliation)
+			#server_send_client_player_movement_reconciliation(from_peer_id, player.server_last_valid_target_position)
+			server_handle_client_pawn_movement_reconciliation(peer_id, player.server_last_valid_on_ground_target_position)
+			player.server_last_valid_target_position = player.server_last_valid_on_ground_target_position
+			# TODO: add a count of reconciliation events and do special stuff if the player is stuck or something weird
+	else:
+		# Only allow server pawn to move if they are not colliding.
+		
+		# TODO: have both server_last_valid_target_position and server_last_valid_on_ground_target_position
+		# try and use server_last_valid_target_position first, then fall back to on_ground version if it fails?
+		server_last_valid_target_position = network_target_position # TODO: only set this when the player is on the ground
+		if (network_movement_status_bitmap & MOVEMENT_STATES_ON_GROUND_MASK) == 1:
+			#Logger.info("player: %s last on ground, updating server_last_valid_on_ground_target_position: %v" % [ str(from_peer_id), network_target_position ])
+			server_last_valid_on_ground_target_position = network_target_position
+		network_target_position = new_position
+		network_target_rotation_degrees_y = rot_y_degrees
+		network_target_rotation_degrees_x = rot_x_degrees
+		network_inputs1 = inputs1
+		network_movement_status_bitmap = movement_status_bitmap
+
+func server_handle_client_pawn_movement_reconciliation(peer_id: int, last_valid_position: Vector3):
+	# TODO: rate limit, keep track of a counter, disconnect or kill/respawn pawn if too many reconciliations happen to fast (indicates being stuck somewhere?)
+	GameInstance.networking.server_networking.server_send_client_player_movement_reconciliation(peer_id, last_valid_position)
 
 func client_handle_server_movement_reconciliation(server_position: Vector3):
 	player.position = server_position

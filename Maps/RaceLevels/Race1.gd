@@ -20,7 +20,7 @@ var finish_line_first_cross: bool = false
 
 func _ready() -> void:
 	super()
-	GameInstance.initialize_level(name, scene_file_path, GameMode.GameModeType.DEFAULT, player_spawn_points, default_level_camera)
+	GameInstance.initialize_level(name, scene_file_path, GameMode.GameModeType.RACE, player_spawn_points, default_level_camera)
 	# TODO: connect local player to the level camera for x seconds during pre-start?
 	pre_start_timer.connect("timeout", _on_pre_start_timer_timeout)
 	start_timer.connect("timeout", _on_start_timer_timeout)
@@ -65,8 +65,6 @@ func start_race() -> void:
 	start_timer.stop()
 	pre_start_timer.stop()
 	start_timer_label_3d.text = "GO!"
-	Logger.warn("test warn log!")
-	Logger.error("test error log!")
 
 func _on_finish_area_3d_body_entered(body: Node3D) -> void:
 	if GameInstance.networking.is_server():
@@ -85,7 +83,9 @@ func _on_kill_box_area_3d_body_entered(body: Node3D) -> void:
 		if body is Player:
 			var player := body as Player
 			Logger.info("player: %s entered killbox" % [str(player.name)])
-			player.server_teleport_player.rpc(Vector3(0.0, 0.0, 0.0))
+			# TODO: game mode handle player death?
+			GameInstance.game_mode.handle_player_death(player)
+			#player.server_teleport_player.rpc(Vector3(0.0, 0.0, 0.0))
 
 func debug_imgui_race_window(_delta: float) -> void:
 	ImGui.Begin("Race")

@@ -134,7 +134,7 @@ func tick(delta: float) -> void:
 
 func process_peer_packet(from_peer_id: int, packet: PackedByteArray):
 	var message_id: int = packet[0]
-	Logger.info("Got message: %s from peer: %d" % [Networking.NetworkMessageId_str(message_id), from_peer_id])
+	Logger.debug("Got message: %s from peer: %d" % [Networking.NetworkMessageId_str(message_id), from_peer_id])
 	if message_id == Networking.NetworkMessageId.SERVER_INITIAL_GAME_STATE:
 		on_receive_initial_game_state(from_peer_id, packet)
 	elif message_id == Networking.NetworkMessageId.SERVER_INITIAL_LEVEL_STATE:
@@ -349,9 +349,9 @@ func client_add_peer_player(peer_id: int, position: Vector3, rot_y_degrees: floa
 	GameInstance.get_node("Players").add_child(player)
 	player.set_owner(get_tree().get_edited_scene_root())
 	player.global_position = position
-	player.network_target_position = position
+	player.network_controller.network_target_position = position
 	player.global_rotation_degrees = Vector3(0.0, rot_y_degrees, 0.0)
-	player.network_target_rotation_degrees_y = rot_y_degrees
+	player.network_controller.network_target_rotation_degrees_y = rot_y_degrees
 	return player
 
 func on_receive_server_tick(_from_peer_id: int, packet: PackedByteArray):
@@ -403,11 +403,11 @@ func on_recieve_player_movement(_from_peer_id: int, packet: PackedByteArray):
 	var movement_status_bitmap := packet.decode_u8(20)
 	var player: Player = networking.get_player(peer_id)
 	if player:
-		player.network_target_position = peer_position
-		player.network_target_rotation_degrees_y = rot_y_degrees
-		player.network_target_rotation_degrees_x = rot_x_degrees
-		player.network_inputs1 = input1
-		player.network_movement_status_bitmap = movement_status_bitmap
+		player.network_controller.network_target_position = peer_position
+		player.network_controller.network_target_rotation_degrees_y = rot_y_degrees
+		player.network_controller.network_target_rotation_degrees_x = rot_x_degrees
+		player.network_controller.network_inputs1 = input1
+		player.network_controller.network_movement_status_bitmap = movement_status_bitmap
 
 func on_receive_client_player_movement_reconciliation(_from_peer_id: int, packet: PackedByteArray):
 	var peer_id = packet.decode_s32(1)
@@ -415,14 +415,15 @@ func on_receive_client_player_movement_reconciliation(_from_peer_id: int, packet
 	var pos_y := packet.decode_float(9)
 	var pos_z := packet.decode_float(13)
 	var server_position := Vector3(pos_x, pos_y, pos_z)
-	var rot_y_mapped := packet.decode_u8(17)
-	var rot_y_degrees = (rot_y_mapped * (360.0 / 256)) - 180
-	var rot_x_mapped := packet.decode_u8(18)
-	var rot_x_degrees = (rot_x_mapped * (360.0 / 256)) - 180
-	var input1 := packet.decode_u8(19)
-	var movement_status_bitmap := packet.decode_u8(20)
+	#var rot_y_mapped := packet.decode_u8(17)
+	#var rot_y_degrees = (rot_y_mapped * (360.0 / 256)) - 180
+	#var rot_x_mapped := packet.decode_u8(18)
+	#var rot_x_degrees = (rot_x_mapped * (360.0 / 256)) - 180
+	#var input1 := packet.decode_u8(19)
+	#var movement_status_bitmap := packet.decode_u8(20)
 	var player: Player = networking.get_player(peer_id)
 	if player:
+		# TODO: incorporate rotation? velocity? inputs? movement status bitmap?
 		player.network_controller.client_handle_server_movement_reconciliation(server_position)
 	Logger.info("on_receive_client_player_movement_reconciliation")
 

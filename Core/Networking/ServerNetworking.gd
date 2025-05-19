@@ -167,50 +167,13 @@ func on_receive_client_player_movement(from_peer_id: int, packet: PackedByteArra
 	var inputs1 = packet.decode_u8(19)
 	var movement_status_bitmap = packet.decode_u8(20)
 	
-	# TODO: simulate movement based on inputs?
-	
-	# TODO: don't allow movement through solid objects
-	var player: Player = networking.get_player(from_peer_id)
-	
-	# todo check collisions? if there is a collision with a wall? then move em back to last_valid_target_position
-	# TODO: is this subtraction correct? order or operands correct? 
-	var motion = new_position - player.server_last_valid_target_position
-	# TODO: simulate the move on a physics tick? also move all this to PlayerNetworking class
-	var collision: KinematicCollision3D = player.move_and_collide(motion, true)
-	if collision:
-		# TODO: maybe only make this "ground level" distance (no vertical distance).
-		var distance = player.server_last_valid_target_position.distance_to(new_position)
-		#Logger.info("Server detected collision for player: %s, dist: %f" % [player.name, distance])
-		if distance > 0.25:
-			Logger.info("Server detected collision for player and distance out of tolerance: %s, dist: %f" % [player.name, distance])
-			# TODO: rate limit?
-			# send message to move player back to last valid target position if they are out of tolerance (reconciliation)
-			#server_send_client_player_movement_reconciliation(from_peer_id, player.server_last_valid_target_position)
-			server_send_client_player_movement_reconciliation(from_peer_id, player.server_last_valid_on_ground_target_position)
-			player.server_last_valid_target_position = player.server_last_valid_on_ground_target_position
-			# TODO: add a count of reconciliation events and do special stuff if the player is stuck or something weird
-	else:
-		# Only allow server pawn to move if they are not colliding.
-		
-		# TODO: have both server_last_valid_target_position and server_last_valid_on_ground_target_position
-		# try and use server_last_valid_target_position first, then fall back to on_ground version if it fails?
-		player.server_last_valid_target_position = player.network_target_position # TODO: only set this when the player is on the ground
-		if (player.network_movement_status_bitmap & player.network_controller.MOVEMENT_STATES_ON_GROUND_MASK) == 1:
-			#Logger.info("player: %s last on ground, updating server_last_valid_on_ground_target_position: %v" % [ str(from_peer_id), player.network_target_position ])
-			player.server_last_valid_on_ground_target_position = player.network_target_position
-		player.network_target_position = new_position
-		player.network_target_rotation_degrees_y = rot_y_degrees
-		player.network_target_rotation_degrees_x = rot_x_degrees
-		player.network_inputs1 = inputs1
-		player.network_movement_status_bitmap = movement_status_bitmap
-	
+	var player: Player = networking.get_player(from_peer_id) # TODO: validate from_peer_id == peer_id?
+	player.network_controller.server_handle_client_pawn_movement(from_peer_id, new_position, rot_y_degrees, rot_x_degrees, inputs1, movement_status_bitmap)
 
 func on_receive_ping(from_peer_id: int, packet: PackedByteArray):
 	var ping_send_time = packet.decode_s32(1)
-	
 	#var time_delta = Time.get_ticks_msec() - ping_send_time
 	# TODO: store time delta
-	
 	networking.send_ping_response(from_peer_id, ping_send_time)
 
 ## 
@@ -226,6 +189,7 @@ func server_synchronize_player_movement(delta: float) -> void:
 					and networking.player_list[i].global_rotation_degrees.x == networking.player_last_broadcast_rotation_degrees_x[i] \
 				):
 				# Player hasn't moved, save the bandwidth
+				# TODO: maybe send one movement packet every second? or one every 5 seconds?
 				continue
 			else:
 				server_broadcast_player_movement(networking.player_list[i].get_multiplayer_authority())
