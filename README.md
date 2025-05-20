@@ -11,12 +11,6 @@ A peer-to-peer first-person template for creating games in godot.
 
 
 ## TODO
-* fix issues around initial spawning with running animation and teleporting to 0,0,0 visually
-* imgui: add count of sent messages? received messages? packet loss? sent bytes? received bytes?
-* remove and re-spawn player pawns when loading new scenes? or just move them?
-* fade to black when changing levels?
-* fix issues around simulated proxies
-* allow multiplayer mode editor to also listen on a part like direct connect hosting 
-* add "start-falling" animation to blend the end of the jump into the falling animation
-* bug: snake people - fix: go out of boxing mode when crouching. upperbody blend is just for standing up?
-* todo: add fishing pole bones to rig and property to snap to hands
+* client respawning doesn't work
+* if client shoots projectile, it doesn't delete when it collides (but it does do pull logic...)
+* 

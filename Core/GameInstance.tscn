@@ -39,9 +39,11 @@ script = ExtResource("9_dqerq")
 
 [node name="Players" type="Node3D" parent="."]
 
+[node name="NPCs" type="Node3D" parent="."]
+
 [node name="Items" type="Node3D" parent="."]
 
-[node name="NPCs" type="Node3D" parent="."]
+[node name="Projectiles" type="Node3D" parent="."]
 
 [node name="DebugLogTimer" type="Timer" parent="."]
 

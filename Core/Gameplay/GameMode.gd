@@ -83,13 +83,15 @@ func handle_player_death(player: Player):
 			# TODO: respawn after x seconds...
 			respawn_player(player)
 
+#@rpc("authority", "call_local", "reliable")
 func respawn_player(player: Player):
 	Logger.info("respawn_player: %s" % [ player.name ])
 	if is_instance_valid(spawn_points) and spawn_points.get_children().size() > 0:
+		# TODO: if the game mode has teams, get specific spawn point for that team
 		var spawn_point = get_spawn_point()
-		player.global_position = spawn_point.global_position
-		player.network_controller.network_target_position = spawn_point.global_position
-		player.respawn()
+		#player.global_position = spawn_point.global_position
+		#player.network_controller.network_target_position = spawn_point.global_position
+		player.respawn.rpc(spawn_point.global_position + Vector3(0.0, 0.1, 0.0)) # spawn a bit above the point?
 	else:
 		Logger.error("%s:respawn_player: NO VALID SPAWN POINTS!" % [name])
 

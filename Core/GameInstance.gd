@@ -8,8 +8,9 @@ extends Node
 ## Flag to check if we are running a scene with a proper "initialize_level" call or not.
 var runnable_scene_is_initialized: bool = false
 @onready var players: Node = $Players
-@onready var items: Node = $Items
 @onready var npcs: Node = $NPCs
+@onready var items: Node = $Items
+@onready var projectiles: Node = $Projectiles
 
 ### Station/world save for the current run.
 #var station: Station

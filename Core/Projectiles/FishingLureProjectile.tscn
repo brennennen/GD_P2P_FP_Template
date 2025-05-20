@@ -1,0 +1,32 @@
+[gd_scene load_steps=5 format=3 uid="uid://bs7k3080q23wd"]
+
+[ext_resource type="Script" uid="uid://cvevw8lxuhvny" path="res://Core/Projectiles/FishingLureProjectile.gd" id="1_0n82c"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_0n82c"]
+radius = 0.125
+
+[sub_resource type="SphereMesh" id="SphereMesh_n76xg"]
+radius = 0.125
+height = 0.25
+radial_segments = 8
+rings = 4
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_po8al"]
+radius = 0.35
+
+[node name="FishingLureProjectile" type="RigidBody3D"]
+collision_layer = 0
+script = ExtResource("1_0n82c")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_0n82c")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("SphereMesh_n76xg")
+
+[node name="PlayerCollisionArea3D" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PlayerCollisionArea3D"]
+shape = SubResource("SphereShape3D_po8al")
+
+[connection signal="body_entered" from="PlayerCollisionArea3D" to="." method="_on_player_collision_area_3d_body_entered"]

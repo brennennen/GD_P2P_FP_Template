@@ -39,7 +39,7 @@ func set_debug_label_3d():
 			net_auth_mode = "Autonomous"
 		else:
 			net_auth_mode = "Simulated"
-	debug_label_3d.text = "%s\n%s" % [ str(name).to_int(), net_auth_mode]
+	debug_label_3d.text = "%s\n%s" % [ str(player.name).to_int(), net_auth_mode]
 
 ## The locally controlled player (controlled by the local game instance) is ready
 func authoritative_player_ready():
@@ -203,8 +203,8 @@ func server_handle_client_pawn_movement(peer_id: int, new_position: Vector3, rot
 			# TODO: rate limit?
 			# send message to move player back to last valid target position if they are out of tolerance (reconciliation)
 			#server_send_client_player_movement_reconciliation(from_peer_id, player.server_last_valid_target_position)
-			server_handle_client_pawn_movement_reconciliation(peer_id, player.server_last_valid_on_ground_target_position)
-			player.server_last_valid_target_position = player.server_last_valid_on_ground_target_position
+			server_handle_client_pawn_movement_reconciliation(peer_id, server_last_valid_on_ground_target_position)
+			server_last_valid_target_position = server_last_valid_on_ground_target_position
 			# TODO: add a count of reconciliation events and do special stuff if the player is stuck or something weird
 	else:
 		# Only allow server pawn to move if they are not colliding.

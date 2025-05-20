@@ -1,3 +1,4 @@
+
 extends Character
 
 class_name Player
@@ -28,6 +29,7 @@ static func EquipmentMode_str(_equipment_mode: EquipmentMode):
 # Nodes
 # # Camera
 @onready var camera_pivot: Node3D = $CameraPivot
+@onready var projectile_spawn: Node3D = $CameraPivot/PlayerCamera/ProjectileSpawn
 @onready var camera: Camera3D = $CameraPivot/PlayerCamera
 
 # # UI/HUD
@@ -271,7 +273,6 @@ func handle_gameplay_inputs(event):
 		return
 	if event.is_action_pressed("primary_action"):
 		primary_action()
-		pass
 	if event.is_action_pressed("hotbar_1"):
 		change_equipment_mode.rpc(EquipmentMode.NONE)
 	if event.is_action_pressed("hotbar_2"):
@@ -288,7 +289,7 @@ func set_spawn_rotation(new_rotation: Vector3):
 	mouse_rotation = Vector3(0.0, new_rotation.y, 0.0)
 
 func primary_action():
-	Logger.info("primary_action: %s" % [name])
+	#Logger.info("primary_action: %s" % [name])
 	primary_action_predictive() # perform visual feedback instantly if we predict the server will allow the input to make the client feel more responsive.
 	primary_action_server_request.rpc_id(1) # send the input request to the server.
 
@@ -303,20 +304,21 @@ func primary_action_predictive():
 		EquipmentMode.FISTS:
 			fists_punch_predictive()
 		EquipmentMode.FISHING_POLE:
-			pass
+			fishing_primary_action_predictive()
 		_:
 			pass
 	pass
 
 @rpc("any_peer", "call_local", "reliable")
 func primary_action_server_request():
-	Logger.info("primary_action_server_request: from: %s" % [name])
+	#Logger.info("primary_action_server_request: from: %s" % [name])
 	match equipment_mode:
 		EquipmentMode.NONE:
 			pass
 		EquipmentMode.FISTS:
 			fists_punch_server_request()
 		EquipmentMode.FISHING_POLE:
+			fishing_primary_action_server_request()
 			pass
 		_:
 			pass
@@ -325,6 +327,10 @@ func primary_action_server_request():
 func fists_punch_predictive():
 	# TODO: play first person punch animation!
 	# TODO: maybe start the "hit" animation for the player in the hitbox?
+	pass
+
+func fishing_primary_action_predictive():
+	# TODO: play fishing first person panimations!
 	pass
 
 func fists_punch_server_request():
@@ -341,19 +347,76 @@ func fists_punch_third_person_visuals():
 	third_person_animation_tree.set("parameters/UpperBodyStateMachine/conditions/punch", true)
 	var upper_body_state_machine_playback = third_person_animation_tree.get("parameters/UpperBodyStateMachine/playback") as AnimationNodeStateMachinePlayback
 	upper_body_state_machine_playback.travel("boxing-punch-right")
-	pass
 
-var knocked_back: bool = false
-var knocked_back_source_position: Vector3 = Vector3(0.0, 0.0, 0.0)
-var knocked_back_force: float = 0.0
+#var knocked_back: bool = false
+#var knocked_back_source_position: Vector3 = Vector3(0.0, 0.0, 0.0)
+#var knocked_back_force: float = 0.0
+
+var handle_hit_next_physics_frame: bool = false
+var hit_source_position: Vector3 = Vector3(0.0, 0.0, 0.0)
+var hit_force: float = 0.0
+
+enum HitType { MELEE, YOINK }
+var hit_type: HitType = HitType.MELEE
 
 @rpc("any_peer", "call_local", "reliable")
 func receive_punch(puncher_position: Vector3):
 	Logger.info("receive_punch: me: %s" % [name])
-	knocked_back = true
-	knocked_back_source_position = puncher_position
-	knocked_back_force = 25.0 # todo send this?
+	#knocked_back = true
+	#knocked_back_source_position = puncher_position
+	#knocked_back_force = 25.0 # todo send this?
+	handle_hit_next_physics_frame = true
+	hit_source_position = puncher_position
+	hit_type = HitType.MELEE
+	hit_force = 10.0
 	set_health(health - 10)
+
+@rpc("any_peer", "call_local", "reliable")
+func fishing_primary_action_third_person_visuals():
+	third_person_animation_tree.set("parameters/UpperBodyStateMachine/conditions/punch", true)
+	var upper_body_state_machine_playback = third_person_animation_tree.get("parameters/UpperBodyStateMachine/playback") as AnimationNodeStateMachinePlayback
+	upper_body_state_machine_playback.travel("boxing-punch-right")
+
+func fishing_primary_action_server_request():
+	#Logger.info("fishing_primary_action_server_request");
+	# TODO: spawn fishing lure projectile
+	spawn_fishing_lure_projectile.rpc()
+	# TODO: go to "fishing-idle" if we hit water, go to "carrying-fishing-pole-idle" if we didn't, 
+	# TODO: go to "fishing-yoink" if we hit a "yoinkable" (another player or physics objects), go to grapple-hook swing if we hit a static object and are not on the ground?
+	fishing_cast_third_person_visuals.rpc()
+
+var last_fishing_lure_projectile: FishingLureProjectile
+var fishing_lure_projectile: FishingLureProjectile
+
+@rpc("any_peer", "call_local", "reliable")
+func spawn_fishing_lure_projectile():
+	if fishing_lure_projectile != null:
+		# fishing lure already in flight, don't allow spawning another one until the last one expires
+		last_fishing_lure_projectile = fishing_lure_projectile
+		fishing_lure_projectile = null
+		last_fishing_lure_projectile.queue_free()
+	fishing_lure_projectile = preload("res://Core/Projectiles/FishingLureProjectile.tscn").instantiate() as FishingLureProjectile
+	GameInstance.projectiles.add_child(fishing_lure_projectile)
+	fishing_lure_projectile.global_position = projectile_spawn.global_position
+	fishing_lure_projectile.rotation = rotation
+	fishing_lure_projectile.start_direction = -projectile_spawn.global_transform.basis.z
+	fishing_lure_projectile.start_force = 20.0 # TODO: add more force if left click held?
+	fishing_lure_projectile.owning_player = self
+	fishing_lure_projectile.launch()
+
+@rpc("any_peer", "call_local", "reliable")
+func fishing_cast_third_person_visuals():
+	third_person_animation_tree.set("parameters/UpperBodyStateMachine/conditions/punch", true)
+	var upper_body_state_machine_playback = third_person_animation_tree.get("parameters/UpperBodyStateMachine/playback") as AnimationNodeStateMachinePlayback
+	upper_body_state_machine_playback.travel("cast-fishing-pole")
+
+@rpc("any_peer", "call_local", "reliable")
+func receive_fishing_lure_yoink(yoinker_position: Vector3):
+	Logger.info("receive_fishing_lure_yoink: me: %s" % [name])
+	handle_hit_next_physics_frame = true
+	hit_source_position = yoinker_position
+	hit_type = HitType.YOINK
+	hit_force = 10.0
 
 func _process(delta) -> void:
 	debug_imgui_handle_player_window(delta)
@@ -410,15 +473,10 @@ func _physics_process(delta):
 			# TODO: add delay before regen
 			if stamina < 100.0:
 				set_stamina(stamina + 0.25)
-
-	# TODO: handle punch knockback here?
-	if knocked_back:
-		#velocity += Vector3(0.0, 1.0, 0.0)
-		var dir = (global_position - knocked_back_source_position).normalized()
-		# TODO: just get XZ direction and apply a fixed Y/UP force when punched?
-		velocity += (dir * knocked_back_force)
-		velocity += Vector3(0.0, 5.0, 0.0) # add some up
-		knocked_back = false
+				
+	if handle_hit_next_physics_frame:
+		physics_process_handle_hit()
+		handle_hit_next_physics_frame = false
 
 	velocity.y -= gravity * delta
 	var move_speed = movement_controller.get_movement_speed()
@@ -433,6 +491,19 @@ func _physics_process(delta):
 		movement_controller.debug_flying_physics(delta, move_speed)
 	if !GameInstance.networking.is_server() and is_multiplayer_authority():
 		network_controller.client_send_move_data()
+
+func physics_process_handle_hit():
+	match(hit_type):
+		HitType.MELEE:
+			var dir = hit_source_position.direction_to(global_position)
+			velocity += (Vector3(dir.x, 0.0, dir.y) * hit_force)
+			velocity += Vector3(0.0, 5.0, 0.0) # add some up force for flavor
+		HitType.YOINK:
+			var dir = global_position.direction_to(hit_source_position)
+			velocity += (Vector3(dir.x, 0.0, dir.y) * hit_force)
+			velocity += Vector3(0.0, 5.0, 0.0) # add some up force for flavor
+		_:
+			pass
 
 var last_player_basis: Basis
 var last_mouse_rotation: Vector3
@@ -471,7 +542,10 @@ func update_camera(delta):
 				camera_pivot.rotation.z = lerp_angle(camera_pivot.rotation.z, deg_to_rad(0), 0.01)
 
 func ground_movement_physics(delta, move_speed):
-	if !is_paused:
+	if is_paused:
+		velocity.x = move_toward(velocity.x, 0, move_speed)
+		velocity.z = move_toward(velocity.z, 0, move_speed)
+	else:
 		var input_dir = Input.get_vector("move_left", "move_right", "move_forward", "move_backward")
 		last_input_dir = input_dir
 		var direction = (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
@@ -531,8 +605,14 @@ func toggle_debug_fly() -> void:
 func server_teleport_player(new_position: Vector3):
 	global_position = new_position
 
-func respawn():
+@rpc("any_peer", "call_local", "reliable")
+func respawn(respawn_position: Vector3):
+	Logger.info("respawn() player: %s, pos: %v" % [ name, respawn_position ])
 	fade_from_black(1.0)
+	global_position = respawn_position
+	# TODO: make a simple "reset_networking" or something that resets these to global_position
+	network_controller.server_last_valid_target_position = respawn_position
+	network_controller.server_last_valid_on_ground_target_position = respawn_position
 
 var black_screen_tween: Tween = null
 func fade_from_black(duration: float):
@@ -567,8 +647,10 @@ func _on_quit_button_pressed() -> void:
 func debug_imgui_handle_player_window(_delta: float) -> void:
 	ImGui.Begin("Player-%s" % [ GameInstance.networking.get_multiplayer_id() ])
 	ImGui.Text("mp_auth: %s" % [ str(get_multiplayer_authority()) ])
+	ImGui.Text("pos: %v" % [ global_position ])
+	ImGui.Text("rot: %f" % [ rotation_degrees.y ])
 	ImGui.Text("equipment_mode: %s" % [ EquipmentMode_str(equipment_mode) ])
-	ImGui.Text("knocked_back: %s" % [ str(knocked_back) ])
+	ImGui.Text("hit: %s" % [ str(handle_hit_next_physics_frame) ])
 	ImGui.End()
 
 var players_in_punch_hitbox: Array[Player] = []
