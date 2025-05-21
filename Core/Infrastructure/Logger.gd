@@ -24,8 +24,6 @@ var log_folder: String = "res://Logs"
 var user_data_log_folder: String = "user://Logs"
 var multiplayer_id: String = "?"
 
-
-
 # #####################
 # Functions
 # #####################

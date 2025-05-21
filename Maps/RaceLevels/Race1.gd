@@ -29,7 +29,8 @@ func _ready() -> void:
 	if GameInstance.networking.is_server():
 		for player in GameInstance.get_players():
 			GameInstance.game_mode.respawn_player(player)
-			player.server_lock_movement.rpc()
+			#player.server_lock_movement.rpc()
+			player.server_lock_movement.rpc_id(int(player.name))
 
 @rpc("any_peer", "call_local", "reliable")
 func start_race_timer() -> void:
@@ -53,7 +54,8 @@ func _on_start_timer_timeout() -> void:
 	
 	if GameInstance.networking.is_server():
 		for player in GameInstance.get_players():
-			player.unlock_movement.rpc()
+			player.unlock_movement.rpc_id(int(player.name))
+			#player.unlock_movement.rpc()
 	start_race.rpc()
 
 func _on_first_cross_end_timer_timeout() -> void:

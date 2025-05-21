@@ -32,7 +32,7 @@ var initial_synchronization = {
 	"wait_tick_ms_per_retry": 5000,
 	ClientSyncState.NONE: {
 		"name": "NONE",
-		"send_message_callback": debug_log,
+		"send_message_callback": client_debug_log,
 		"start_time_ms": 0,
 		"last_message_sent_time_ms": 0,
 		"retries": 0,
@@ -72,7 +72,7 @@ var initial_synchronization = {
 	},
 	ClientSyncState.SYNCED: {
 		"name": "SYNCED",
-		"send_message_callback": debug_log,
+		"send_message_callback": client_debug_log,
 		"start_time_ms": 0,
 		"last_message_sent_time_ms": 0,
 		"retries": 0,
@@ -83,19 +83,25 @@ var initial_synchronization = {
 var client_tick: int = 0
 var out_of_sync_tolerance: int = 5
 var client_latency_ms: int = 0
+var client_latency_history_size: int = 10
 var client_latency_history: Array[int] = []
 var client_latency_history_index: int = 0
 
 var client_ping_running_delta: float = 5.0
 var client_process_running_delta: float = 0.0
 
-func _ready() -> void:
-	client_latency_history.resize(100)
+var server_peer_id_list: Array[int] = []
 
-func debug_imgui_append_client_networking_debug_window(_delta: float): 
-	ImGui.Text("client_id: %s" % [ networking.get_multiplayer_id() ]);
-	ImGui.Text("latency: %d" % [ client_latency_ms ]);
-	ImGui.PlotLines("latency", client_latency_history, 100);
+func _ready() -> void:
+	client_latency_history_size = 50
+	client_latency_history.resize(client_latency_history_size)
+
+func debug_imgui_append_client_networking_debug_window(_delta: float):
+	ImGui.Text("client_id: %s (%d)" % [ networking.get_multiplayer_id(), multiplayer.get_unique_id() ]);
+	ImGui.Text("latency: %d ms" % [ client_latency_ms ]);
+	ImGui.PlotLines("latency", client_latency_history, client_latency_history_size);
+	ImGui.Text("server_peer_id_list: %s" % [ JSON.stringify(server_peer_id_list) ]);
+	ImGui.Text("init_sync_state: %s" % [ ClientSyncState_str(initial_synchronization["current_state"]) ]);
 	# TODO: estimated packet loss?
 
 func initialize(p_networking: Networking):
@@ -111,7 +117,7 @@ func on_peer_disconnected(peer_id):
 func on_client_connected_to_server():
 	Logger.info("on_client_connected_to_server")
 	if networking.multiplayer_mode == Networking.MultiplayerMode.IN_EDITOR:
-		await get_tree().create_timer(5.0).timeout
+		await get_tree().create_timer(1.0).timeout
 		client_start_sync_process()
 	else:
 		client_start_sync_process()
@@ -132,33 +138,35 @@ func tick(delta: float) -> void:
 	else:
 		periodic_ping(delta)
 
-func process_peer_packet(from_peer_id: int, packet: PackedByteArray):
+func client_process_peer_packet(from_peer_id: int, packet: PackedByteArray):
 	var message_id: int = packet[0]
-	Logger.debug("Got message: %s from peer: %d" % [Networking.NetworkMessageId_str(message_id), from_peer_id])
-	if message_id == Networking.NetworkMessageId.SERVER_INITIAL_GAME_STATE:
-		on_receive_initial_game_state(from_peer_id, packet)
-	elif message_id == Networking.NetworkMessageId.SERVER_INITIAL_LEVEL_STATE:
-		on_receive_initial_scene_state(from_peer_id, packet)
-	elif message_id == Networking.NetworkMessageId.SERVER_ACKNOWLEDGE_PLAYER_PAWN_DATA:
-		on_receive_server_acknowledge_player_pawn_data(from_peer_id, packet)
-	elif message_id == Networking.NetworkMessageId.PEER_INITIAL_STATE:
-		on_receive_player_initial_state(from_peer_id, packet)
-	elif message_id == networking.NetworkMessageId.SERVER_BROADCAST_TICK:
-		on_receive_server_tick(from_peer_id, packet)
-	elif message_id == Networking.NetworkMessageId.SERVER_BROADCAST_PLAYER_ID_LIST:
-		on_recieve_player_id_list(from_peer_id, packet)
-	elif message_id == Networking.NetworkMessageId.SERVER_BROADCAST_PLAYER_MOVEMENT:
-		on_recieve_player_movement(from_peer_id, packet)
-	elif message_id == Networking.NetworkMessageId.SERVER_SEND_CLIENT_PLAYER_MOVEMENT_RECONCILIATION:
-		on_receive_client_player_movement_reconciliation(from_peer_id, packet)
-		pass
-		
-	elif message_id == Networking.NetworkMessageId.PING_RESPONSE:
-		on_receive_ping_response(from_peer_id, packet)
+	#Logger.info("Got message: %s from peer: %d" % [Networking.NetworkMessageId_str(message_id), from_peer_id])
+	match message_id:
+		Networking.NetworkMessageId.SERVER_INITIAL_GAME_STATE:
+			on_receive_initial_game_state(from_peer_id, packet)
+		Networking.NetworkMessageId.SERVER_INITIAL_LEVEL_STATE:
+			on_receive_initial_level_state(from_peer_id, packet)
+		Networking.NetworkMessageId.SERVER_ACKNOWLEDGE_PLAYER_PAWN_DATA:
+			on_receive_server_acknowledge_player_pawn_data(from_peer_id, packet)
+		Networking.NetworkMessageId.PEER_INITIAL_STATE:
+			on_receive_player_initial_state(from_peer_id, packet)
+		Networking.NetworkMessageId.SERVER_BROADCAST_TICK:
+			on_receive_server_tick(from_peer_id, packet)
+		Networking.NetworkMessageId.SERVER_BROADCAST_PEER_IDS:
+			on_recieve_peer_ids(from_peer_id, packet)
+		Networking.NetworkMessageId.SERVER_BROADCAST_PLAYER_MOVEMENT:
+			on_recieve_player_movement(from_peer_id, packet)
+		Networking.NetworkMessageId.SERVER_SEND_CLIENT_PLAYER_MOVEMENT_RECONCILIATION:
+			on_receive_client_player_movement_reconciliation(from_peer_id, packet)
+		Networking.NetworkMessageId.PING_RESPONSE:
+			on_receive_ping_response(from_peer_id, packet)
+		_:
+			Logger.warn("client_process_peer_packet: received unknown message! from: %d, message_id: %d" % [ from_peer_id, message_id ])
 
 func client_sync_change_next_state():
 	var current_state: ClientSyncState = initial_synchronization["current_state"]
 	var new_state = initial_synchronization[current_state]["next_state"]
+	Logger.info("client_sync_change_next_state: state: %s, new_state: %s" % [ClientSyncState_str(current_state), ClientSyncState_str(new_state)])
 	initial_synchronization["current_state"] = new_state
 
 func client_start_sync_process():
@@ -174,6 +182,7 @@ func client_manage_initial_synchronization() -> void:
 	if current_state == ClientSyncState.NONE:
 		return
 	if initial_synchronization[current_state]["start_time_ms"] == 0:
+		Logger.info("client_manage_initial_synchronization: state: %s, calling: %s " % [ ClientSyncState_str(current_state), initial_synchronization[current_state]["send_message_callback"] ])
 		initial_synchronization[current_state]["send_message_callback"].call()
 		initial_synchronization[current_state]["start_time_ms"] = Time.get_ticks_msec()
 		initial_synchronization[current_state]["last_message_sent_time_ms"]  = Time.get_ticks_msec()
@@ -181,16 +190,18 @@ func client_manage_initial_synchronization() -> void:
 		if Time.get_ticks_msec() - initial_synchronization[current_state]["last_message_sent_time_ms"] > initial_synchronization["wait_tick_ms_per_retry"]:
 			initial_synchronization[current_state]["retries"] += 1
 			if initial_synchronization[current_state]["retries"] > initial_synchronization["max_retries"]:
-				Logger.error("Failed to sync %s %d times, giving up and returning to lobby" % [ 
-					initial_synchronization[current_state]["name"], initial_synchronization["max_retries"] 
+				Logger.error("Failed to sync %s %d times, giving up and returning to lobby" % [
+					initial_synchronization[current_state]["name"], initial_synchronization["max_retries"]
 				])
 				initial_synchronization["current_state"] = ClientSyncState.NONE
 				GameInstance.go_to_main_menu_with_error("Failed to synchronize with host...")
 			else:
+				Logger.info("client_manage_initial_synchronization: (retry) state: %s, calling: %s " % [ ClientSyncState_str(current_state), initial_synchronization[current_state]["send_message_callback"] ])
 				initial_synchronization[current_state]["send_message_callback"].call()
 				initial_synchronization[current_state]["last_message_sent_time_ms"]  = Time.get_ticks_msec()
 	if current_state == ClientSyncState.SYNCED:
 		done_initial_synchronization = true
+		client_debug_log()
 
 func periodic_ping(delta):
 	#print("periodic_ping: %f" % [ client_ping_running_delta ])
@@ -221,8 +232,9 @@ func send_request_initial_level_state():
 	networking.send_bytes(packet_bytes, 1, MultiplayerPeer.TRANSFER_MODE_RELIABLE, 0)
 
 func send_all_request_player_initial_state():
-	for player_id in networking.player_id_list:
-		send_request_player_initial_state(player_id)
+	Logger.info("send_all_request_player_initial_state: %s" % [JSON.stringify(server_peer_id_list)])
+	for peer_id in server_peer_id_list:
+		send_request_player_initial_state(peer_id)
 
 ## Send a request to the server for a specific player peer's initial state.
 ## @param player_peer_id	Peer id to request the initial player state for.
@@ -230,8 +242,8 @@ func send_request_player_initial_state(player_peer_id: int) -> void:
 	Logger.info("sending: %s, data: peer_id_to_request: %d" % [
 		Networking.NetworkMessageId_str(Networking.NetworkMessageId.REQUEST_PEER_INITIAL_STATE), player_peer_id
 	])
-	var packet_bytes: PackedByteArray = [ Networking.NetworkMessageId.REQUEST_PEER_INITIAL_STATE, 
-		0x00, 0x00, 0x00, 0x00 
+	var packet_bytes: PackedByteArray = [ Networking.NetworkMessageId.REQUEST_PEER_INITIAL_STATE,
+		0x00, 0x00, 0x00, 0x00
 	]
 	packet_bytes.encode_s32(1, player_peer_id)
 	networking.send_bytes(packet_bytes, 1, MultiplayerPeer.TRANSFER_MODE_RELIABLE, 0)
@@ -254,25 +266,22 @@ func on_receive_initial_game_state(from_peer_id: int, packet: PackedByteArray):
 	var scene_path_string_bytes = packet.slice(offset, offset + scene_path_string_length)
 	offset += scene_path_string_length
 	var scene_path_string = scene_path_string_bytes.get_string_from_utf8()
-	var player_id_list_count = packet.decode_u8(offset)
+	var peer_count = packet.decode_u8(offset)
 	offset += 1
-	networking.player_id_list = []
-	for i in range(0, player_id_list_count):
-		var player_id = packet.decode_s32(offset)
+	server_peer_id_list.clear()
+	for i in range(0, peer_count):
+		var peer_id = packet.decode_s32(offset)
 		offset += 4
-		networking.player_id_list.append(player_id)
-		var new_peer = PeerMetadata.new()
-		new_peer.peer_id = player_id
-		networking.peer_list.append(new_peer)
+		server_peer_id_list.append(peer_id)
 	Logger.info("received: %s, data: server_scene: %s, player_count: %d, peer_list: %s" % [
-		Networking.NetworkMessageId_str(message_id), scene_path_string, player_id_list_count,
-		JSON.stringify(networking.peer_list)
+		Networking.NetworkMessageId_str(message_id), scene_path_string, peer_count,
+		JSON.stringify(server_peer_id_list)
 	])
 	if initial_synchronization["current_state"] == ClientSyncState.SYNCING_START:
 		GameInstance.load_and_change_scene(scene_path_string)
 		client_sync_change_next_state()
 
-func on_receive_initial_scene_state(from_peer_id: int, _packet: PackedByteArray):
+func on_receive_initial_level_state(from_peer_id: int, _packet: PackedByteArray):
 	if from_peer_id != 1:
 		Logger.error("Received %s message from client %d (expected server!)" % [
 			Networking.NetworkMessageId_str(Networking.NetworkMessageId.SERVER_INITIAL_LEVEL_STATE), from_peer_id
@@ -289,16 +298,18 @@ func on_receive_initial_scene_state(from_peer_id: int, _packet: PackedByteArray)
 		client_sync_change_next_state()
 
 func on_receive_server_acknowledge_player_pawn_data(_from_peer_id: int, packet: PackedByteArray):
+	# SERVER_ACKNOWLEDGE_PLAYER_PAWN_DATA
 	var offset = 0
-	#var message_id = packet.decode_u8(offset)
+	var packet_id = packet.decode_u8(offset)
 	offset += 1
-	var player_id_list_count = packet.decode_u8(offset)
+	var peer_ids_count = packet.decode_u8(offset)
 	offset += 1
-	networking.player_id_list = []
-	for i in range(0, player_id_list_count):
-		var player_id = packet.decode_s32(offset)
+	server_peer_id_list = []
+	for i in range(0, peer_ids_count):
+		var peer_id = packet.decode_s32(offset)
 		offset += 4
-		networking.player_id_list.append(player_id)
+		server_peer_id_list.append(peer_id)
+	Logger.info("received: %s, data: server_peer_id_list: %s" % [ Networking.NetworkMessageId_str(packet_id), JSON.stringify(server_peer_id_list) ])
 	if initial_synchronization["current_state"] == ClientSyncState.SYNCING_MY_PAWN:
 		client_sync_change_next_state()
 
@@ -307,6 +318,7 @@ func on_receive_server_acknowledge_player_pawn_data(_from_peer_id: int, packet: 
 ## @param from_peer_id 	Should always be server id.
 ## @param packet 		Message containing an individual players initial state.
 func on_receive_player_initial_state(_from_peer_id: int, packet: PackedByteArray):
+	# PEER_INITIAL_STATE
 	var packet_id = packet.decode_u8(0)
 	var peer_id = packet.decode_s32(1)
 	#var peer_index = packet.decode_u8(5)
@@ -316,11 +328,11 @@ func on_receive_player_initial_state(_from_peer_id: int, packet: PackedByteArray
 	var peer_position: Vector3 = Vector3(pos_x, pos_y, pos_z)
 	var rot_y_mapped = packet.decode_u8(18)
 	var rot_y_degrees = (rot_y_mapped * (360.0 / 256)) - 180
-	var color_packed = packet.decode_s32(19)
-	var color: Color = Color(color_packed)
+	#var color_packed = packet.decode_s32(19)
+	#var color: Color = Color(color_packed)
 
-	Logger.info("received: %s, data: peer_id: %d, pos: %v, rot.y: %f" % [ 
-		Networking.NetworkMessageId_str(packet_id), peer_id, peer_position, rot_y_degrees 
+	Logger.info("received: %s, data: peer_id: %d, pos: %v, rot.y: %f" % [
+		Networking.NetworkMessageId_str(packet_id), peer_id, peer_position, rot_y_degrees
 	])
 
 	if networking.player_pawn_exists(peer_id):
@@ -328,16 +340,25 @@ func on_receive_player_initial_state(_from_peer_id: int, packet: PackedByteArray
 		return
 
 	#print("RECEIVED COLOR: %d %s" % [color_packed, JSON.stringify(color)])
-	networking.player_pawn_data[peer_id] = {}
-	networking.player_pawn_data[peer_id]["color"] = color
+	#networking.player_pawn_data[peer_id] = {}
+	#networking.player_pawn_data[peer_id]["color"] = color
 	#var color: Color = networking.player_pawn_data[peer_id]["color"]
 	#response_packet.encode_s32(22, color.to_rgba32())
 
-	var player = client_add_peer_player(peer_id, peer_position, rot_y_degrees)
-	networking.player_list.append(player)
-	
+	#var player = client_add_peer_player(peer_id, peer_position, rot_y_degrees)
+	#networking.player_list.append(player)
+	if !networking.peers.has(peer_id):
+		networking.peers[peer_id] = PeerMetadata.new()
+		networking.peers[peer_id].peer_id = peer_id
+	networking.peers[peer_id].player = client_add_peer_player(peer_id, peer_position, rot_y_degrees)
+
 	if initial_synchronization["current_state"] == ClientSyncState.SYNCING_PEERS:
-		if networking.player_id_list.size() == networking.player_list.size():
+		Logger.info("on_receive_player_initial_state: peers: %s" % [ JSON.stringify(networking.peers.keys()) ])
+		var done_syncing_peers = true
+		for server_peer_id in server_peer_id_list:
+			if !networking.peers.has(server_peer_id):
+				done_syncing_peers = false
+		if done_syncing_peers:
 			client_sync_change_next_state()
 
 func client_add_peer_player(peer_id: int, position: Vector3, rot_y_degrees: float) -> Player:
@@ -366,24 +387,25 @@ func on_receive_server_tick(_from_peer_id: int, packet: PackedByteArray):
 		networking.network_tick = server_tick
 		Logger.info("CLIENT CORRECTION: net_tick_delta: %d" % net_tick_delta)
 
-func on_recieve_player_id_list(_from_peer_id: int, packet: PackedByteArray):
-	# networking.NetworkMessageId.SERVER_BROADCAST_PLAYER_ID_LIST
+func on_recieve_peer_ids(_from_peer_id: int, packet: PackedByteArray):
+	# networking.NetworkMessageId.SERVER_BROADCAST_PEER_IDS
 	var offset = 0
 	var message_id = packet.decode_u8(offset)
 	offset += 1
 	var player_id_list_count = packet.decode_u8(offset)
 	offset += 1
-	var new_player_id_list = []
+	var new_peer_id_list: Array[int] = []
 	for i in range(0, player_id_list_count):
 		var player_id = packet.decode_s32(offset)
 		offset += 4
-		new_player_id_list.append(player_id)
-	Logger.info("received: %s, new_player_id_list: %s" % [
-		Networking.NetworkMessageId_str(message_id), JSON.stringify(new_player_id_list)
+		new_peer_id_list.append(player_id)
+	Logger.info("received: %s, new_peer_id_list: %s" % [
+		Networking.NetworkMessageId_str(message_id), JSON.stringify(new_peer_id_list)
 	])
-	for peer_id in new_player_id_list:
-		# TODO: use peer_list here instead
-		if !networking.player_id_list.has(peer_id):
+	if initial_synchronization["current_state"] == ClientSyncState.SYNCED:
+		server_peer_id_list = new_peer_id_list
+	for peer_id in new_peer_id_list:
+		if !networking.peers.has(peer_id):
 			send_request_player_initial_state(peer_id)
 
 func on_recieve_player_movement(_from_peer_id: int, packet: PackedByteArray):
@@ -403,6 +425,7 @@ func on_recieve_player_movement(_from_peer_id: int, packet: PackedByteArray):
 	var movement_status_bitmap := packet.decode_u8(20)
 	var player: Player = networking.get_player(peer_id)
 	if player:
+		#player.network_controller.on_receive_player_movement(peer_position, rot_y_degrees, rot_x_degrees, input1, movement_status_bitmap)
 		player.network_controller.network_target_position = peer_position
 		player.network_controller.network_target_rotation_degrees_y = rot_y_degrees
 		player.network_controller.network_target_rotation_degrees_x = rot_x_degrees
@@ -426,6 +449,9 @@ func on_receive_client_player_movement_reconciliation(_from_peer_id: int, packet
 		# TODO: incorporate rotation? velocity? inputs? movement status bitmap?
 		player.network_controller.client_handle_server_movement_reconciliation(server_position)
 	Logger.info("on_receive_client_player_movement_reconciliation")
+	if peer_id == multiplayer.get_unique_id():
+		# TODO: increment reconciliations count?
+		pass
 
 func on_receive_ping_response(_from_peer_id: int, packet: PackedByteArray):
 	# TODO: consider using this, maybe create a rotating queue of 10 and take average to smooth out weirdnesses.
@@ -440,11 +466,10 @@ func on_receive_ping_response(_from_peer_id: int, packet: PackedByteArray):
 	])
 	client_latency_ms = int(ping_delta / 2.0) # round trip ping, not the most accurate, but good enough for now
 	client_latency_history[client_latency_history_index] = client_latency_ms
-	client_latency_history_index = (client_latency_history_index + 1) % 99
-
+	client_latency_history_index = (client_latency_history_index + 1) % (client_latency_history_size - 1)
 
 func client_send_player_movement(peer_id: int, position: Vector3, rotation_degrees_y: float, camera_rotation_degrees_x: float, inputs1: int, movement_states_bitmap: int):
-	var packet: PackedByteArray = [ Networking.NetworkMessageId.CLIENT_SEND_PLAYER_MOVEMENT, 
+	var packet: PackedByteArray = [ Networking.NetworkMessageId.CLIENT_SEND_PLAYER_MOVEMENT,
 		0x00, 0x00, 0x00, 0x00, # peer id
 		0x00, 0x00, 0x00, 0x00, # pos.x
 		0x00, 0x00, 0x00, 0x00, # pos.y
@@ -466,13 +491,11 @@ func client_send_player_movement(peer_id: int, position: Vector3, rotation_degre
 	packet.encode_u8(18, rot_x_mapped)
 	packet.encode_u8(19, inputs1)
 	packet.encode_u8(20, movement_states_bitmap)
-	networking.send_bytes(packet, 0, MultiplayerPeer.TRANSFER_MODE_UNRELIABLE_ORDERED, 0)
+	networking.send_bytes(packet, 1, MultiplayerPeer.TRANSFER_MODE_UNRELIABLE_ORDERED, 0)
 
-func debug_log() -> void:
-	var peers_string: String = JSON.stringify(multiplayer.get_peers())
+func client_debug_log() -> void:
 	var server_scene_path = networking.game_network_state["scene_path"]
-	Logger.debug("client: my_id: %d, peers: %s, scene_path: %s, player_id_list: %s, player_list: %s, player_pawn_data: %s, sync_state: %s" % [
-		int(multiplayer.get_unique_id()), String(peers_string), str(server_scene_path),
-		JSON.stringify(networking.player_id_list), JSON.stringify(networking.player_list),
-		JSON.stringify(networking.player_pawn_data), ClientSyncState_str(initial_synchronization["current_state"])
+	Logger.debug("client_debug_log: my_id: %d, peers: %s, scene_path: %s, sync_state: %s" % [
+		int(multiplayer.get_unique_id()), JSON.stringify(multiplayer.get_peers()), str(server_scene_path),
+		ClientSyncState_str(initial_synchronization["current_state"])
 	])

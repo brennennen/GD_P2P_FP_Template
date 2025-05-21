@@ -12,6 +12,7 @@ func launch() -> void:
 	apply_central_impulse(start_direction * start_force)
 
 func _on_player_collision_area_3d_body_entered(body: Node3D) -> void:
+	# Player to player: only allow on server?
 	if GameInstance.networking.is_server():
 		if body is Player and body != owning_player:
 			var player_hit = body as Player
@@ -21,6 +22,10 @@ func _on_player_collision_area_3d_body_entered(body: Node3D) -> void:
 			# TODO: queue_free() rpc
 			#queue_free()
 			cleanup.rpc()
+	# player to environment: allow on client
+	if body is StaticBody3D:
+		Logger.info("player: %s (%v) fishing lure hit static body: %s (%v)" % [owning_player.name, owning_player.global_position, body.name, body.global_position])
+		# TODO: yoink self toward point that lure hit?
 
 @rpc("any_peer", "call_local", "reliable")
 func cleanup():

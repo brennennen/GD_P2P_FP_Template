@@ -212,16 +212,18 @@ func toggle_pause():
 @onready var player_list: VBoxContainer = $PauseMenu/PlayerListMarginContainer/PlayerListVBoxContainer/PlayerListScrollContainer/PlayerListVBoxContainer
 
 func load_player_list():
-	for player_label in player_list.get_children():
-		player_label.queue_free()
-	for id: int in GameInstance.networking.player_id_list:
-		var player_label := Label.new()
-		if id == 1:
-			var ping = GameInstance.networking.client_networking.client_latency_ms
-			player_label.text = "%s   %s ms" % [str(id), str(ping)]
-		else:
-			player_label.text = "%s" % [str(id)]
-		player_list.add_child(player_label)
+	pass
+	# TODO: rewrite to use peers and PeerMetadata
+	#for player_label in player_list.get_children():
+		#player_label.queue_free()
+	#for id: int in GameInstance.networking.player_id_list:
+		#var player_label := Label.new()
+		#if id == 1:
+			#var ping = GameInstance.networking.client_networking.client_latency_ms
+			#player_label.text = "%s   %s ms" % [str(id), str(ping)]
+		#else:
+			#player_label.text = "%s" % [str(id)]
+		#player_list.add_child(player_label)
 
 # authority vs any_peer is complicated because we set authority to the local client for the player class
 # ideally this would only be callable by the server, need to work through a way to handle this...
@@ -381,7 +383,7 @@ func fishing_primary_action_server_request():
 	#Logger.info("fishing_primary_action_server_request");
 	# TODO: spawn fishing lure projectile
 	spawn_fishing_lure_projectile.rpc()
-	# TODO: go to "fishing-idle" if we hit water, go to "carrying-fishing-pole-idle" if we didn't, 
+	# TODO: go to "fishing-idle" if we hit water, go to "carrying-fishing-pole-idle" if we didn't,
 	# TODO: go to "fishing-yoink" if we hit a "yoinkable" (another player or physics objects), go to grapple-hook swing if we hit a static object and are not on the ground?
 	fishing_cast_third_person_visuals.rpc()
 
@@ -473,7 +475,7 @@ func _physics_process(delta):
 			# TODO: add delay before regen
 			if stamina < 100.0:
 				set_stamina(stamina + 0.25)
-				
+
 	if handle_hit_next_physics_frame:
 		physics_process_handle_hit()
 		handle_hit_next_physics_frame = false
@@ -609,10 +611,15 @@ func server_teleport_player(new_position: Vector3):
 func respawn(respawn_position: Vector3):
 	Logger.info("respawn() player: %s, pos: %v" % [ name, respawn_position ])
 	fade_from_black(1.0)
+	if is_multiplayer_authority():
+		pass
+	else:
+		third_person.visible = true
 	global_position = respawn_position
 	# TODO: make a simple "reset_networking" or something that resets these to global_position
 	network_controller.server_last_valid_target_position = respawn_position
 	network_controller.server_last_valid_on_ground_target_position = respawn_position
+
 
 var black_screen_tween: Tween = null
 func fade_from_black(duration: float):

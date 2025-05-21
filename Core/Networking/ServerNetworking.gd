@@ -29,21 +29,24 @@ func on_peer_disconnected(peer_id):
 	Logger.debug("peer_disconnected: %d" % [ peer_id ])
 	networking.remove_peer(peer_id)
 
-func process_peer_packet(from_peer_id: int, packet: PackedByteArray):
+func server_process_peer_packet(from_peer_id: int, packet: PackedByteArray):
 	var message_id: int = packet[0]
 	#Logger.info("Got message: %s from peer: %d" % [NetworkMessageId_str(message_id), from_peer_id])
-	if message_id == Networking.NetworkMessageId.REQUEST_INITIAL_GAME_STATE:
-		send_initial_game_state(from_peer_id)
-	elif message_id == Networking.NetworkMessageId.REQUEST_INITIAL_LEVEL_STATE:
-		send_initial_scene_state(from_peer_id)
-	elif message_id == Networking.NetworkMessageId.CLIENT_REGISTER_PLAYER_PAWN_DATA:
-		on_receive_register_player_pawn_data(from_peer_id, packet)
-	elif message_id == Networking.NetworkMessageId.REQUEST_PEER_INITIAL_STATE:
-		on_receive_request_peer_initial_state(from_peer_id, packet)
-	elif message_id == Networking.NetworkMessageId.CLIENT_SEND_PLAYER_MOVEMENT:
-		on_receive_client_player_movement(from_peer_id, packet)
-	elif message_id == Networking.NetworkMessageId.PING:
-		on_receive_ping(from_peer_id, packet)
+	match message_id:
+		Networking.NetworkMessageId.REQUEST_INITIAL_GAME_STATE:
+			server_send_initial_game_state(from_peer_id)
+		Networking.NetworkMessageId.REQUEST_INITIAL_LEVEL_STATE:
+			server_send_initial_scene_state(from_peer_id)
+		Networking.NetworkMessageId.CLIENT_REGISTER_PLAYER_PAWN_DATA:
+			on_receive_register_player_pawn_data(from_peer_id, packet)
+		Networking.NetworkMessageId.REQUEST_PEER_INITIAL_STATE:
+			on_receive_request_peer_initial_state(from_peer_id, packet)
+		Networking.NetworkMessageId.CLIENT_SEND_PLAYER_MOVEMENT:
+			on_receive_client_player_movement(from_peer_id, packet)
+		Networking.NetworkMessageId.PING:
+			on_receive_ping(from_peer_id, packet)
+		_:
+			Logger.warn("server_process_peer_packet: received unknown message! from: %d, message_id: %d" % [ from_peer_id, message_id ])
 
 ## Initial game state sent by the server to the client when requested.
 ## Message contents:
@@ -53,27 +56,30 @@ func process_peer_packet(from_peer_id: int, packet: PackedByteArray):
 ##  * u8 - Player count
 ##  * Array[u8] - Player peer ids
 ## @param peer_id	Peer id to send the initial game state to.
-func send_initial_game_state(peer_id: int):
+func server_send_initial_game_state(peer_id: int):
 	var offset = 1
 	var packet: PackedByteArray = [ Networking.NetworkMessageId.SERVER_INITIAL_GAME_STATE, 0x00, 0x00 ]
 	var server_scene_path: String = networking.game_network_state["scene_path"]
 	var scene_path_bytes: PackedByteArray = server_scene_path.to_utf8_buffer()
-	packet.encode_u16(offset, scene_path_bytes.size()) # write to bytes 1 and 2
+	packet.encode_u16(offset, scene_path_bytes.size())
 	offset += 2
-	packet.append_array(scene_path_bytes) # bytes 3 and after
+
+	packet.append_array(scene_path_bytes)
 	offset += scene_path_bytes.size()
-	packet.resize(offset + 1 + (networking.player_id_list.size() * 4))
-	packet.encode_u8(offset, (networking.player_id_list.size()))
+
+	var peer_ids: Array[int] = networking.get_peer_id_list()
+	packet.resize(offset + 1 + (peer_ids.size() * 4))
+	packet.encode_u8(offset, (peer_ids.size()))
 	offset += 1
 
-	for i in range(0, networking.player_id_list.size()):
-		packet.encode_s32(offset, networking.player_id_list[i])
+	for i in range(0, peer_ids.size()):
+		packet.encode_s32(offset, peer_ids[i])
 		offset += 4
 	Logger.info("sending: %s to %s" % [ Networking.NetworkMessageId_str(packet[0]), str(peer_id) ])
 	networking.send_bytes(packet, peer_id, MultiplayerPeer.TRANSFER_MODE_RELIABLE, 0)
 
-func send_initial_scene_state(peer_id: int):
-	var packet: PackedByteArray = [ Networking.NetworkMessageId.SERVER_INITIAL_LEVEL_STATE, 
+func server_send_initial_scene_state(peer_id: int):
+	var packet: PackedByteArray = [ Networking.NetworkMessageId.SERVER_INITIAL_LEVEL_STATE,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00  # server seed
 	]
 	#Logger.info("sending: %s" % [ Networking.NetworkMessageId_str(packet[0]),
@@ -90,49 +96,51 @@ func on_receive_register_player_pawn_data(from_peer_id: int, request_packet: Pac
 	var message_id: int = request_packet.decode_u8(0)
 	var color_packed_rgba32: int = request_packet.decode_s32(1)
 	var color = Color(color_packed_rgba32)
-	
-	# TODO: set networking peer 
+
 	networking.set_peer_pawn_data(from_peer_id, color)
 	#packet_bytes.encode_s32(1, color.to_rgba32())
-	Logger.info("received: %s, from: %d" % [ 
+	Logger.info("received: %s, from: %d" % [
 		Networking.NetworkMessageId_str(message_id), from_peer_id
 	])
 	server_add_peer(from_peer_id)
 	send_acknowledge_register_player_pawn_data(from_peer_id)
-	server_broadcast_player_id_list()
-	# TODO: send broadcast updating player_id_list
-	pass
+	server_broadcast_peer_ids()
 
+## Server -> Client to inform them the server has received the player pawn data and spawned them a player pawn
 func send_acknowledge_register_player_pawn_data(peer_id: int):
 	var packet: PackedByteArray = [ Networking.NetworkMessageId.SERVER_ACKNOWLEDGE_PLAYER_PAWN_DATA, 0x00 ]
-	packet.resize(1 + 1 + (networking.player_id_list.size() * 4))
+	# Embed a "SERVER_BROADCAST_PEER_IDS" message for the next peer sync step
+	var peer_ids = networking.get_peer_id_list()
+	packet.resize(1 + 1 + (peer_ids.size() * 4))
 	var offset: int = 1
-	packet.encode_u8(offset, (networking.player_id_list.size()))
+	packet.encode_u8(offset, (peer_ids.size()))
 	offset += 1
-	for i in range(0, networking.player_id_list.size()):
-		packet.encode_s32(offset, networking.player_id_list[i])
+	for i in range(0, peer_ids.size()):
+		packet.encode_s32(offset, peer_ids[i])
 		offset += 4
 	networking.send_bytes(packet, peer_id, MultiplayerPeer.TRANSFER_MODE_RELIABLE, 0)
-	pass
 
-## 
+##
 func on_receive_request_peer_initial_state(from_peer_id: int, request_packet: PackedByteArray):
 	var peer_id_being_requested = request_packet.decode_s32(1)
-	Logger.info("received: %s, from: %d, data: peer_state_requested: %d" % [ 
+	Logger.info("received: %s, from: %d, data: peer_state_requested: %d" % [
 		Networking.NetworkMessageId_str(Networking.NetworkMessageId.REQUEST_PEER_INITIAL_STATE), from_peer_id, peer_id_being_requested
 	])
 	send_player_initial_state(peer_id_being_requested, from_peer_id)
 
 ## Send the players initial state from the client to the server.
 func send_player_initial_state(peer_id: int, peer_id_to_send_to: int):
-	var peer_index = networking.get_player_index(peer_id)
-	var player_position: Vector3 = networking.player_list[peer_index].global_position
-	var rot_y_mapped: int = int((networking.player_list[peer_index].global_rotation_degrees.y + 180) * (256.0 / 360))
-	Logger.info("sending: %s, to: %d, data: peer: %d (%d), position: %.2v, rot_degs.y: %f" % [ 
-		Networking.NetworkMessageId_str(Networking.NetworkMessageId.PEER_INITIAL_STATE), peer_id_to_send_to, 
-		peer_id, peer_index, player_position, rot_y_mapped
+	var peer_index = networking.get_peer_index(peer_id)
+	if networking.peers[peer_id].player == null:
+		Logger.warn("send_player_initial_state: attemptying to send player initial state for non-existing player. player_peer_id: %d, send_to: %d" % [peer_id, peer_id_to_send_to])
+		return
+	var player_position: Vector3 = networking.peers[peer_id].player.global_position
+	var rot_y_mapped: int = int((networking.peers[peer_id].player.global_rotation_degrees.y + 180) * (256.0 / 360))
+	Logger.info("sending: %s, to: %d, data: peer: %d, position: %.2v, rot_degs.y: %f" % [
+		Networking.NetworkMessageId_str(Networking.NetworkMessageId.PEER_INITIAL_STATE), peer_id_to_send_to,
+		peer_id, player_position, rot_y_mapped
 	])
-	var response_packet: PackedByteArray = [ Networking.NetworkMessageId.PEER_INITIAL_STATE, 
+	var response_packet: PackedByteArray = [ Networking.NetworkMessageId.PEER_INITIAL_STATE,
 		0x00, 0x00, 0x00, 0x00, # peer id
 		0x00, # peer index
 		0x00, 0x00, 0x00, 0x00, # pos.x
@@ -147,7 +155,8 @@ func send_player_initial_state(peer_id: int, peer_id_to_send_to: int):
 	response_packet.encode_float(10, player_position.y)
 	response_packet.encode_float(14, player_position.z)
 	response_packet.encode_u8(18, rot_y_mapped)
-	var color: Color = networking.player_pawn_data[peer_id]["color"]
+	#var color: Color = networking.player_pawn_data[peer_id]["color"]
+	var color: Color = Color.WHITE_SMOKE
 	response_packet.encode_s32(19, color.to_rgba32())
 	#print("SENT COLOR: %d %s" % [color.to_rgba32(), JSON.stringify(color)])
 	# TODO: send additional data, player scene, skins, position, metadata?
@@ -166,7 +175,7 @@ func on_receive_client_player_movement(from_peer_id: int, packet: PackedByteArra
 	var rot_x_degrees = (rot_x_mapped * (360.0 / 256)) - 180
 	var inputs1 = packet.decode_u8(19)
 	var movement_status_bitmap = packet.decode_u8(20)
-	
+
 	var player: Player = networking.get_player(from_peer_id) # TODO: validate from_peer_id == peer_id?
 	player.network_controller.server_handle_client_pawn_movement(from_peer_id, new_position, rot_y_degrees, rot_x_degrees, inputs1, movement_status_bitmap)
 
@@ -176,43 +185,46 @@ func on_receive_ping(from_peer_id: int, packet: PackedByteArray):
 	# TODO: store time delta
 	networking.send_ping_response(from_peer_id, ping_send_time)
 
-## 
+##
 func server_synchronize_player_movement(delta: float) -> void:
 	player_movement_sync_running_delta += delta
 	if player_movement_sync_running_delta >= player_movement_sync_tick_rate:
 		player_movement_sync_running_delta = 0.0
 		# TODO: send all player movements in a single packet, less overhead from many small packets
-		#print("player_list size: %d" % networking.player_list.size())
-		for i in range(0, networking.player_list.size() - 1):
-			if (	networking.player_list[i].global_position == networking.player_last_broadcast_position[i] \
-					and networking.player_list[i].global_rotation_degrees.y == networking.player_last_broadcast_rotation_degrees_y[i] \
-					and networking.player_list[i].global_rotation_degrees.x == networking.player_last_broadcast_rotation_degrees_x[i] \
+		for peer_id in networking.peers:
+			if networking.peers[peer_id].player == null:
+				Logger.warn("server_synchronize_player_movement: peer: %d has no player! can't sync!" % [peer_id])
+				return
+			if (	networking.peers[peer_id].player.global_position == networking.peers[peer_id].player_last_broadcast_position \
+					and networking.peers[peer_id].player.global_rotation.y == networking.peers[peer_id].player_last_broadcast_rotation_y \
+					and networking.peers[peer_id].player.camera.global_rotation.x == networking.peers[peer_id].player_camera_last_broadcast_rotation_x \
 				):
 				# Player hasn't moved, save the bandwidth
 				# TODO: maybe send one movement packet every second? or one every 5 seconds?
 				continue
 			else:
-				server_broadcast_player_movement(networking.player_list[i].get_multiplayer_authority())
-				networking.player_last_broadcast_position[i] = networking.player_list[i].global_position
-				networking.player_last_broadcast_rotation_degrees_y[i] = networking.player_list[i].global_rotation_degrees.y
-				networking.player_last_broadcast_rotation_degrees_x[i] = networking.player_list[i].global_rotation_degrees.x
+				server_broadcast_player_movement(peer_id)
+				networking.peers[peer_id].player_last_broadcast_position = networking.peers[peer_id].player.global_position
+				networking.peers[peer_id].player_last_broadcast_rotation_y = networking.peers[peer_id].player.global_rotation.y
+				networking.peers[peer_id].player_camera_last_broadcast_rotation_x = networking.peers[peer_id].player.camera.global_rotation.x
 
 func server_broadcast_network_tick(network_tick: int):
-	var packet: PackedByteArray = [ networking.NetworkMessageId.SERVER_BROADCAST_TICK, 
+	var packet: PackedByteArray = [ networking.NetworkMessageId.SERVER_BROADCAST_TICK,
 		0x00, 0x00, 0x00, 0x00 ]
 	packet.encode_s32(1, network_tick) # is this an int? maybe make it 8 bytes or unsigned?
 	networking.send_bytes(packet, 0, MultiplayerPeer.TRANSFER_MODE_UNRELIABLE, 0)
 
-func server_broadcast_player_id_list():
-	var packet: PackedByteArray = [ networking.NetworkMessageId.SERVER_BROADCAST_PLAYER_ID_LIST, 
+func server_broadcast_peer_ids():
+	var packet: PackedByteArray = [ networking.NetworkMessageId.SERVER_BROADCAST_PEER_IDS,
 		0x00 ]
 	#Logger.info("server sending: %s" % [])
-	packet.resize(1 + 1 + (networking.player_id_list.size() * 4))
+	var peer_ids = networking.peers.keys()
+	packet.resize(1 + 1 + (peer_ids.size() * 4))
 	var offset: int = 1
-	packet.encode_u8(offset, (networking.player_id_list.size()))
+	packet.encode_u8(offset, (peer_ids.size()))
 	offset += 1
-	for i in range(0, networking.player_id_list.size()):
-		packet.encode_s32(offset, networking.player_id_list[i])
+	for i in range(0, peer_ids.size()):
+		packet.encode_s32(offset, peer_ids[i])
 		offset += 4
 	networking.send_bytes(packet, 0, MultiplayerPeer.TRANSFER_MODE_RELIABLE, 0)
 
@@ -237,7 +249,7 @@ func server_broadcast_all_player_movement():
 	pass
 
 func server_broadcast_player_movement(peer_id: int):
-	var packet: PackedByteArray = [ networking.NetworkMessageId.SERVER_BROADCAST_PLAYER_MOVEMENT, 
+	var packet: PackedByteArray = [ networking.NetworkMessageId.SERVER_BROADCAST_PLAYER_MOVEMENT,
 		0x00, 0x00, 0x00, 0x00, # peer id (TODO: sync indicies and just send 1 byte player index)
 		0x00, 0x00, 0x00, 0x00, # pos.x
 		0x00, 0x00, 0x00, 0x00, # pos.y
@@ -251,34 +263,28 @@ func server_broadcast_player_movement(peer_id: int):
 		0x00 # movement status bitmap
 		# TODO: crouching/sprinting (not jumping or spontaneous actions, those can be rpcs)
 	]
-	var peer_index = networking.get_player_index(peer_id)
-	if peer_index == null:
+	if !networking.peers.has(peer_id):
+		Logger.warn("server_broadcast_player_movement: peer_id not in peers: %d" % [peer_id])
 		return
-	#Logger.info("server_broadcast_player_movement: player_list: %s, id_list: %s" % [JSON.stringify(networking.player_list), JSON.stringify(networking.player_id_list)])
-	var player_position: Vector3 = networking.player_list[peer_index].global_position
+
+	var player: Player = networking.peers[peer_id].player
 	packet.encode_s32(1, peer_id)
-	packet.encode_float(5, player_position.x)
-	packet.encode_float(9, player_position.y)
-	packet.encode_float(13, player_position.z)
+	packet.encode_float(5, player.global_position.x)
+	packet.encode_float(9, player.global_position.y)
+	packet.encode_float(13, player.global_position.z)
 	# 1 byte y rotation: starting rot_y range: -180 - 180, add 180 to change range to 0 - 360, then multiply by 256/360 to squish range to: 0 - 255
-	var rot_y_mapped: int = int((networking.player_list[peer_index].global_rotation_degrees.y + 180) * (256.0 / 360))
+	var rot_y_mapped: int = int((player.global_rotation_degrees.y + 180) * (256.0 / 360))
 	packet.encode_u8(17, rot_y_mapped)
 	# 1 byte x rotation: starting rot_x range: -180 - 180, add 180 to change range to 0 - 360, then multiply by 256/360 to squish range to: 0 - 255
-	# TODO: get camera x rotation
-	var rot_x_mapped: int = int((networking.player_list[peer_index].camera.global_rotation_degrees.x + 180) * (256.0 / 360))
+	var rot_x_mapped: int = int((player.camera.global_rotation_degrees.x + 180) * (256.0 / 360))
 	packet.encode_u8(18, rot_x_mapped)
-	packet.encode_u8(19, networking.player_list[peer_index].network_controller.build_inputs1())
-	packet.encode_u8(20, networking.player_list[peer_index].network_controller.build_movement_states_bitmap())
-	#Logger.info("sending: %s, peer: %d, pos: %v, rot_y: %f, rot_x: %f" % [
-		#Networking.NetworkMessageId_str(networking.NetworkMessageId.SERVER_BROADCAST_PLAYER_MOVEMENT),
-		#peer_id, player_position, networking.player_list[peer_index].global_rotation_degrees.y,
-		#networking.player_list[peer_index].global_rotation_degrees.x
-	#])
+	packet.encode_u8(19, player.network_controller.build_inputs1())
+	packet.encode_u8(20, player.network_controller.build_movement_states_bitmap())
+	# Logger.info("sending: %s, peer: %d, pos: %v, rot_y: %f, rot_x: %f" % [ Networking.NetworkMessageId_str(networking.NetworkMessageId.SERVER_BROADCAST_PLAYER_MOVEMENT), peer_id, player.global_position, player.global_rotation_degrees.y, player.camera.global_rotation_degrees.x ])
 	networking.send_bytes(packet, 0, MultiplayerPeer.TRANSFER_MODE_UNRELIABLE_ORDERED, 0)
 
 func server_send_client_player_movement_reconciliation(peer_id: int, last_valid_position: Vector3) -> void:
-	# SERVER_SEND_CLIENT_PLAYER_MOVEMENT_RECONCILIATION
-	var packet: PackedByteArray = [ networking.NetworkMessageId.SERVER_SEND_CLIENT_PLAYER_MOVEMENT_RECONCILIATION, 
+	var packet: PackedByteArray = [ networking.NetworkMessageId.SERVER_SEND_CLIENT_PLAYER_MOVEMENT_RECONCILIATION,
 		0x00, 0x00, 0x00, 0x00, # peer id (TODO: sync indicies and just send 1 byte player index)
 		0x00, 0x00, 0x00, 0x00, # pos.x
 		0x00, 0x00, 0x00, 0x00, # pos.y
@@ -291,23 +297,23 @@ func server_send_client_player_movement_reconciliation(peer_id: int, last_valid_
 		0x00, # inputs1
 		0x00 # movement status bitmap
 	]
-	var peer_index = networking.get_player_index(peer_id)
-	if peer_index == null:
+	if !networking.peers.has(peer_id):
+		Logger.warn("server_send_client_player_movement_reconciliation: peer_id not in peers: %d" % [peer_id])
 		return
 
+	var player: Player = networking.peers[peer_id].player
 	packet.encode_s32(1, peer_id)
 	packet.encode_float(5, last_valid_position.x)
 	packet.encode_float(9, last_valid_position.y)
 	packet.encode_float(13, last_valid_position.z)
 	# 1 byte y rotation: starting rot_y range: -180 - 180, add 180 to change range to 0 - 360, then multiply by 256/360 to squish range to: 0 - 255
-	var rot_y_mapped: int = int((networking.player_list[peer_index].global_rotation_degrees.y + 180) * (256.0 / 360))
+	var rot_y_mapped: int = int((player.global_rotation_degrees.y + 180) * (256.0 / 360))
 	packet.encode_u8(17, rot_y_mapped)
 	# 1 byte x rotation: starting rot_x range: -180 - 180, add 180 to change range to 0 - 360, then multiply by 256/360 to squish range to: 0 - 255
-	# TODO: get camera x rotation
-	var rot_x_mapped: int = int((networking.player_list[peer_index].camera.global_rotation_degrees.x + 180) * (256.0 / 360))
+	var rot_x_mapped: int = int((player.camera.global_rotation_degrees.x + 180) * (256.0 / 360))
 	packet.encode_u8(18, rot_x_mapped)
-	packet.encode_u8(19, networking.player_list[peer_index].network_controller.build_inputs1())
-	packet.encode_u8(20, networking.player_list[peer_index].network_controller.build_movement_states_bitmap())
+	packet.encode_u8(19, player.network_controller.build_inputs1())
+	packet.encode_u8(20,player.network_controller.build_movement_states_bitmap())
 	Logger.info("sending: %s, peer: %d" % [ Networking.NetworkMessageId_str(packet[0]), peer_id ])
 	networking.send_bytes(packet, peer_id, MultiplayerPeer.TRANSFER_MODE_RELIABLE, 0) # send reliably
 
@@ -315,12 +321,6 @@ func reset_server_networking() -> void:
 	pass
 
 func debug_log() -> void:
-	var peers_string: String = JSON.stringify(multiplayer.get_peers())
-	var server_scene_path = networking.game_network_state["scene_path"]
-	#if networking.game_network_state["scene_path"] != null:
-	#	server_scene_path = networking.game_network_state["scene_path"]
-	Logger.debug("server: my_id: %d, peers: %s, scene_path: %s, player_id_list: %s, player_list: %s, player_pawn_data: %s" % [
-		int(multiplayer.get_unique_id()), String(peers_string), str(server_scene_path),
-		JSON.stringify(networking.player_id_list), JSON.stringify(networking.player_list),
-		JSON.stringify(networking.player_pawn_data)
+	Logger.debug("server: my_id: %d, peers: %s, scene_path: %s" % [
+		multiplayer.get_unique_id(), JSON.stringify(multiplayer.get_peers()), str(networking.game_network_state["scene_path"])
 	])

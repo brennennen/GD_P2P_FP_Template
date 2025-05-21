@@ -122,48 +122,51 @@ func initialize_level(level_name: String, scene_path: String, game_mode_type: Ga
 		if GameInstance.networking.in_editor_lobby.instance_num == 1:
 			networking.host_game()
 		else:
-			await get_tree().create_timer(1.0).timeout
+			await get_tree().create_timer(0.5).timeout
 			GameInstance.networking.in_editor_lobby.join_lobby()
 		await get_tree().create_timer(1.0).timeout
-		if networking.in_editor_lobby.get_multiplayer_id() == 1:
+		if GameInstance.networking.in_editor_lobby.instance_num == 1:
 			var player = game_mode.spawn_player(multiplayer.get_unique_id())
-			networking.player_list.append(player)
+			var peer_metadata = PeerMetadata.new()
+			peer_metadata.peer_id = 1
+			peer_metadata.peer_index = 0
+			peer_metadata.player = player
+			peer_metadata.player_last_broadcast_position = player.global_position
+			peer_metadata.player_last_broadcast_rotation_y = player.global_rotation_degrees.y
+			peer_metadata.player_camera_last_broadcast_rotation_x = player.camera.global_rotation_degrees.x
+			networking.peers[1] = peer_metadata
 		debug_position_all_instance_windows()
 	if GameInstance.networking.is_server():
 		if networking.multiplayer_mode == Networking.MultiplayerMode.SINGLE_PLAYER \
 				or networking.multiplayer_mode == Networking.MultiplayerMode.DIRECT_CONNECT \
 				or networking.multiplayer_mode == Networking.MultiplayerMode.STEAM:
 			var player = game_mode.spawn_player(multiplayer.get_unique_id())
-			networking.player_list.append(player)
+			var peer_metadata = PeerMetadata.new()
+			peer_metadata.peer_id = 1
+			peer_metadata.peer_index = 0
+			peer_metadata.player = player
+			peer_metadata.player_last_broadcast_position = player.global_position
+			peer_metadata.player_last_broadcast_rotation = player.global_rotation_degrees
+			networking.peers[1] = peer_metadata
 	_on_debug_log_timer_timeout() # debug log right away
 
 func debug_position_all_instance_windows():
-	var screen_size := DisplayServer.screen_get_size()
-	var top_panel_height: float = 40
-	var window_title_bar_height: float = 40
-	var screen_width: float = screen_size.x
-
-	var launch_arguments = OS.get_cmdline_args()
-	var screen_height: float = screen_size.y - top_panel_height
-	var new_window_size: Vector2 = Vector2(screen_width / 2.0, screen_height / 2.0 - window_title_bar_height)
-	Logger.info("%s:launch_arguments: '%s'" % [name, launch_arguments])
-
 	var window := get_window()
-	window.size = new_window_size
-
-	if launch_arguments.has("server0"):
-		window.title = "server0"
-		window.position = Vector2(0, 30)
-	elif launch_arguments.has("client1"):
-		window.title = "Client1"
-		window.position = Vector2(1300, 30)
-	elif launch_arguments.has("client2"):
-		window.title = "Client2"
-		window.position = Vector2(0, 730)
-	elif launch_arguments.has("client3"):
-		window.title = "Client3"
-		window.position = Vector2(1300,  730)
-	#await get_tree().create_timer(0.1).timeout
+	match(networking.in_editor_lobby.instance_num):
+		1:
+			window.title = "server - 1"
+			window.position = Vector2(0, 30)
+		2:
+			window.title = "client - 2"
+			window.position = Vector2(1300, 30)
+		3:
+			window.title = "client - 3"
+			window.position = Vector2(1300,  730) # 3rd player is bottom right, leave bottom left open to scan logs easier
+		4:
+			window.title = "client - 4"
+			window.position = Vector2(0, 730)
+		_:
+			pass
 
 ## Changes to the loading scene and then loads the requested scene
 func load_and_change_scene(scene_path: String):
@@ -275,9 +278,6 @@ func spawn_item_3d_scene(scene_path: String, pos: Vector3) -> Node:
 func remove_all_players():
 	for player in GameInstance.get_node("Players").get_children():
 		player.queue_free()
-	networking.player_id_list = []
-	networking.peer_list = []
-	networking.player_list = []
 
 @rpc("any_peer", "call_local", "reliable")
 func despawn_npcs():

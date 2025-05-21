@@ -22,8 +22,8 @@ enum NetworkMessageId {
 # START SYNCHRONIZATION INITIALIZATION MESSAGES
 	## Client -> Server: Client requests the initial game state from the server.
 	REQUEST_INITIAL_GAME_STATE,
-	## Server -> Client: Server 
-	## Sent by the server when requested, holds the initial game state (ex: which level scene to load, 
+	## Server -> Client: Server
+	## Sent by the server when requested, holds the initial game state (ex: which level scene to load,
 	## a list of player ids, etc). After a client receives the initial game state, they request the
 	## initial state of each player in the game to spawn their respective pawns.
 	SERVER_INITIAL_GAME_STATE,
@@ -34,21 +34,23 @@ enum NetworkMessageId {
 	## Client -> Server: Client registers their pawn data with the server.
 	CLIENT_REGISTER_PLAYER_PAWN_DATA,
 	## Server -> Client: Server acknolwedgement of client pawn data.
+	## The server sends a "SERVER_BROADCAST_PEER_IDS" embedded in ack player pawn data for the next
+	## peer sync process
 	SERVER_ACKNOWLEDGE_PLAYER_PAWN_DATA,
 	## Client -> Server:
-	## Sent by the client to request the initial state of each individual player in the game, 
+	## Sent by the client to request the initial state of each individual player in the game,
 	## received by server who responds with PLAYER_INITIAL_STATE
 	REQUEST_PEER_INITIAL_STATE,
 	## Server -> Client: Sent by server to client to provide the initial data to spawn
 	## a peer (pawn data/skins, position, rotation, etc).
 	PEER_INITIAL_STATE,
 # END SYNCHRONIZATION INITIALIZATION MESSAGES
-	
+
 # MATCH IN PROGRESS MESSAGES
 	SERVER_BROADCAST_TICK,
 	PING,
 	PING_RESPONSE,
-	SERVER_BROADCAST_PLAYER_ID_LIST,
+	SERVER_BROADCAST_PEER_IDS,
 	SERVER_BROADCAST_PLAYER_MOVEMENT,
 	SERVER_BROADCAST_ALL_PLAYER_MOVEMENT,
 	CLIENT_SEND_PLAYER_MOVEMENT,
@@ -91,13 +93,8 @@ var debug_emulate_latency_running_delta: float = 0.0
 var debug_emulate_packet_loss: bool = true
 var debug_emulate_packet_loss_percent: float = 0.10 # 10%?
 
-var player_id_list: Array[int] = []
-var peer_list: Array[PeerMetadata] = []
-var player_list: Array[Player] = []
-var player_pawn_data: Dictionary = {}
-var player_last_broadcast_position: Array[Vector3] = []
-var player_last_broadcast_rotation_degrees_y: Array[float] = []
-var player_last_broadcast_rotation_degrees_x: Array[float] = []
+var peers: Dictionary[int, PeerMetadata]
+#var player_pawn_data: Dictionary = {}
 
 var multiplayer_mode: MultiplayerMode = MultiplayerMode.NONE
 
@@ -134,11 +131,11 @@ func debug_imgui_handle_network_window(delta: float) -> void:
 		server_networking.debug_imgui_append_server_networking_debug_window(delta)
 	else:
 		client_networking.debug_imgui_append_client_networking_debug_window(delta)
-	ImGui.Text("peers %s" % [ JSON.stringify(player_id_list) ]);
+	ImGui.Text("peers %s" % [ JSON.stringify(peers.keys()) ]);
 	ImGui.Text("tick %d" % [ network_tick ]);
 	# TODO: estimated packet loss?
 	# TODO: estimated download/receive byte count
-	# TODO: estimated 
+	# TODO: estimated
 
 	if multiplayer_mode == MultiplayerMode.STEAM:
 		steam_lobby.debug_imgui_append_steam_debug_window(delta)
@@ -191,12 +188,11 @@ func multiplayer_poll(delta):
 
 func host_game() -> Error:
 	game_network_state["scene_path"] = GameInstance.current_level_path
-	player_id_list.append(1)
 	var new_peer = PeerMetadata.new()
 	new_peer.peer_id = 1
-	peer_list.append(new_peer)
-	player_pawn_data[1] = GameInstance.my_pawn_data
-	Logger.info("host_game, peer_list: %s" % [JSON.stringify(peer_list)])
+	peers[1] = new_peer
+	#player_pawn_data[1] = GameInstance.my_pawn_data
+	Logger.info("host_game, peer_list: %s" % [JSON.stringify(multiplayer.get_peers())])
 	_is_server = true
 	if multiplayer_mode == MultiplayerMode.DIRECT_CONNECT:
 		return direct_connect_lobby.host_game()
@@ -243,9 +239,9 @@ func process_peer_packet(from_peer_id: int, packet: PackedByteArray):
 		Logger.error("got empty peer packet from peer_id: %d" % from_peer_id)
 		return
 	if GameInstance.networking.is_server():
-		server_networking.process_peer_packet(from_peer_id, packet)
+		server_networking.server_process_peer_packet(from_peer_id, packet)
 	else:
-		client_networking.process_peer_packet(from_peer_id, packet)
+		client_networking.client_process_peer_packet(from_peer_id, packet)
 	this_second_bytes_received += packet.size()
 	total_bytes_received += packet.size()
 
@@ -255,12 +251,11 @@ func send_bytes(bytes: PackedByteArray, id: int = 0, mode: MultiplayerPeer.Trans
 	scene_multiplayer.send_bytes(bytes, id, mode, channel)
 
 func send_ping(peer_id: int):
-	#Logger.info("send_ping: %d" % [ peer_id ])
 	var ping_send_ticks_ms = Time.get_ticks_msec()
 	Logger.debug("sending: %s, to: %d, initial_ping_send_time: %d" % [
-		Networking.NetworkMessageId.keys()[ NetworkMessageId.PING ], peer_id, ping_send_ticks_ms
+		Networking.NetworkMessageId.keys()[NetworkMessageId.PING], peer_id, ping_send_ticks_ms
 	])
-	var packet_bytes: PackedByteArray = [ 
+	var packet_bytes: PackedByteArray = [
 		Networking.NetworkMessageId.PING,
 		0x00, 0x00, 0x00, 0x00
 	]
@@ -271,7 +266,7 @@ func send_ping_response(peer_id: int, ping_send_time: int):
 	Logger.debug("sending: %s, to: %d, initial_ping_send_time: %d" % [
 		Networking.NetworkMessageId.keys()[NetworkMessageId.PING_RESPONSE], peer_id, ping_send_time
 	])
-	var packet_bytes: PackedByteArray = [ 
+	var packet_bytes: PackedByteArray = [
 		Networking.NetworkMessageId.PING_RESPONSE,
 		0x00, 0x00, 0x00, 0x00
 	]
@@ -280,45 +275,54 @@ func send_ping_response(peer_id: int, ping_send_time: int):
 
 func add_player(peer_id):
 	Logger.info("add_player: peer_id: %s" % [str(peer_id)])
-	var player = GameInstance.game_mode.spawn_player(peer_id)
-	player_id_list.append(peer_id)
-	player_list.append(player)
-	player_last_broadcast_position.append(player.global_position)
-	player_last_broadcast_rotation_degrees_y.append(0)
-	player_last_broadcast_rotation_degrees_x.append(0)
+	#var player = GameInstance.game_mode.spawn_player(peer_id)
+	# TODO: switch from parallel arrays to something cleaner #peer_list.append()
+	var peer_metadata: PeerMetadata
+	if peers.has(peer_id):
+		peer_metadata = peers.get(peer_id)
+	else:
+		peer_metadata = PeerMetadata.new()
+		peer_metadata.peer_id = peer_id
+		peers[peer_id] = peer_metadata
+	peer_metadata.player = GameInstance.game_mode.spawn_player(peer_id)
+	peer_metadata.player_last_broadcast_position = peer_metadata.player.global_position
+	peer_metadata.player_last_broadcast_rotation_y = peer_metadata.player.global_rotation_degrees.y
+	peer_metadata.player_camera_last_broadcast_rotation_x = peer_metadata.player.camera.global_rotation_degrees.x
 
 func remove_peer(peer_id: int):
-	var peer_to_remove = get_player(peer_id)
-	player_id_list.erase(peer_id)
-	player_pawn_data.erase(peer_id)
-	player_list.erase(peer_to_remove)
-	
+	peers.erase(peer_id)
+
+	# Delete any pawns owned by the peer
 	for child in GameInstance.players.get_children():
 		if child.name.to_int() == peer_id:
 			child.queue_free()
 
-func set_peer_pawn_data(peer_id, color):
-	if peer_id not in player_pawn_data:
-		player_pawn_data[peer_id] = {}
-	player_pawn_data[peer_id]["color"] = color
+func set_peer_pawn_data(_peer_id, _color):
+	pass
+	#if peer_id not in player_pawn_data:
+	#	player_pawn_data[peer_id] = {}
+	#player_pawn_data[peer_id]["color"] = color
 
-func get_player_index(peer_id):
-	for i in range(0, player_id_list.size()):
-		if peer_id == player_id_list[i]:
-			return i
+func get_peer_index(peer_id):
+	if peers.has(peer_id):
+		return peers[peer_id].peer_index
 	return null
 
 func player_pawn_exists(peer_id) -> bool:
-	for player in player_list:
-		if str(peer_id) == str(player.name):
-			return true
+	if peers.has(peer_id) and peers[peer_id].player != null:
+		return true
 	return false
 
 func get_player(peer_id):
-	for player in player_list:
-		if str(peer_id) == str(player.name):
-			return player
-	return null
+	if peers.has(peer_id):
+		return peers[peer_id].player
+
+## Retrieves a list of peer ids (multiplayer.get_peers() doesn't include the server, which makes it hard to use for games where the server is also a peer)
+func get_peer_id_list():
+	var peer_ids: Array[int] = []
+	for peer_id in peers:
+		peer_ids.append(peer_id)
+	return peer_ids
 
 func calculate_network_metrics(delta):
 	network_tick_second_rollover += delta
@@ -330,18 +334,18 @@ func calculate_network_metrics(delta):
 		this_second_bytes_received = 0
 
 func reset_networking() -> void:
+	var my_id = multiplayer.get_unique_id()
 	multiplayer.multiplayer_peer.close()
 	multiplayer.multiplayer_peer = OfflineMultiplayerPeer.new()
 	server_networking.reset_server_networking()
-	player_id_list = []
-	player_list = []
-	player_pawn_data = {}
-	player_last_broadcast_position = []
-	player_last_broadcast_rotation_degrees_y = []
-	player_last_broadcast_rotation_degrees_x = []
+	peers.clear()
+	for child in GameInstance.players.get_children():
+		# This is going to require some thought... the player id is the multiplayer.get_unique_id, it will be a different id if they connect to someone else...
+		if child.name.to_int() != my_id:
+			child.queue_free()
 
 func debug_log() -> void:
 	if GameInstance.networking.is_server():
 		server_networking.debug_log()
 	else:
-		client_networking.debug_log()
+		client_networking.client_debug_log()

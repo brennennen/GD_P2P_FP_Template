@@ -11,6 +11,5 @@ A peer-to-peer first-person template for creating games in godot.
 
 
 ## TODO
-* client respawning doesn't work
-* if client shoots projectile, it doesn't delete when it collides (but it does do pull logic...)
+* simulated proxy pawn animations not working
 * 
