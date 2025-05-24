@@ -1,0 +1,55 @@
+[gd_scene load_steps=3 format=3 uid="uid://b2t12xhe4sco3"]
+
+[ext_resource type="Script" uid="uid://di5w0il64qaaa" path="res://Core/Inventory/Inventory.gd" id="1_im6ks"]
+[ext_resource type="PackedScene" uid="uid://igi6g4njl4kx" path="res://Core/Inventory/InventorySlot.tscn" id="2_bv0ma"]
+
+[node name="Inventory" type="PanelContainer"]
+custom_minimum_size = Vector2(64, 64)
+script = ExtResource("1_im6ks")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="ItemGrid" type="GridContainer" parent="MarginContainer"]
+layout_mode = 2
+columns = 6
+
+[node name="InventorySlot" parent="MarginContainer/ItemGrid" instance=ExtResource("2_bv0ma")]
+layout_mode = 2
+
+[node name="InventorySlot2" parent="MarginContainer/ItemGrid" instance=ExtResource("2_bv0ma")]
+layout_mode = 2
+
+[node name="InventorySlot3" parent="MarginContainer/ItemGrid" instance=ExtResource("2_bv0ma")]
+layout_mode = 2
+
+[node name="InventorySlot4" parent="MarginContainer/ItemGrid" instance=ExtResource("2_bv0ma")]
+layout_mode = 2
+
+[node name="InventorySlot5" parent="MarginContainer/ItemGrid" instance=ExtResource("2_bv0ma")]
+layout_mode = 2
+
+[node name="InventorySlot6" parent="MarginContainer/ItemGrid" instance=ExtResource("2_bv0ma")]
+layout_mode = 2
+
+[node name="InventorySlot7" parent="MarginContainer/ItemGrid" instance=ExtResource("2_bv0ma")]
+layout_mode = 2
+
+[node name="InventorySlot8" parent="MarginContainer/ItemGrid" instance=ExtResource("2_bv0ma")]
+layout_mode = 2
+
+[node name="InventorySlot9" parent="MarginContainer/ItemGrid" instance=ExtResource("2_bv0ma")]
+layout_mode = 2
+
+[node name="InventorySlot10" parent="MarginContainer/ItemGrid" instance=ExtResource("2_bv0ma")]
+layout_mode = 2
+
+[node name="InventorySlot11" parent="MarginContainer/ItemGrid" instance=ExtResource("2_bv0ma")]
+layout_mode = 2
+
+[node name="InventorySlot12" parent="MarginContainer/ItemGrid" instance=ExtResource("2_bv0ma")]
+layout_mode = 2

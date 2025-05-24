@@ -51,7 +51,6 @@ func _on_pre_start_timer_timeout() -> void:
 
 func _on_start_timer_timeout() -> void:
 	Logger.info("Start timer timeout! race starting!")
-	
 	if GameInstance.networking.is_server():
 		for player in GameInstance.get_players():
 			player.unlock_movement.rpc_id(int(player.name))
@@ -73,7 +72,7 @@ func _on_finish_area_3d_body_entered(body: Node3D) -> void:
 		if body is Player:
 			var player := body as Player
 			Logger.info("player: %s entered finish area3d" % [ str(player.name) ])
-			first_cross_finish_line.rpc(first_cross_finish_line)
+			first_cross_finish_line.rpc(player.name)
 			first_cross_end_timer.start(first_cross_end_timer_time)
 
 @rpc("authority", "call_local", "reliable")

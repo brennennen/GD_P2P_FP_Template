@@ -10,6 +10,7 @@ var last_sent_location: Vector3
 var last_sent_rotation_degrees_y: float
 var last_sent_rotation_degrees_x: float
 var last_sent_velocity: Vector3
+var last_sent_inputs1: int
 var last_sent_movement_status_bitmap: int
 
 var interpolate_networked_movement: bool = true
@@ -99,6 +100,10 @@ func build_movement_states_bitmap():
 		movement_state_bitmap += MOVEMENT_STATES_ON_GROUND_MASK
 	return movement_state_bitmap
 
+func local_controlled_pawn_physics_process(_delta):
+	network_inputs1 = build_inputs1()
+	network_movement_status_bitmap = build_movement_states_bitmap()
+
 func remote_pawn_physics_process(_delta):
 	if is_multiplayer_authority():
 		return
@@ -160,6 +165,7 @@ func client_send_move_data():
 			and global_rotation_degrees.y == last_sent_rotation_degrees_y \
 			and global_rotation_degrees.x == last_sent_rotation_degrees_x \
 			and player.velocity == last_sent_velocity \
+			and inputs1 == last_sent_inputs1 \
 			and movement_states_bitmap == last_sent_movement_status_bitmap \
 			and sent_one_extra_no_move_data_packet == true:
 		# player hasn't moved, don't waste the bandwidth
@@ -181,45 +187,60 @@ func client_send_move_data():
 	last_sent_location = global_position
 	last_sent_rotation_degrees_y = global_rotation_degrees.y
 	last_sent_velocity = player.velocity
+	last_sent_inputs1 = inputs1
 	last_sent_movement_status_bitmap = movement_states_bitmap
+
+var continuous_floor_collisions: int = 0
 
 ## Server on receiving a client player movement packet
 ## Whenever the server is notified a client's pawn moved, try and simulate that move on the server
 ## to make sure the client is not clipping through geometry or fly/move speed hacking. Reconcile the
 ## client's position if it is out of a tolerance of where the server thinks the player should be.
 func server_handle_client_pawn_movement(peer_id: int, new_position: Vector3, rot_y_degrees: float, rot_x_degrees: float, inputs1: int, movement_status_bitmap: int):
+	# If we just spawned in, ignore client pawn movement for a bit
+	if player.spawning_delay > 0.0:
+		return
+
 	var motion = new_position - server_last_valid_target_position
 	# TODO: simulate the move on a physics tick? also move all this to PlayerNetworking class
 	var collision: KinematicCollision3D = player.move_and_collide(motion, true)
-	# TODO: only detect collision on geometry, not area3ds
 	# TODO: speed and fly hack checking
 	if collision:
-		Logger.info("server detected player collided: %s" % [ collision.get_collider() ])
-		# TODO: maybe only make this "ground level" distance (no vertical distance).
 		var distance = player.network_controller.server_last_valid_target_position.distance_to(new_position)
-		#Logger.info("Server detected collision for player: %s, dist: %f" % [player.name, distance])
-		if distance > 0.25:
-			Logger.info("Server detected collision for player and distance out of tolerance: %s, dist: %f" % [player.name, distance])
-			# TODO: rate limit?
-			# send message to move player back to last valid target position if they are out of tolerance (reconciliation)
-			#server_send_client_player_movement_reconciliation(from_peer_id, player.server_last_valid_target_position)
-			server_handle_client_pawn_movement_reconciliation(peer_id, server_last_valid_on_ground_target_position)
-			server_last_valid_target_position = server_last_valid_on_ground_target_position
-			# TODO: add a count of reconciliation events and do special stuff if the player is stuck or something weird
-	else:
-		# Only allow server pawn to move if they are not colliding.
-		
-		# TODO: have both server_last_valid_target_position and server_last_valid_on_ground_target_position
-		# try and use server_last_valid_target_position first, then fall back to on_ground version if it fails?
-		server_last_valid_target_position = network_target_position # TODO: only set this when the player is on the ground
-		if (network_movement_status_bitmap & MOVEMENT_STATES_ON_GROUND_MASK) == 1:
-			#Logger.info("player: %s last on ground, updating server_last_valid_on_ground_target_position: %v" % [ str(from_peer_id), network_target_position ])
-			server_last_valid_on_ground_target_position = network_target_position
-		network_target_position = new_position
-		network_target_rotation_degrees_y = rot_y_degrees
-		network_target_rotation_degrees_x = rot_x_degrees
-		network_inputs1 = inputs1
-		network_movement_status_bitmap = movement_status_bitmap
+		# If the collision is with another player, ignore it
+		if collision.get_collider() is Player:
+			pass
+		# if a really low angel and low col depth, assume floor collision and ignore unless it continues for awhile, then reconcile up
+		elif collision.get_angle() < 1.0 and collision.get_depth() < 0.01:
+			continuous_floor_collisions += 1
+			if continuous_floor_collisions >= 100:
+				server_handle_client_pawn_movement_reconciliation(peer_id, server_last_valid_on_ground_target_position + Vector3(0.0, 0.1, 0.0))
+		else:
+			Logger.info("server detected player %s collided: %s, dist: %f, depth: %f, angle: %f" % [ player.name, collision.get_collider(), distance, collision.get_depth(), collision.get_angle() ])
+			#Logger.info("Server detected collision for player: %s, dist: %f" % [player.name, distance])
+			if distance > 0.25:
+				Logger.info("Server detected collision for player and distance out of tolerance: %s, dist: %f, pos: %v" % [player.name, distance, player.global_position])
+				# TODO: rate limit?
+				# send message to move player back to last valid target position if they are out of tolerance (reconciliation)
+				#server_send_client_player_movement_reconciliation(from_peer_id, player.server_last_valid_target_position)
+				server_handle_client_pawn_movement_reconciliation(peer_id, server_last_valid_on_ground_target_position)
+				server_last_valid_target_position = server_last_valid_on_ground_target_position
+				# TODO: add a count of reconciliation events and do special stuff if the player is stuck or something weird
+			return
+	# Only allow server pawn to move if they are not colliding.
+	continuous_floor_collisions = 0
+	
+	# TODO: have both server_last_valid_target_position and server_last_valid_on_ground_target_position
+	# try and use server_last_valid_target_position first, then fall back to on_ground version if it fails?
+	server_last_valid_target_position = network_target_position # TODO: only set this when the player is on the ground
+	if (movement_status_bitmap & MOVEMENT_STATES_ON_GROUND_MASK) == 1:
+		#Logger.info("player: %s last on ground, updating server_last_valid_on_ground_target_position: %v" % [ str(from_peer_id), network_target_position ])
+		server_last_valid_on_ground_target_position = network_target_position
+	network_target_position = new_position
+	network_target_rotation_degrees_y = rot_y_degrees
+	network_target_rotation_degrees_x = rot_x_degrees
+	network_inputs1 = inputs1
+	network_movement_status_bitmap = movement_status_bitmap
 
 func server_handle_client_pawn_movement_reconciliation(peer_id: int, last_valid_position: Vector3):
 	# TODO: rate limit, keep track of a counter, disconnect or kill/respawn pawn if too many reconciliations happen to fast (indicates being stuck somewhere?)

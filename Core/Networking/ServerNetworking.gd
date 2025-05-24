@@ -5,11 +5,19 @@ class_name ServerNetworking
 
 var networking: Networking
 
-var player_movement_sync_tick_rate: float = 0.066666 # 15 fps # 0.0333333 # 30 fps
+var player_movement_sync_tick_rate: float = 0.066666 # 15 fps
 var player_movement_sync_running_delta: float = 0.0
 
 func debug_imgui_append_server_networking_debug_window(_delta: float) -> void:
 	ImGui.Text("server");
+	for peer_id in networking.peers:
+		var peer: PeerMetadata = networking.peers[peer_id]
+		ImGui.Separator()
+		ImGui.Text("peer: %d" % [peer_id])
+		ImGui.Text("ping: %d" % [peer.ping])
+		ImGui.Text("pawn_pos: %v" % [peer.player_last_broadcast_position])
+		ImGui.Text("reconciles: %d" % [peer.server_reconciliations])
+		pass
 
 func initialize(p_networking: Networking):
 	networking = p_networking
@@ -228,25 +236,24 @@ func server_broadcast_peer_ids():
 		offset += 4
 	networking.send_bytes(packet, 0, MultiplayerPeer.TRANSFER_MODE_RELIABLE, 0)
 
-func server_broadcast_all_player_movement():
-	var packet: PackedByteArray = [ networking.NetworkMessageId.SERVER_BROADCAST_PLAYER_MOVEMENT ]
-	#packet.resize(1 + 13 * networking.player_list.size())
-	var offset = 1
-	for i in range(0, networking.player_list.size() - 1):
-		if (	networking.player_list[i].global_position == networking.player_last_broadcast_position[i] \
-				and networking.player_list[i].global_rotation_degrees.y == networking.player_last_broadcast_rotation_degrees_y[i]
-			):
-			# Player hasn't moved, save the bandwidth
-			break
-		else:
-			packet.resize(offset + 13)
-			packet.encode_s32(offset, networking.player_list[i].get_multiplayer_authority())
-			server_broadcast_player_movement(networking.player_list[i].get_multiplayer_authority())
-			networking.player_last_broadcast_position[i] = networking.player_list[i].global_position
-			networking.player_last_broadcast_rotation_degrees_y[i] = networking.player_list[i].global_rotation_degrees.y
-			networking.player_last_broadcast_rotation_degrees_x[i] = networking.player_list[i].camera.global_rotation_degrees.x
-			networking.send_bytes(packet, 0, MultiplayerPeer.TRANSFER_MODE_UNRELIABLE_ORDERED, 0)
-	pass
+#func server_broadcast_all_player_movement():
+	#var packet: PackedByteArray = [ networking.NetworkMessageId.SERVER_BROADCAST_ALL_PLAYER_MOVEMENT ]
+	##packet.resize(1 + 13 * networking.player_list.size())
+	#var offset = 1
+	#for i in range(0, networking.player_list.size() - 1):
+		#if (	networking.player_list[i].global_position == networking.player_last_broadcast_position[i] \
+				#and networking.player_list[i].global_rotation_degrees.y == networking.player_last_broadcast_rotation_degrees_y[i]
+			#):
+			## Player hasn't moved, save the bandwidth
+			#break
+		#else:
+			#packet.resize(offset + 13)
+			#packet.encode_s32(offset, networking.player_list[i].get_multiplayer_authority())
+			#server_broadcast_player_movement(networking.player_list[i].get_multiplayer_authority())
+			#networking.player_last_broadcast_position[i] = networking.player_list[i].global_position
+			#networking.player_last_broadcast_rotation_degrees_y[i] = networking.player_list[i].global_rotation_degrees.y
+			#networking.player_last_broadcast_rotation_degrees_x[i] = networking.player_list[i].camera.global_rotation_degrees.x
+			#networking.send_bytes(packet, 0, MultiplayerPeer.TRANSFER_MODE_UNRELIABLE_ORDERED, 0)
 
 func server_broadcast_player_movement(peer_id: int):
 	var packet: PackedByteArray = [ networking.NetworkMessageId.SERVER_BROADCAST_PLAYER_MOVEMENT,
@@ -278,8 +285,10 @@ func server_broadcast_player_movement(peer_id: int):
 	# 1 byte x rotation: starting rot_x range: -180 - 180, add 180 to change range to 0 - 360, then multiply by 256/360 to squish range to: 0 - 255
 	var rot_x_mapped: int = int((player.camera.global_rotation_degrees.x + 180) * (256.0 / 360))
 	packet.encode_u8(18, rot_x_mapped)
-	packet.encode_u8(19, player.network_controller.build_inputs1())
-	packet.encode_u8(20, player.network_controller.build_movement_states_bitmap())
+	#packet.encode_u8(19, player.network_controller.build_inputs1())
+	#packet.encode_u8(20, player.network_controller.build_movement_states_bitmap())
+	packet.encode_u8(19, player.network_controller.network_inputs1)
+	packet.encode_u8(20, player.network_controller.network_movement_status_bitmap)
 	# Logger.info("sending: %s, peer: %d, pos: %v, rot_y: %f, rot_x: %f" % [ Networking.NetworkMessageId_str(networking.NetworkMessageId.SERVER_BROADCAST_PLAYER_MOVEMENT), peer_id, player.global_position, player.global_rotation_degrees.y, player.camera.global_rotation_degrees.x ])
 	networking.send_bytes(packet, 0, MultiplayerPeer.TRANSFER_MODE_UNRELIABLE_ORDERED, 0)
 
@@ -301,6 +310,8 @@ func server_send_client_player_movement_reconciliation(peer_id: int, last_valid_
 		Logger.warn("server_send_client_player_movement_reconciliation: peer_id not in peers: %d" % [peer_id])
 		return
 
+	networking.peers[peer_id].server_reconciliations += 1
+	networking.peers[peer_id].server_recent_reconciliations += 1 # TODO: clear this out every 5 seconds or something?
 	var player: Player = networking.peers[peer_id].player
 	packet.encode_s32(1, peer_id)
 	packet.encode_float(5, last_valid_position.x)

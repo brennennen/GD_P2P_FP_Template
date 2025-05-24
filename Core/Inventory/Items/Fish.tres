@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="InventoryItem" load_steps=4 format=3 uid="uid://b8i08ee74phcc"]
+
+[ext_resource type="Script" uid="uid://dene4sq7syubb" path="res://Core/Inventory/InventoryItemData.gd" id="1_ceuv7"]
+
+[sub_resource type="Gradient" id="Gradient_ceuv7"]
+offsets = PackedFloat32Array(0.391941, 0.470696)
+colors = PackedColorArray(0.233733, 0.401475, 0.52215, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_724xi"]
+gradient = SubResource("Gradient_ceuv7")
+fill = 2
+fill_from = Vector2(0.5, 0.5)
+
+[resource]
+script = ExtResource("1_ceuv7")
+name = "Fish"
+description = "A common feesh"
+stackable = false
+texture = SubResource("GradientTexture2D_724xi")
+metadata/_custom_type_script = "uid://dene4sq7syubb"

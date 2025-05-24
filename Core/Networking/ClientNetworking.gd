@@ -409,7 +409,7 @@ func on_recieve_peer_ids(_from_peer_id: int, packet: PackedByteArray):
 			send_request_player_initial_state(peer_id)
 
 func on_recieve_player_movement(_from_peer_id: int, packet: PackedByteArray):
-	var peer_id = packet.decode_s32(1)
+	var peer_id = packet.decode_s32(1) # SERVER_BROADCAST_PLAYER_MOVEMENT
 	if peer_id == multiplayer.get_unique_id():
 		# got packet for myself, ignore, maybe do some light cheat detection here?
 		return
@@ -423,6 +423,7 @@ func on_recieve_player_movement(_from_peer_id: int, packet: PackedByteArray):
 	var rot_x_degrees = (rot_x_mapped * (360.0 / 256)) - 180
 	var input1 := packet.decode_u8(19)
 	var movement_status_bitmap := packet.decode_u8(20)
+	#Logger.info("on_recieve_player_movement: peer: %d, movement_status_bitmap: %d" % [peer_id, movement_status_bitmap])
 	var player: Player = networking.get_player(peer_id)
 	if player:
 		#player.network_controller.on_receive_player_movement(peer_position, rot_y_degrees, rot_x_degrees, input1, movement_status_bitmap)

@@ -61,13 +61,31 @@ func spawn_player(peer_id) -> Player:
 	player.network_controller.network_target_position = spawn_point_global_position
 	return player
 
+var last_spawn_index: int = 0
 func get_spawn_point() -> SpawnPoint:
-	for child in spawn_points.get_children():
-		var spawn_point = child as SpawnPoint
-		if !spawn_point.is_occupied() and spawn_point not in reserved_spawn_points_this_frame:
-			reserved_spawn_points_this_frame.append(spawn_point)
-			return spawn_point
-	return spawn_points.get_children().pick_random() # if all spawn points are occupied, pick a random one
+	var sentinel: int = 0
+	var spawn_points_array: Array[Node] = spawn_points.get_children()
+	var spawn_point_count: int = spawn_points.get_child_count()
+	var next_spawn_index = last_spawn_index
+	
+	while(true):
+		sentinel += 1
+		if sentinel > 100:
+			break
+		next_spawn_index = (next_spawn_index + 1) % (spawn_point_count - 1)
+		if spawn_points_array[next_spawn_index] is SpawnPoint:
+			var spawn_point = spawn_points_array[next_spawn_index] as SpawnPoint
+			if !spawn_point.is_occupied() and spawn_point not in reserved_spawn_points_this_frame:
+				last_spawn_index = next_spawn_index
+				return spawn_point
+	return spawn_points.get_children().pick_random()
+
+	#for child in spawn_points.get_children():
+		#var spawn_point = child as SpawnPoint
+		#if !spawn_point.is_occupied() and spawn_point not in reserved_spawn_points_this_frame:
+			#reserved_spawn_points_this_frame.append(spawn_point)
+			#return spawn_point
+	#return spawn_points.get_children().pick_random() # if all spawn points are occupied, pick a random one
 
 # TODO: create a spawn queue? respawning adds players to the spawn queue, only spawn 1 player per physics tick?
 
@@ -78,20 +96,18 @@ func handle_player_death(player: Player):
 		GameModeType.LAST_MAN_STANDING:
 			player.die()
 			# TODO: start spectate mode after x seconds...
+			respawn_player(player, true)
 		_:
 			player.die()
 			# TODO: respawn after x seconds...
-			respawn_player(player)
+			respawn_player(player, false)
 
 #@rpc("authority", "call_local", "reliable")
-func respawn_player(player: Player):
-	Logger.info("respawn_player: %s" % [ player.name ])
+func respawn_player(player: Player, spectator: bool = false):
 	if is_instance_valid(spawn_points) and spawn_points.get_children().size() > 0:
-		# TODO: if the game mode has teams, get specific spawn point for that team
 		var spawn_point = get_spawn_point()
-		#player.global_position = spawn_point.global_position
-		#player.network_controller.network_target_position = spawn_point.global_position
-		player.respawn.rpc(spawn_point.global_position + Vector3(0.0, 0.1, 0.0)) # spawn a bit above the point?
+		Logger.info("respawn_player: %s, pos: %v" % [ player.name, spawn_point.global_position ])
+		player.respawn.rpc(spawn_point.global_position + Vector3(0.0, 0.1, 0.0), spawn_point.global_rotation_degrees.y, spectator) # spawn a bit above the point?
 	else:
 		Logger.error("%s:respawn_player: NO VALID SPAWN POINTS!" % [name])
 

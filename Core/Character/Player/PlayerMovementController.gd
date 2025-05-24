@@ -2,10 +2,10 @@ extends Node3D
 
 class_name PlayerMovementController
 
-enum MovementMode { UNKNOWN, WALKING, FALLING, SWIMMING, DEBUG_FLY, SPECTATE }
+enum MovementMode { UNKNOWN, WALKING, FALLING, SWIMMING, SWINGING, HORSE_RIDING, DEBUG_FLY, SPECTATE }
 enum WalkingSubMovementMode { NONE, CROUCHING, SPRINTING }
 
-@onready var player = $".."
+@onready var player: Player = $".."
 
 @export_category("Movement")
 @export var walk_speed: float = 2.5
@@ -27,11 +27,34 @@ var walking_sub_movement_mode: WalkingSubMovementMode = WalkingSubMovementMode.N
 func _ready() -> void:
 	jump_velocity = sqrt(jump_height * gravity * 2)
 
+@rpc("any_peer", "call_local", "reliable")
+func change_movement_mode(new_movement_mode: MovementMode) -> void:
+	
+	match movement_mode:
+		MovementMode.SWINGING:
+			match new_movement_mode:
+				MovementMode.FALLING:
+					movement_mode_transition_swinging_to_falling()
+				_:
+					pass
+			pass
+		_:
+			pass
+	if movement_mode == MovementMode.SWINGING:
+		pass
+		#movement_controller.change_movement_mode(PlayerMovementController.MovementMode.FALLING)
+		#movement_controller.movement_mode_transition_swinging_to_falling()
+	
+	movement_mode = new_movement_mode
+	
+
 func determine_movement_mode(_delta, last_movement_mode) -> MovementMode:
 	var new_movement_mode = last_movement_mode
 	if player.is_on_floor():
 		if last_movement_mode == MovementMode.FALLING:
 			movement_mode_transition_falling_to_walking()
+		elif last_movement_mode == MovementMode.SWINGING:
+			movement_mode_transition_swinging_to_walking()
 		new_movement_mode = MovementMode.WALKING
 		walking_sub_movement_mode = determine_walking_sub_movement_mode()
 	else:
@@ -52,6 +75,15 @@ func movement_mode_transition_falling_to_walking():
 	#third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/jump", false)
 	player.play_footstep_audio()
 
+func movement_mode_transition_swinging_to_walking():
+	# TODO: play swinging to ground landing animation
+	player.play_footstep_audio()
+
+func movement_mode_transition_swinging_to_falling():
+	#
+	movement_mode = MovementMode.FALLING
+	pass
+
 func get_movement_speed() -> float:
 	var movement_speed = walk_speed
 	if player.is_on_floor():
@@ -68,10 +100,25 @@ func get_movement_speed() -> float:
 			movement_speed = air_strafe_speed
 	return movement_speed
 
-func ground_movement_physics(delta, move_speed):
-	var input_dir = Input.get_vector("move_left", "move_right", "move_forward", "move_backward")
-	player.last_input_dir = input_dir
-	var direction = (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
+func player_physics_process(delta: float, input_dir: Vector2, jump_pressed: bool) -> void:
+	var move_speed: float = get_movement_speed()
+	if movement_mode == MovementMode.WALKING and jump_pressed == false:
+		ground_movement_physics(delta, move_speed, input_dir)
+		if player.velocity.length() != 0:
+			player.footstep_animation_player.play("Walk")
+			player.head_bob_animation_player.play("HeadBob")
+	elif movement_mode == MovementMode.SWINGING:
+		swinging_movement_physics(delta, move_speed)
+	elif movement_mode == MovementMode.FALLING:
+		falling_movement_physics(delta, move_speed)
+	elif movement_mode == MovementMode.DEBUG_FLY:
+		debug_flying_physics(delta, move_speed)
+	if !GameInstance.networking.is_server() and is_multiplayer_authority():
+		player.network_controller.client_send_move_data()
+
+func ground_movement_physics(delta: float, move_speed: float, input_dir: Vector2) -> void:
+	player.velocity.y -= player.gravity * delta
+	var direction = (player.transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
 	if direction:
 		player.velocity.x = lerp(player.velocity.x, direction.x * move_speed, delta * 3.0)
 		player.velocity.z = lerp(player.velocity.z, direction.z * move_speed, delta * 3.0)
@@ -80,6 +127,57 @@ func ground_movement_physics(delta, move_speed):
 		player.velocity.z = move_toward(player.velocity.z, 0, move_speed)
 	player.move_and_slide()
 	move_colliding_rigid_bodies()
+
+var current_swing_radius: float = 0.0
+
+@export var swing_control_strength: float = 1.0
+@export var swing_initial_boost_factor: float = 0.5
+@export var swing_damping_factor: float = 1.0
+
+func start_swinging():
+	change_movement_mode.rpc(MovementMode.SWINGING)
+	#movement_mode = MovementMode.SWINGING
+	#current_swing_radius = (player.global_transform.origin - player.grapple_hook_point).length()
+	#var vector_to_anchor = player.grapple_hook_point - player.global_transform.origin
+	#var radial_velocity = player.velocity.project(vector_to_anchor.normalized())
+	#player.velocity = (player.velocity - radial_velocity) * swing_initial_boost_factor
+	pass
+
+var rest_length: float = 2.0
+var stiffness: float = 5.0
+var dampening: float = 1.0
+
+func swinging_movement_physics(delta: float, _move_speed: float) -> void:
+	player.velocity.y -= player.gravity * delta
+	# TODO: move in parabala from swinging point
+	# use "player.grapple_hook_point" to access vector3 point to swing around
+
+	# If the grapple hook is gone, change to falling
+	if player.grapple_hook_point == null:
+		movement_mode = MovementMode.FALLING
+		return
+
+	# hooke's law
+	# https://www.youtube.com/watch?v=yWRHMOqoxGM
+	var target_dir = player.global_position.direction_to(player.grapple_hook_point)
+	var target_dist = player.global_position.distance_to(player.grapple_hook_point)
+	var displacement = target_dist - rest_length
+	var force := Vector3.ZERO
+	
+	if displacement > 0.0001:
+		var spring_force_magnitude = stiffness * displacement
+		var spring_force = target_dir * spring_force_magnitude
+		var vel_dot: float = player.velocity.dot(target_dir)
+		var local_dampening = -dampening * vel_dot * target_dir
+		force = spring_force + local_dampening
+	player.velocity += force * delta
+	player.move_and_slide()
+
+func falling_movement_physics(delta, _speed):
+	player.velocity.y -= player.gravity * delta
+	#velocity.y -= gravity * delta
+	#Logger.info("gravity: %f, y_veloc: %f" % [gravity, velocity.y])
+	player.move_and_slide()
 
 func move_colliding_rigid_bodies():
 	for col_idx in player.get_slide_collision_count():

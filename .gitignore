@@ -4,6 +4,7 @@
 
 Logs
 *.tmp
+.exports
 
 # Excluding the addons folder to reduce repo size. Read the readme for
 # addons to install.

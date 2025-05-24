@@ -88,15 +88,21 @@ var last_input_dir: Vector2 = Vector2(0.0, 0.0)
 var equipment_mode: EquipmentMode = EquipmentMode.NONE
 var is_paused: bool = false
 var is_movement_locked: bool = false
+var spawning_delay: float
+
+
+var multiplayer_id: int = 0
 
 # Functions
 
 func _enter_tree():
 	Logger.info("character enter tree. name: %s" % str(name))
 	set_multiplayer_authority(str(name).to_int(), true)
+	multiplayer_id = name.to_int()
 
 func _ready():
 	 # hide any menus that might have been left visible
+	spawning_delay = 1.0
 	pause_menu.visible = false
 	jump_velocity = sqrt(jump_height * gravity * 2)
 	stored_collision_layer = collision_layer
@@ -142,6 +148,18 @@ func notify_peer_their_player_is_spawned(spawned_peer_id):
 
 @rpc("any_peer", "call_local", "reliable")
 func change_equipment_mode(new_equipment_mode: EquipmentMode):
+	match equipment_mode:
+		EquipmentMode.NONE:
+			pass
+		EquipmentMode.FISTS:
+			pass
+		EquipmentMode.FISHING_POLE:
+			if movement_controller.movement_mode == PlayerMovementController.MovementMode.SWINGING:
+				movement_controller.movement_mode_transition_swinging_to_falling()
+		_:
+			pass
+		pass
+
 	match new_equipment_mode:
 		EquipmentMode.NONE:
 			third_person_animation_tree.set("parameters/UpperBodyStateMachine/conditions/equip_none", true)
@@ -181,6 +199,7 @@ func die():
 	velocity = Vector3(0.0, 0.0, 0.0)
 	third_person.hide()
 	alive = false
+	movement_controller.change_movement_mode(PlayerMovementController.MovementMode.UNKNOWN)
 
 func is_menu_open() -> bool:
 	if pause_menu.visible == true: # or options menu, or interactable menu, etc.
@@ -273,6 +292,8 @@ func handle_gameplay_inputs(event):
 		return
 	if is_menu_open():
 		return
+	if event.is_action_pressed("jump"):
+		jump_action_pressed()
 	if event.is_action_pressed("primary_action"):
 		primary_action()
 	if event.is_action_pressed("hotbar_1"):
@@ -349,10 +370,6 @@ func fists_punch_third_person_visuals():
 	third_person_animation_tree.set("parameters/UpperBodyStateMachine/conditions/punch", true)
 	var upper_body_state_machine_playback = third_person_animation_tree.get("parameters/UpperBodyStateMachine/playback") as AnimationNodeStateMachinePlayback
 	upper_body_state_machine_playback.travel("boxing-punch-right")
-
-#var knocked_back: bool = false
-#var knocked_back_source_position: Vector3 = Vector3(0.0, 0.0, 0.0)
-#var knocked_back_force: float = 0.0
 
 var handle_hit_next_physics_frame: bool = false
 var hit_source_position: Vector3 = Vector3(0.0, 0.0, 0.0)
@@ -432,6 +449,12 @@ func predictive_physics_process(_delta: float) -> void:
 	pass
 
 func _physics_process(delta):
+	
+	# If we just spawned in, ignore everything for a bit
+	if spawning_delay > 0.0:
+		spawning_delay -= delta
+		return
+		
 	# delay when just spawned in for a bit to give godot a second to not spaz out
 	if delay_physics:
 		physics_delay_running_delta += delta
@@ -439,14 +462,20 @@ func _physics_process(delta):
 			collision_layer = stored_collision_layer
 			delay_physics = false
 		return
+	var input_dir = Input.get_vector("move_left", "move_right", "move_forward", "move_backward")
+	last_input_dir = input_dir
 	if not self.is_alive: # If the player is dead, allow them to move the camera, but don't do much else.
-		update_camera(delta)
+		update_camera(delta, input_dir)
 		return
+	
+	update_rope()
+	
 	if not is_multiplayer_authority():
 		network_controller.remote_pawn_physics_process(delta)
 		return
 
-	update_camera(delta)
+	update_camera(delta, input_dir)
+	network_controller.local_controlled_pawn_physics_process(delta)
 
 	if is_movement_locked:
 		return
@@ -475,34 +504,20 @@ func _physics_process(delta):
 			# TODO: add delay before regen
 			if stamina < 100.0:
 				set_stamina(stamina + 0.25)
-
 	if handle_hit_next_physics_frame:
 		physics_process_handle_hit()
 		handle_hit_next_physics_frame = false
-
-	velocity.y -= gravity * delta
-	var move_speed = movement_controller.get_movement_speed()
-	if movement_controller.movement_mode == PlayerMovementController.MovementMode.WALKING and jump_pressed == false:
-		ground_movement_physics(delta, move_speed)
-		if velocity.length() != 0:
-			footstep_animation_player.play("Walk")
-			head_bob_animation_player.play("HeadBob")
-	elif movement_controller.movement_mode == PlayerMovementController.MovementMode.FALLING:
-		falling_movement_physics(delta, move_speed)
-	elif movement_controller.movement_mode == PlayerMovementController.MovementMode.DEBUG_FLY:
-		movement_controller.debug_flying_physics(delta, move_speed)
-	if !GameInstance.networking.is_server() and is_multiplayer_authority():
-		network_controller.client_send_move_data()
+	movement_controller.player_physics_process(delta, input_dir, jump_pressed)
 
 func physics_process_handle_hit():
 	match(hit_type):
 		HitType.MELEE:
 			var dir = hit_source_position.direction_to(global_position)
-			velocity += (Vector3(dir.x, 0.0, dir.y) * hit_force)
+			velocity += (Vector3(dir.x, 0.0, dir.z) * hit_force)
 			velocity += Vector3(0.0, 5.0, 0.0) # add some up force for flavor
 		HitType.YOINK:
 			var dir = global_position.direction_to(hit_source_position)
-			velocity += (Vector3(dir.x, 0.0, dir.y) * hit_force)
+			velocity += (Vector3(dir.x, 0.0, dir.z) * hit_force)
 			velocity += Vector3(0.0, 5.0, 0.0) # add some up force for flavor
 		_:
 			pass
@@ -512,7 +527,7 @@ var last_mouse_rotation: Vector3
 var last_mouse_rotation_delta: Vector2
 var last_mouse_y_rotation: float = 0.0
 
-func update_camera(delta):
+func update_camera(delta, input_dir):
 	mouse_rotation.x += tilt_input * delta * mouse_sensitivity
 	mouse_rotation.x = clamp(mouse_rotation.x, tilt_lower_limit, tilt_upper_limit)
 	mouse_rotation.y += rotation_input * delta * mouse_sensitivity
@@ -531,8 +546,6 @@ func update_camera(delta):
 	rotation_input = 0.0
 	tilt_input = 0.0
 
-	var input_dir = Input.get_vector("move_left", "move_right", "move_forward", "move_backward")
-
 	if !is_leaning_left and !is_leaning_right: # Don't sway if leaning
 		if  movement_controller.movement_mode != PlayerMovementController.MovementMode.DEBUG_FLY: # Don't sway if debug flying
 			# Head sway (TODO: add speed to influence the amount of sway)
@@ -543,31 +556,17 @@ func update_camera(delta):
 			else:
 				camera_pivot.rotation.z = lerp_angle(camera_pivot.rotation.z, deg_to_rad(0), 0.01)
 
-func ground_movement_physics(delta, move_speed):
-	if is_paused:
-		velocity.x = move_toward(velocity.x, 0, move_speed)
-		velocity.z = move_toward(velocity.z, 0, move_speed)
-	else:
-		var input_dir = Input.get_vector("move_left", "move_right", "move_forward", "move_backward")
-		last_input_dir = input_dir
-		var direction = (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
-		if direction:
-			velocity.x = lerp(velocity.x, direction.x * move_speed, delta * 3.0)
-			velocity.z = lerp(velocity.z, direction.z * move_speed, delta * 3.0)
-		else:
-			velocity.x = move_toward(velocity.x, 0, move_speed)
-			velocity.z = move_toward(velocity.z, 0, move_speed)
-	move_and_slide()
-	movement_controller.move_colliding_rigid_bodies()
-
-func falling_movement_physics(_delta, _speed):
-	#velocity.y -= gravity * delta
-	#Logger.info("gravity: %f, y_veloc: %f" % [gravity, velocity.y])
-	move_and_slide()
-
 func _on_animation_player_animation_started(anim_name):
 	if anim_name == "Crouch":
 		is_crouching = !is_crouching
+
+
+func jump_action_pressed():
+	
+	# don't actually jump when pressed, wait until physics process 1/60th a second is fine to wait and it's easier to handle velocity changing behavior there
+	if movement_controller.movement_mode == PlayerMovementController.MovementMode.SWINGING:
+		movement_controller.change_movement_mode.rpc(PlayerMovementController.MovementMode.FALLING)
+		#movement_controller.movement_mode_transition_swinging_to_falling()
 
 @rpc("any_peer", "call_local", "reliable")
 func start_jump():
@@ -607,19 +606,43 @@ func toggle_debug_fly() -> void:
 func server_teleport_player(new_position: Vector3):
 	global_position = new_position
 
+var grapple_hook_point: Vector3
+
+const SWING_ROPE = preload("res://Core/Misc/SwingRope/SwingRope.tscn")
+@onready var swing_rope: Node3D = $CameraPivot/PlayerCamera/SwingRope
+
 @rpc("any_peer", "call_local", "reliable")
-func respawn(respawn_position: Vector3):
-	Logger.info("respawn() player: %s, pos: %v" % [ name, respawn_position ])
+func start_swinging(hook_point: Vector3):
+	Logger.info("starting swing!")
+	grapple_hook_point = hook_point
+	movement_controller.start_swinging()
+
+func update_rope():
+	if movement_controller.movement_mode != PlayerMovementController.MovementMode.SWINGING:
+		swing_rope.visible = false
+		return
+	
+	swing_rope.visible = true
+	var dist = global_position.distance_to(grapple_hook_point)
+	swing_rope.look_at(grapple_hook_point)
+	swing_rope.scale = Vector3(1, 1, dist)
+
+@rpc("any_peer", "call_local", "reliable")
+func respawn(respawn_position: Vector3, respawn_rot_y: float, spectator: bool = false):
+	Logger.info("respawn() player: %s, pos: %v, rot_y: %f, spectator: %s" % [ name, respawn_position, respawn_rot_y, str(spectator) ])
 	fade_from_black(1.0)
+	movement_controller.change_movement_mode(PlayerMovementController.MovementMode.WALKING)
 	if is_multiplayer_authority():
 		pass
 	else:
 		third_person.visible = true
 	global_position = respawn_position
+	global_rotation_degrees.y = respawn_rot_y
 	# TODO: make a simple "reset_networking" or something that resets these to global_position
+	network_controller.network_target_position = respawn_position
 	network_controller.server_last_valid_target_position = respawn_position
 	network_controller.server_last_valid_on_ground_target_position = respawn_position
-
+	spawning_delay = 1.0
 
 var black_screen_tween: Tween = null
 func fade_from_black(duration: float):
@@ -652,11 +675,16 @@ func _on_quit_button_pressed() -> void:
 	GameInstance.quit()
 
 func debug_imgui_handle_player_window(_delta: float) -> void:
-	ImGui.Begin("Player-%s" % [ GameInstance.networking.get_multiplayer_id() ])
+	ImGui.Begin("Players")
+	ImGui.Separator()
+	ImGui.Text("name: %s" % [ str(name) ])
 	ImGui.Text("mp_auth: %s" % [ str(get_multiplayer_authority()) ])
 	ImGui.Text("pos: %v" % [ global_position ])
-	ImGui.Text("rot: %f" % [ rotation_degrees.y ])
+	ImGui.Text("rot_y: %f" % [ rotation_degrees.y ])
+	ImGui.Text("mov_mode: %s" % [ str(PlayerMovementController.MovementMode.keys()[movement_controller.movement_mode]) ])
 	ImGui.Text("equipment_mode: %s" % [ EquipmentMode_str(equipment_mode) ])
+	ImGui.Text("mov_status: %d" % [network_controller.network_movement_status_bitmap])
+	
 	ImGui.Text("hit: %s" % [ str(handle_hit_next_physics_frame) ])
 	ImGui.End()
 

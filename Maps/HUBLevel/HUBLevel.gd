@@ -12,7 +12,7 @@ func _ready() -> void:
 	# snaps/rubber bands the player back if outside of some distance tolerance.
 	if !GameInstance.networking.is_server():
 		$World/ServerSideOnlyBox.queue_free()
-	
+
 	# TODO: only run this if it isn't played as the main scene from editor?
 	# If we travel back to the HUBLevel, respawn each player
 	if GameInstance.networking.is_server():

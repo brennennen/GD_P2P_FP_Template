@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="InventoryItem" load_steps=4 format=3 uid="uid://c6aa3clknr8yn"]
+
+[ext_resource type="Script" uid="uid://dene4sq7syubb" path="res://Core/Inventory/InventoryItemData.gd" id="1_825xe"]
+
+[sub_resource type="Gradient" id="Gradient_gb86m"]
+offsets = PackedFloat32Array(0.510989, 0.666667)
+colors = PackedColorArray(0.885182, 0.0445304, 0.217628, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_edv0o"]
+gradient = SubResource("Gradient_gb86m")
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(0.8, 0.2)
+
+[resource]
+script = ExtResource("1_825xe")
+name = "Health Potion"
+description = "A potion that restores health points"
+stackable = true
+texture = SubResource("GradientTexture2D_edv0o")
+metadata/_custom_type_script = "uid://dene4sq7syubb"

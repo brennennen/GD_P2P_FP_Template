@@ -10,6 +10,5 @@ A peer-to-peer first-person template for creating games in godot.
 * Some larger art assets that are "work in progress" have also not been committed to prevent too much lfs churn and repo size issues.
 
 
-## TODO
-* simulated proxy pawn animations not working
-* 
+## TODO:
+* horse keys

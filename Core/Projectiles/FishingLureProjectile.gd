@@ -11,6 +11,20 @@ var owning_player: Player
 func launch() -> void:
 	apply_central_impulse(start_direction * start_force)
 
+func _physics_process(_delta: float) -> void:
+	# player to environment: allow on client (player movement related and static bodies shouldn't change too much, folks could cheat with this though)
+	if owning_player.is_multiplayer_authority():
+		if get_contact_count() > 0:
+			for node in get_colliding_bodies():
+				if node is StaticBody3D:
+					# TODO: instead of "is_on_floor" maybe if player is holding left click?
+					if owning_player.is_on_floor():
+						owning_player.receive_fishing_lure_yoink.rpc(global_position)
+						cleanup.rpc()
+					else:
+						owning_player.start_swinging.rpc(global_position)
+					cleanup.rpc()
+
 func _on_player_collision_area_3d_body_entered(body: Node3D) -> void:
 	# Player to player: only allow on server?
 	if GameInstance.networking.is_server():
@@ -22,14 +36,10 @@ func _on_player_collision_area_3d_body_entered(body: Node3D) -> void:
 			# TODO: queue_free() rpc
 			#queue_free()
 			cleanup.rpc()
-	# player to environment: allow on client
-	if body is StaticBody3D:
-		Logger.info("player: %s (%v) fishing lure hit static body: %s (%v)" % [owning_player.name, owning_player.global_position, body.name, body.global_position])
-		# TODO: yoink self toward point that lure hit?
 
 @rpc("any_peer", "call_local", "reliable")
 func cleanup():
-	Logger.info("FishingLureProjectile.cleanup")
+	#Logger.info("FishingLureProjectile.cleanup")
 	# TODO: will this cause node not found desync issues? should multiplayer polling be disabled/turned off and then deleted after some delay? maybe just teleport to narnia for some time before deleting?
 	# TODO: or just pool 2 of these per player and swap between them, disabling/hiding the unused one?
 	queue_free()
