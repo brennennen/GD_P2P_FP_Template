@@ -361,15 +361,6 @@ surface_material_override/0 = SubResource("StandardMaterial3D_ff61r")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="World/Floors/MeshInstance3D7/StaticBody3D"]
 shape = SubResource("ConcavePolygonShape3D_3cn84")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="World"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8, -17)
-mesh = SubResource("BoxMesh_x2hfb")
-
-[node name="StaticBody3D" type="StaticBody3D" parent="World/MeshInstance3D"]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="World/MeshInstance3D/StaticBody3D"]
-shape = SubResource("ConcavePolygonShape3D_v8yre")
-
 [node name="MeshInstance3D2" type="MeshInstance3D" parent="World"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 8, -28)
 mesh = SubResource("BoxMesh_x2hfb")
@@ -389,7 +380,7 @@ mesh = SubResource("BoxMesh_x2hfb")
 shape = SubResource("ConcavePolygonShape3D_v8yre")
 
 [node name="MeshInstance3D4" type="MeshInstance3D" parent="World"]
-transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -6.411e-07, 8, -64.6667)
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -6.411e-07, 8, -52.6667)
 mesh = SubResource("BoxMesh_x2hfb")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="World/MeshInstance3D4"]
@@ -397,41 +388,16 @@ mesh = SubResource("BoxMesh_x2hfb")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="World/MeshInstance3D4/StaticBody3D"]
 shape = SubResource("ConcavePolygonShape3D_v8yre")
 
-[node name="MeshInstance3D7" type="MeshInstance3D" parent="World"]
-transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -6.411e-07, 8, -43.6667)
-mesh = SubResource("BoxMesh_x2hfb")
-
-[node name="StaticBody3D" type="StaticBody3D" parent="World/MeshInstance3D7"]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="World/MeshInstance3D7/StaticBody3D"]
-shape = SubResource("ConcavePolygonShape3D_v8yre")
-
-[node name="MeshInstance3D5" type="MeshInstance3D" parent="World"]
-transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -7, 8, -53.6667)
-mesh = SubResource("BoxMesh_x2hfb")
-
-[node name="StaticBody3D" type="StaticBody3D" parent="World/MeshInstance3D5"]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="World/MeshInstance3D5/StaticBody3D"]
-shape = SubResource("ConcavePolygonShape3D_v8yre")
-
-[node name="MeshInstance3D6" type="MeshInstance3D" parent="World"]
-transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 7, 8, -53.6667)
-mesh = SubResource("BoxMesh_x2hfb")
-
-[node name="StaticBody3D" type="StaticBody3D" parent="World/MeshInstance3D6"]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="World/MeshInstance3D6/StaticBody3D"]
-shape = SubResource("ConcavePolygonShape3D_v8yre")
-
 [node name="FinishArea3D" type="Area3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -31.4)
 
 [node name="Label3D2" type="Label3D" parent="FinishArea3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -48.5)
 text = "Finish Line"
 font_size = 128
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="FinishArea3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -51.1)
 shape = SubResource("BoxShape3D_8gnua")
 
 [node name="LevelTeleporter" parent="." instance=ExtResource("3_ff61r")]

@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=3 uid="uid://csmy5aw3v1gbq"]
+[gd_scene load_steps=22 format=3 uid="uid://csmy5aw3v1gbq"]
 
 [ext_resource type="PackedScene" uid="uid://dq3k1gmfnaxit" path="res://Core/Gameplay/SpawnPoint.tscn" id="1_46c6v"]
 [ext_resource type="Script" uid="uid://wqb1mmmb8bln" path="res://Maps/HUBLevel/HUBLevel.gd" id="1_kb0kb"]
@@ -55,12 +55,6 @@ size = Vector3(1, 2, 1)
 
 [sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_b0y6d"]
 data = PackedVector3Array(-0.5, 1, 0.5, 0.5, 1, 0.5, -0.5, -1, 0.5, 0.5, 1, 0.5, 0.5, -1, 0.5, -0.5, -1, 0.5, 0.5, 1, -0.5, -0.5, 1, -0.5, 0.5, -1, -0.5, -0.5, 1, -0.5, -0.5, -1, -0.5, 0.5, -1, -0.5, 0.5, 1, 0.5, 0.5, 1, -0.5, 0.5, -1, 0.5, 0.5, 1, -0.5, 0.5, -1, -0.5, 0.5, -1, 0.5, -0.5, 1, -0.5, -0.5, 1, 0.5, -0.5, -1, -0.5, -0.5, 1, 0.5, -0.5, -1, 0.5, -0.5, -1, -0.5, 0.5, 1, 0.5, -0.5, 1, 0.5, 0.5, 1, -0.5, -0.5, 1, 0.5, -0.5, 1, -0.5, 0.5, 1, -0.5, -0.5, -1, 0.5, 0.5, -1, 0.5, -0.5, -1, -0.5, 0.5, -1, 0.5, 0.5, -1, -0.5, -0.5, -1, -0.5)
-
-[sub_resource type="BoxMesh" id="BoxMesh_b0y6d"]
-size = Vector3(3, 3, 3)
-
-[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_5txvh"]
-data = PackedVector3Array(-1.5, 1.5, 1.5, 1.5, 1.5, 1.5, -1.5, -1.5, 1.5, 1.5, 1.5, 1.5, 1.5, -1.5, 1.5, -1.5, -1.5, 1.5, 1.5, 1.5, -1.5, -1.5, 1.5, -1.5, 1.5, -1.5, -1.5, -1.5, 1.5, -1.5, -1.5, -1.5, -1.5, 1.5, -1.5, -1.5, 1.5, 1.5, 1.5, 1.5, 1.5, -1.5, 1.5, -1.5, 1.5, 1.5, 1.5, -1.5, 1.5, -1.5, -1.5, 1.5, -1.5, 1.5, -1.5, 1.5, -1.5, -1.5, 1.5, 1.5, -1.5, -1.5, -1.5, -1.5, 1.5, 1.5, -1.5, -1.5, 1.5, -1.5, -1.5, -1.5, 1.5, 1.5, 1.5, -1.5, 1.5, 1.5, 1.5, 1.5, -1.5, -1.5, 1.5, 1.5, -1.5, 1.5, -1.5, 1.5, 1.5, -1.5, -1.5, -1.5, 1.5, 1.5, -1.5, 1.5, -1.5, -1.5, -1.5, 1.5, -1.5, 1.5, 1.5, -1.5, -1.5, -1.5, -1.5, -1.5)
 
 [sub_resource type="BoxMesh" id="BoxMesh_obda4"]
 size = Vector3(20, 0.5, 20)
@@ -132,6 +126,11 @@ text = "* server/host picks level by stepping on level pads
 * left click - use equipped item
 * esc - pause"
 
+[node name="InstructionsLabel3D2" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3.2, -10)
+text = "Leaderboard:
+"
+
 [node name="EnvironmentAndAtmosphere" type="Node3D" parent="."]
 
 [node name="ReflectionProbe" type="ReflectionProbe" parent="EnvironmentAndAtmosphere"]
@@ -188,21 +187,6 @@ skeleton = NodePath("../..")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="World/MeshInstance3D5/StaticBody3D"]
 shape = SubResource("ConcavePolygonShape3D_b0y6d")
-
-[node name="ServerSideOnlyBox" type="MeshInstance3D" parent="World"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 1.5, 8)
-mesh = SubResource("BoxMesh_b0y6d")
-
-[node name="StaticBody3D" type="StaticBody3D" parent="World/ServerSideOnlyBox"]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="World/ServerSideOnlyBox/StaticBody3D"]
-shape = SubResource("ConcavePolygonShape3D_5txvh")
-
-[node name="Label3D" type="Label3D" parent="World"]
-transform = Transform3D(-1, 0, 8.74228e-08, 0, 1, 0, -8.74228e-08, 0, -1, 3, 2, 6)
-text = "Server side only box
-(should stop clients)
-(may cause rubber banding)"
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="World"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
@@ -272,13 +256,23 @@ shape = SubResource("ConcavePolygonShape3D_y4585")
 [node name="Teleporters" type="Node3D" parent="."]
 
 [node name="Race1LevelTeleporter" parent="Teleporters" instance=ExtResource("3_84xh2")]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -8, 0, -6)
+transform = Transform3D(1, 0, -4.37114e-08, 0, 1, 0, 4.37114e-08, 0, 1, -8, 0, -8)
 label_name = "Race1"
 scene_path = "res://Maps/RaceLevels/Race1.tscn"
+
+[node name="Race1LevelTeleporter2" parent="Teleporters" instance=ExtResource("3_84xh2")]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -10, 0, -6)
+label_name = "Swinging Race"
+scene_path = "res://Maps/RaceLevels/SwingingRace.tscn"
 
 [node name="Sumo1LevelTeleporter" parent="Teleporters" instance=ExtResource("3_84xh2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, -8)
 label_name = "SUMO!"
 scene_path = "res://Maps/LastManLevels/LastMan1.tscn"
+
+[node name="Sumo1LevelTeleporter2" parent="Teleporters" instance=ExtResource("3_84xh2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -8)
+label_name = "Debug Sandbox"
+scene_path = "res://Maps/Sandboxes/DebugSandbox.tscn"
 
 [connection signal="body_entered" from="KillBoxArea3D" to="." method="_on_kill_box_area_3d_body_entered"]

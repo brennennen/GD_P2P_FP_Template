@@ -100,7 +100,38 @@ func get_movement_speed() -> float:
 			movement_speed = air_strafe_speed
 	return movement_speed
 
-func player_physics_process(delta: float, input_dir: Vector2, jump_pressed: bool) -> void:
+@rpc("any_peer", "call_local", "reliable")
+func start_jump():
+	player.velocity.y = jump_velocity
+	player.third_person.jump_third_person_visuals()
+	player.play_footstep_audio()
+
+func player_physics_process(delta: float, input_dir: Vector2, sprint_held: bool, jump_pressed: bool) -> void:
+	movement_mode = determine_movement_mode(delta, movement_mode)
+
+	# Handle Jump.
+	if !player.is_paused:
+		if jump_pressed and player.is_on_floor():
+			start_jump.rpc() # TODO: this no longer makes sense to do in the physics frame given it's an rpc... need to rethink this...
+
+	# Handle Sprint
+	player.is_sprinting = false
+	if !player.is_paused:
+		if sprint_held:
+			if player.stamina <= 1.0:
+				player.is_sprinting = false
+			else:
+				player.is_sprinting = true
+				player.set_stamina(player.stamina - 0.25)
+		else:
+			# TODO: add delay before regen
+			if player.stamina < 100.0:
+				player.set_stamina(player.stamina + 0.25)
+
+	if player.handle_hit_next_physics_frame:
+		player.physics_process_handle_hit()
+		player.handle_hit_next_physics_frame = false
+
 	var move_speed: float = get_movement_speed()
 	if movement_mode == MovementMode.WALKING and jump_pressed == false:
 		ground_movement_physics(delta, move_speed, input_dir)

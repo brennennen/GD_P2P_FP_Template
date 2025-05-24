@@ -10,12 +10,6 @@ static func EquipmentMode_str(_equipment_mode: EquipmentMode):
 
 # Public Members
 @export_category("Movement")
-@export var walk_speed: float = 2.5
-@export var crouch_speed: float = 1.5
-@export var sprint_speed: float = 5.0
-@export var swim_speed: float = 3.0
-@export var air_strafe_speed: float = 1.0
-@export var debug_fly_speed: float = 10.0
 @export var jump_height: float = 1.0 # meters
 @export var crouch_animation_speed : float = 10.0
 
@@ -23,6 +17,9 @@ static func EquipmentMode_str(_equipment_mode: EquipmentMode):
 @export var mouse_sensitivity: float = 0.5
 @export var tilt_lower_limit : float = deg_to_rad(-90.0)
 @export var tilt_upper_limit : float = deg_to_rad(90.0)
+
+@export_category("Misc")
+@export var inventory_data: InventoryData
 
 #@export_category("Misc")
 
@@ -54,6 +51,9 @@ static func EquipmentMode_str(_equipment_mode: EquipmentMode):
 @onready var first_person = $CameraPivot/FirstPerson
 @onready var network_controller: PlayerNetworkController = $NetworkController
 @onready var alive: bool = true
+@onready var inventory_interface: InventoryInterface = $UI/MarginContainer/InventoryInterface
+
+
 
 # Data Members
 # # Status
@@ -73,7 +73,6 @@ var is_sprinting: bool = false
 var is_leaning_left: bool = false
 var is_leaning_right: bool = false
 var is_debug_flying: bool = false
-var jump_velocity: float = 0.0
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 
 # # Networking
@@ -104,7 +103,6 @@ func _ready():
 	 # hide any menus that might have been left visible
 	spawning_delay = 1.0
 	pause_menu.visible = false
-	jump_velocity = sqrt(jump_height * gravity * 2)
 	stored_collision_layer = collision_layer
 	if is_multiplayer_authority():
 		authoritative_player_ready() # TODO rename this to something about "autonomouse proxy"
@@ -114,12 +112,14 @@ func _ready():
 ## The locally controlled player (controlled by the local game instance) is ready
 func authoritative_player_ready():
 	Logger.info("%s:authoritative_player_ready" % [name])
+	$UI.hide() 
 	camera.current = true
 	third_person.visible = false
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	crouch_shapecast.add_exception($".")
 	fade_from_black(5.0)
 	toggle_pause() # for debug testing on a single machine, best to start paused so you can move the windows around
+	inventory_interface.set_player_inventory_data(inventory_data)
 
 ## A peer player (not controlled by the local game instance) is ready
 func peer_player_ready():
@@ -128,6 +128,7 @@ func peer_player_ready():
 	first_person.visible = false
 	third_person.visible = true
 	hud.hide()
+	$UI.hide()
 	Logger.info("spawned %s's peer, sending rpc to start syncing" % name)
 	third_person_animation_tree.set("parameters/UpperBlend2/blend_amount", 0.0)
 	notify_peer_their_player_is_spawned.rpc_id(str(name).to_int(), multiplayer.get_unique_id())
@@ -264,14 +265,14 @@ func ghost_level_camera() -> void:
 func reconnect_camera_to_player() -> void:
 	camera.global_position = camera_pivot.global_position
 
-func _input(event):
+func _input(event: InputEvent) -> void:
 	if is_multiplayer_authority():
 		handle_system_inputs(event)
 		if !is_paused: # and !debug_console.visible:
 			handle_gameplay_inputs(event)
 
 ## Handle non-gameplay related system inputs (pausing, quiting, etc.)
-func handle_system_inputs(event):
+func handle_system_inputs(event: InputEvent) -> void:
 	if !is_multiplayer_authority():
 		return
 	if event.is_action_pressed("pause"):
@@ -285,7 +286,7 @@ func handle_system_inputs(event):
 		get_tree().quit()
 
 ## Handle gameplay related inputs (moving, interacting, etc.)
-func handle_gameplay_inputs(event):
+func handle_gameplay_inputs(event: InputEvent) -> void:
 	if !is_multiplayer_authority():
 		return
 	if !self.is_alive:
@@ -304,6 +305,8 @@ func handle_gameplay_inputs(event):
 		change_equipment_mode.rpc(EquipmentMode.FISHING_POLE)
 	if event.is_action_pressed("crouch_toggle"):
 		toggle_crouch.rpc()
+	if event.is_action_pressed("toggle_inventory"):
+		toggle_inventory()
 	if event.is_action_pressed("debug_fly_toggle"):
 		toggle_debug_fly.rpc()
 
@@ -449,12 +452,11 @@ func predictive_physics_process(_delta: float) -> void:
 	pass
 
 func _physics_process(delta):
-	
 	# If we just spawned in, ignore everything for a bit
 	if spawning_delay > 0.0:
 		spawning_delay -= delta
 		return
-		
+
 	# delay when just spawned in for a bit to give godot a second to not spaz out
 	if delay_physics:
 		physics_delay_running_delta += delta
@@ -467,9 +469,9 @@ func _physics_process(delta):
 	if not self.is_alive: # If the player is dead, allow them to move the camera, but don't do much else.
 		update_camera(delta, input_dir)
 		return
-	
+
 	update_rope()
-	
+
 	if not is_multiplayer_authority():
 		network_controller.remote_pawn_physics_process(delta)
 		return
@@ -480,34 +482,10 @@ func _physics_process(delta):
 	if is_movement_locked:
 		return
 
-	movement_controller.movement_mode = movement_controller.determine_movement_mode(delta, movement_controller.movement_mode)
+	var jump_pressed: bool = Input.is_action_just_pressed("jump")
+	var sprint_held: bool = Input.is_action_pressed("sprint")
 
-	# Handle Jump.
-	var jump_pressed: bool = false
-	if !is_paused:
-		jump_pressed = Input.is_action_just_pressed("jump")
-		if jump_pressed and is_on_floor():
-			if is_crouching == true:
-				toggle_crouch.rpc()
-			start_jump.rpc()
-
-	# Handle Sprint
-	is_sprinting = false
-	if !is_paused:
-		if Input.is_action_pressed("sprint"):
-			if stamina <= 1.0:
-				is_sprinting = false
-			else:
-				is_sprinting = true
-				set_stamina(stamina - 0.25)
-		else:
-			# TODO: add delay before regen
-			if stamina < 100.0:
-				set_stamina(stamina + 0.25)
-	if handle_hit_next_physics_frame:
-		physics_process_handle_hit()
-		handle_hit_next_physics_frame = false
-	movement_controller.player_physics_process(delta, input_dir, jump_pressed)
+	movement_controller.player_physics_process(delta, input_dir, sprint_held, jump_pressed)
 
 func physics_process_handle_hit():
 	match(hit_type):
@@ -562,19 +540,13 @@ func _on_animation_player_animation_started(anim_name):
 
 
 func jump_action_pressed():
-	
+	# Jumping uncrouches
+	if is_crouching == true:
+		toggle_crouch.rpc()
 	# don't actually jump when pressed, wait until physics process 1/60th a second is fine to wait and it's easier to handle velocity changing behavior there
 	if movement_controller.movement_mode == PlayerMovementController.MovementMode.SWINGING:
 		movement_controller.change_movement_mode.rpc(PlayerMovementController.MovementMode.FALLING)
 		#movement_controller.movement_mode_transition_swinging_to_falling()
-
-@rpc("any_peer", "call_local", "reliable")
-func start_jump():
-	#Logger.info("%s:start_jump" % [name])
-	velocity.y = jump_velocity
-	#third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/jump", true)
-	third_person.jump_third_person_visuals()
-	play_footstep_audio()
 
 func end_jump():
 	third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/jump", false)
@@ -589,6 +561,21 @@ func toggle_crouch():
 	else:
 		crouch_animation_player.play("Crouch", -1, crouch_animation_speed)
 		is_crouching = true
+
+func toggle_inventory():
+	if !is_multiplayer_authority():
+		return
+	
+	if is_paused:
+		return
+
+	$UI.visible = !$UI.visible
+	
+	if $UI.visible:
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	else:
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
 
 @rpc("any_peer", "call_local", "reliable")
 func toggle_debug_fly() -> void:

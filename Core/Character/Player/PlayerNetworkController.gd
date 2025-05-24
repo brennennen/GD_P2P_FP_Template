@@ -191,6 +191,7 @@ func client_send_move_data():
 	last_sent_movement_status_bitmap = movement_states_bitmap
 
 var continuous_floor_collisions: int = 0
+var continuous_corner_collisions: int = 0
 
 ## Server on receiving a client player movement packet
 ## Whenever the server is notified a client's pawn moved, try and simulate that move on the server
@@ -214,7 +215,13 @@ func server_handle_client_pawn_movement(peer_id: int, new_position: Vector3, rot
 		elif collision.get_angle() < 1.0 and collision.get_depth() < 0.01:
 			continuous_floor_collisions += 1
 			if continuous_floor_collisions >= 100:
+				Logger.info("server_handle_client_pawn_movement: 100+ floor collisions! pushing client up 10cm from last valid position.")
 				server_handle_client_pawn_movement_reconciliation(peer_id, server_last_valid_on_ground_target_position + Vector3(0.0, 0.1, 0.0))
+		# if just low depth, assume it's clipping a corner on some geometry
+		elif collision.get_depth() < 0.01:
+			continuous_corner_collisions += 1
+			if continuous_corner_collisions >= 100:
+				Logger.info("server_handle_client_pawn_movement: 100+ corner collisions? TODO: not sure.")
 		else:
 			Logger.info("server detected player %s collided: %s, dist: %f, depth: %f, angle: %f" % [ player.name, collision.get_collider(), distance, collision.get_depth(), collision.get_angle() ])
 			#Logger.info("Server detected collision for player: %s, dist: %f" % [player.name, distance])
@@ -229,6 +236,7 @@ func server_handle_client_pawn_movement(peer_id: int, new_position: Vector3, rot
 			return
 	# Only allow server pawn to move if they are not colliding.
 	continuous_floor_collisions = 0
+	continuous_corner_collisions = 0
 	
 	# TODO: have both server_last_valid_target_position and server_last_valid_on_ground_target_position
 	# try and use server_last_valid_target_position first, then fall back to on_ground version if it fails?
