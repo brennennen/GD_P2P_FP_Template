@@ -1,0 +1,16 @@
+[gd_scene load_steps=2 format=3 uid="uid://c0hkijhcuc843"]
+
+[ext_resource type="PackedScene" uid="uid://cwlna3eas8sti" path="res://Assets/Characters/Horsequin/horsequin.glb" id="1_wpsxw"]
+
+[node name="HorseMount" type="Node3D"]
+
+[node name="horsequin2" parent="." instance=ExtResource("1_wpsxw")]
+
+[node name="PlayerBoneAttachment3D" type="BoneAttachment3D" parent="."]
+transform = Transform3D(1, 0, -8.74228e-08, -8.74228e-08, 0, -1, 0, 1, 0, -1.87246e-16, 1.36748, -0.125557)
+bone_name = "slot_player_attach"
+bone_idx = 37
+use_external_skeleton = true
+external_skeleton = NodePath("../horsequin2/horsequin/Skeleton3D")
+
+[editable path="horsequin2"]

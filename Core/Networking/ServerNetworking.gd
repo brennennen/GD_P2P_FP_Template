@@ -31,7 +31,7 @@ func on_peer_connected(_peer_id):
 	pass
 
 func server_add_peer(peer_id):
-	networking.add_player(peer_id)
+	networking.add_peer(peer_id)
 
 func on_peer_disconnected(peer_id):
 	Logger.debug("peer_disconnected: %d" % [ peer_id ])
@@ -200,8 +200,9 @@ func server_synchronize_player_movement(delta: float) -> void:
 		player_movement_sync_running_delta = 0.0
 		# TODO: send all player movements in a single packet, less overhead from many small packets
 		for peer_id in networking.peers:
+			#TODO HERE
 			if networking.peers[peer_id].player == null:
-				Logger.warn("server_synchronize_player_movement: peer: %d has no player! can't sync!" % [peer_id])
+				#Logger.warn("server_synchronize_player_movement: peer: %d has no player! can't sync!" % [peer_id])
 				return
 			if (	networking.peers[peer_id].player.global_position == networking.peers[peer_id].player_last_broadcast_position \
 					and networking.peers[peer_id].player.global_rotation.y == networking.peers[peer_id].player_last_broadcast_rotation_y \

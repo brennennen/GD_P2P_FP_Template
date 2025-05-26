@@ -217,11 +217,14 @@ func server_handle_client_pawn_movement(peer_id: int, new_position: Vector3, rot
 			if continuous_floor_collisions >= 100:
 				Logger.info("server_handle_client_pawn_movement: 100+ floor collisions! pushing client up 10cm from last valid position.")
 				server_handle_client_pawn_movement_reconciliation(peer_id, server_last_valid_on_ground_target_position + Vector3(0.0, 0.1, 0.0))
+			return
 		# if just low depth, assume it's clipping a corner on some geometry
-		elif collision.get_depth() < 0.01:
+		# TODO: this breaks the 3m x 3m x 3m server side only box collision when jumping through it
+		elif collision.get_depth() < 0.01 and distance < 0.1:
 			continuous_corner_collisions += 1
 			if continuous_corner_collisions >= 100:
 				Logger.info("server_handle_client_pawn_movement: 100+ corner collisions? TODO: not sure.")
+			return
 		else:
 			Logger.info("server detected player %s collided: %s, dist: %f, depth: %f, angle: %f" % [ player.name, collision.get_collider(), distance, collision.get_depth(), collision.get_angle() ])
 			#Logger.info("Server detected collision for player: %s, dist: %f" % [player.name, distance])

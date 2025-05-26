@@ -1,8 +1,9 @@
-[gd_scene load_steps=26 format=3 uid="uid://c1xyjf8804omj"]
+[gd_scene load_steps=27 format=3 uid="uid://c1xyjf8804omj"]
 
 [ext_resource type="Script" uid="uid://ba834ivl65ngb" path="res://Maps/Sandboxes/DebugSandbox.gd" id="1_dmo41"]
 [ext_resource type="PackedScene" uid="uid://dq3k1gmfnaxit" path="res://Core/Gameplay/SpawnPoint.tscn" id="2_t3lk3"]
 [ext_resource type="PackedScene" uid="uid://b8lytvha5krpa" path="res://Core/Gameplay/LevelTeleporter.tscn" id="3_ftmlj"]
+[ext_resource type="PackedScene" uid="uid://bw2qospayyty4" path="res://Core/Character/NPC/Mountables/Horse/Horse.tscn" id="3_jl181"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ftmlj"]
 size = Vector3(1000, 10, 1000)
@@ -85,8 +86,10 @@ size = Vector3(3, 2, 3)
 [sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_ftmlj"]
 data = PackedVector3Array(1.5, 1, 1.5, 1.5, -1, 1.5, -1.5, -1, 1.5, 1.5, 1, -1.5, -1.5, -1, -1.5, 1.5, -1, -1.5, 1.5, 1, 1.5, 1.5, 1, -1.5, 1.5, -1, 1.5, 1.5, 1, -1.5, 1.5, -1, -1.5, 1.5, -1, 1.5, 1.5, 1, -1.5, 1.5, 1, 1.5, -1.5, -1, -1.5, 1.5, 1, 1.5, -1.5, -1, 1.5, -1.5, -1, -1.5, -1.5, -1, 1.5, 1.5, -1, 1.5, -1.5, -1, -1.5, 1.5, -1, 1.5, 1.5, -1, -1.5, -1.5, -1, -1.5)
 
-[node name="DebugSandbox" type="Node3D"]
+[node name="DebugSandbox" type="Node3D" node_paths=PackedStringArray("player_spawn_points", "default_level_camera")]
 script = ExtResource("1_dmo41")
+player_spawn_points = NodePath("SpawnPoints")
+default_level_camera = NodePath("DefaultLevelCamera")
 
 [node name="SpawnPoints" type="Node3D" parent="."]
 
@@ -158,6 +161,17 @@ surface_material_override/0 = SubResource("StandardMaterial3D_ftmlj")
 [node name="StaticBody3D" type="StaticBody3D" parent="World/MeshInstance3D"]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="World/MeshInstance3D/StaticBody3D"]
+shape = SubResource("ConcavePolygonShape3D_jl181")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, -0.25, 0)
+mesh = SubResource("BoxMesh_t3lk3")
+skeleton = NodePath("../..")
+surface_material_override/0 = SubResource("StandardMaterial3D_ftmlj")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="World/MeshInstance3D2"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="World/MeshInstance3D2/StaticBody3D"]
 shape = SubResource("ConcavePolygonShape3D_jl181")
 
 [node name="Section1" type="Node3D" parent="World"]
@@ -307,6 +321,9 @@ clipping through the corner of the mesh.
 Solution: Check the collision depth/angle
 and allow some light amounts of colliding/
 clipping on the server."
+
+[node name="Horse" parent="World" instance=ExtResource("3_jl181")]
+transform = Transform3D(-1, 0, 8.74228e-08, 0, 1, 0, -8.74228e-08, 0, -1, -12, 0, 7)
 
 [node name="Teleporters" type="Node3D" parent="."]
 

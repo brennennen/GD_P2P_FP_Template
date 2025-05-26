@@ -42,12 +42,6 @@ var session_min_fps: float = 60.0
 
 var arguments: Dictionary = {}
 
-#func _enter_tree() -> void:
-#	process_command_line_arguments()
-
-#func _init() -> void:
-	#process_command_line_arguments()
-
 func _ready() -> void:
 	arguments = parse_command_line_arguments(OS.get_cmdline_args())
 	if OS.is_debug_build():
@@ -109,46 +103,28 @@ func initialize_level(level_name: String, scene_path: String, game_mode_type: Ga
 			get_parent() == get_tree().root and \
 			networking.multiplayer_mode == Networking.MultiplayerMode.NONE
 		):
-		Logger.info("Detected scene running directly via run-scene. Using InEditorLobby for mulitple run instances.")
-		networking.multiplayer_mode = Networking.MultiplayerMode.IN_EDITOR
-		var main_node = load("res://Maps/Main/Main.tscn").instantiate()
-		get_window().add_child.call_deferred(main_node)
-		main_node.set_owner(get_tree().get_edited_scene_root())
-		var level_node = get_tree().get_root().get_node(level_name)
-		level_node.queue_free()
-		var new_level_node = load(scene_path).instantiate()
-		main_node.add_child.call_deferred(new_level_node)
-		new_level_node.set_owner(get_tree().get_edited_scene_root())
-		if GameInstance.networking.in_editor_lobby.instance_num == 1:
-			networking.host_game()
-		else:
-			await get_tree().create_timer(0.5).timeout
-			GameInstance.networking.in_editor_lobby.join_lobby()
-		await get_tree().create_timer(1.0).timeout
-		if GameInstance.networking.in_editor_lobby.instance_num == 1:
-			var player = game_mode.spawn_player(multiplayer.get_unique_id())
-			var peer_metadata = PeerMetadata.new()
-			peer_metadata.peer_id = 1
-			peer_metadata.peer_index = 0
-			peer_metadata.player = player
-			peer_metadata.player_last_broadcast_position = player.global_position
-			peer_metadata.player_last_broadcast_rotation_y = player.global_rotation_degrees.y
-			peer_metadata.player_camera_last_broadcast_rotation_x = player.camera.global_rotation_degrees.x
-			networking.peers[1] = peer_metadata
-		debug_position_all_instance_windows()
-	if GameInstance.networking.is_server():
-		if networking.multiplayer_mode == Networking.MultiplayerMode.SINGLE_PLAYER \
-				or networking.multiplayer_mode == Networking.MultiplayerMode.DIRECT_CONNECT \
-				or networking.multiplayer_mode == Networking.MultiplayerMode.STEAM:
-			var player = game_mode.spawn_player(multiplayer.get_unique_id())
-			var peer_metadata = PeerMetadata.new()
-			peer_metadata.peer_id = 1
-			peer_metadata.peer_index = 0
-			peer_metadata.player = player
-			peer_metadata.player_last_broadcast_position = player.global_position
-			peer_metadata.player_last_broadcast_rotation = player.global_rotation_degrees
-			networking.peers[1] = peer_metadata
+		in_editor_run_multiple_instance_hack(level_name, scene_path)
 	_on_debug_log_timer_timeout() # debug log right away
+
+func in_editor_run_multiple_instance_hack(level_name: String, scene_path: String):
+	Logger.info("Detected scene running directly via run-scene. Using InEditorLobby for mulitple run instances.")
+	networking.multiplayer_mode = Networking.MultiplayerMode.IN_EDITOR
+	var main_node = load("res://Maps/Main/Main.tscn").instantiate()
+	get_window().add_child.call_deferred(main_node)
+	main_node.set_owner(get_tree().get_edited_scene_root())
+	var level_node = get_tree().get_root().get_node(level_name)
+	level_node.queue_free()
+	var new_level_node = load(scene_path).instantiate()
+	main_node.add_child.call_deferred(new_level_node)
+	new_level_node.set_owner(get_tree().get_edited_scene_root())
+	if GameInstance.networking.in_editor_lobby.instance_num == 1:
+		networking.host_game()
+	else:
+		await get_tree().create_timer(0.5).timeout
+		GameInstance.networking.in_editor_lobby.join_lobby()
+	await get_tree().create_timer(1.0).timeout
+	debug_position_all_instance_windows()
+	pass
 
 func debug_position_all_instance_windows():
 	var window := get_window()
@@ -347,7 +323,8 @@ func clear_npcs() -> void:
 func get_players() -> Array[Player]:
 	var players_array: Array[Player] = []
 	for player in get_node("Players").get_children():
-		players_array.append(player)
+		if player is Player:
+			players_array.append(player)
 	return players_array
 	#return networking.get_players()
 

@@ -51,7 +51,7 @@ static func EquipmentMode_str(_equipment_mode: EquipmentMode):
 @onready var first_person = $CameraPivot/FirstPerson
 @onready var network_controller: PlayerNetworkController = $NetworkController
 @onready var alive: bool = true
-@onready var inventory_interface: InventoryInterface = $UI/MarginContainer/InventoryInterface
+@onready var inventory_interface: PlayerInventoryInterface = $UI/MarginContainer/PlayerInventoryInterface
 
 
 
@@ -216,6 +216,8 @@ func _unhandled_input(event):
 			rotation_input = -event.relative.x
 			tilt_input = -event.relative.y
 			#GameInstance.debug_panel.update_entry("mouse", ("%.2f, %.2f" % [_rotation_input, _tilt_input]))
+		#todo
+		pass
 
 func toggle_pause():
 	is_paused = !is_paused
@@ -309,6 +311,26 @@ func handle_gameplay_inputs(event: InputEvent) -> void:
 		toggle_inventory()
 	if event.is_action_pressed("debug_fly_toggle"):
 		toggle_debug_fly.rpc()
+	if event.is_action_pressed("debug_misc"):
+		debug_misc()
+
+
+const horse_scene = preload("res://Core/Character/NPC/Mountables/Horse/Horse.tscn")
+
+var horse: Horse
+
+func debug_misc():
+	Logger.info("debug_misc")
+	if movement_controller.movement_mode == PlayerMovementController.MovementMode.HORSE_RIDING:
+		if horse:
+			horse.queue_free()
+		movement_controller.change_movement_mode(PlayerMovementController.MovementMode.WALKING)
+	else:
+		var new_horse = horse_scene.instantiate()
+		add_child(horse)
+		horse = new_horse
+		movement_controller.change_movement_mode(PlayerMovementController.MovementMode.HORSE_RIDING)
+
 
 func set_spawn_rotation(new_rotation: Vector3):
 	player_rotation = Vector3(0.0, new_rotation.y, 0.0)
@@ -363,10 +385,8 @@ func fists_punch_server_request():
 	Logger.info("fists_punch_server_request");
 	# TODO: determine if the punch is allowed or not?
 	fists_punch_third_person_visuals.rpc()
-
 	for player in players_in_punch_hitbox:
 		player.receive_punch.rpc(global_position)
-	pass
 
 @rpc("any_peer", "call_local", "reliable")
 func fists_punch_third_person_visuals():
@@ -446,6 +466,13 @@ func _process(delta) -> void:
 		third_person.debug_imgui_handle_3rd_person_animation_window(delta)
 	if is_paused:
 		load_player_list()
+	
+	#if movement_controller.movement_mode == PlayerMovementController.MovementMode.HORSE_RIDING \
+			#and horse:
+		## ????
+		#horse.global_position = global_position
+		#pass
+		
 
 func predictive_physics_process(_delta: float) -> void:
 	# TODO: move most of physics process into here
@@ -671,7 +698,6 @@ func debug_imgui_handle_player_window(_delta: float) -> void:
 	ImGui.Text("mov_mode: %s" % [ str(PlayerMovementController.MovementMode.keys()[movement_controller.movement_mode]) ])
 	ImGui.Text("equipment_mode: %s" % [ EquipmentMode_str(equipment_mode) ])
 	ImGui.Text("mov_status: %d" % [network_controller.network_movement_status_bitmap])
-	
 	ImGui.Text("hit: %s" % [ str(handle_hit_next_physics_frame) ])
 	ImGui.End()
 

@@ -1,0 +1,27 @@
+[gd_scene load_steps=4 format=3 uid="uid://bw2qospayyty4"]
+
+[ext_resource type="Script" uid="uid://dohmb3u3ppo66" path="res://Core/Character/NPC/Mountables/Horse/Horse.gd" id="1_rejuq"]
+[ext_resource type="PackedScene" uid="uid://cwlna3eas8sti" path="res://Assets/Characters/Horsequin/horsequin.glb" id="2_rejuq"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_15i0k"]
+radius = 0.25
+height = 1.4
+
+[node name="Horse" type="CharacterBody3D"]
+script = ExtResource("1_rejuq")
+metadata/_custom_type_script = "uid://bhllc885f6a17"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+shape = SubResource("CapsuleShape3D_15i0k")
+
+[node name="horsequin" parent="." instance=ExtResource("2_rejuq")]
+
+[node name="PlayerBoneAttachment3D" type="BoneAttachment3D" parent="."]
+transform = Transform3D(1, 0, -8.74228e-08, -8.74228e-08, 0, -1, 0, 1, 0, -1.87246e-16, 1.36748, -0.125557)
+bone_name = "slot_player_attach"
+bone_idx = 37
+use_external_skeleton = true
+external_skeleton = NodePath("../horsequin/horsequin/Skeleton3D")
+
+[editable path="horsequin"]

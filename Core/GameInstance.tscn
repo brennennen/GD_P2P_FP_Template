@@ -16,6 +16,10 @@ script = ExtResource("1_kfnhb")
 [node name="GameMode" type="Node" parent="."]
 script = ExtResource("2_260b4")
 
+[node name="Timer" type="Timer" parent="GameMode"]
+process_callback = 0
+autostart = true
+
 [node name="Networking" type="Node" parent="."]
 script = ExtResource("2_gaito")
 

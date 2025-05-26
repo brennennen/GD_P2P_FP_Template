@@ -35,7 +35,3 @@ func join_game(address: String = "127.0.0.1", join_port: int = 7000) -> Error:
 @rpc("authority", "call_remote", "reliable", 0)
 func transfer_lobby_data(lobby_data: Dictionary):
 	Logger.info("peer %d got lobby_data: %s" % [ multiplayer.get_unique_id(), JSON.stringify(lobby_data)])
-
-func add_player(peer_id):
-	Logger.info("add_player: %d" % peer_id)
-	GameInstance.game_mode.spawn_character(peer_id)

@@ -29,7 +29,7 @@ func _ready() -> void:
 
 @rpc("any_peer", "call_local", "reliable")
 func change_movement_mode(new_movement_mode: MovementMode) -> void:
-	
+	Logger.info("change_movement_mode: %s -> %s" % [ MovementMode.keys()[movement_mode], MovementMode.keys()[new_movement_mode] ])
 	match movement_mode:
 		MovementMode.SWINGING:
 			match new_movement_mode:
@@ -44,11 +44,11 @@ func change_movement_mode(new_movement_mode: MovementMode) -> void:
 		pass
 		#movement_controller.change_movement_mode(PlayerMovementController.MovementMode.FALLING)
 		#movement_controller.movement_mode_transition_swinging_to_falling()
-	
 	movement_mode = new_movement_mode
-	
 
 func determine_movement_mode(_delta, last_movement_mode) -> MovementMode:
+	# TODO: don't change movement mode?
+	
 	var new_movement_mode = last_movement_mode
 	if player.is_on_floor():
 		if last_movement_mode == MovementMode.FALLING:
@@ -107,8 +107,7 @@ func start_jump():
 	player.play_footstep_audio()
 
 func player_physics_process(delta: float, input_dir: Vector2, sprint_held: bool, jump_pressed: bool) -> void:
-	movement_mode = determine_movement_mode(delta, movement_mode)
-
+	#movement_mode = determine_movement_mode(delta, movement_mode)
 	# Handle Jump.
 	if !player.is_paused:
 		if jump_pressed and player.is_on_floor():
@@ -138,6 +137,8 @@ func player_physics_process(delta: float, input_dir: Vector2, sprint_held: bool,
 		if player.velocity.length() != 0:
 			player.footstep_animation_player.play("Walk")
 			player.head_bob_animation_player.play("HeadBob")
+	elif movement_mode == MovementMode.HORSE_RIDING:
+		horse_riding_movement_physics(delta, move_speed, input_dir)
 	elif movement_mode == MovementMode.SWINGING:
 		swinging_movement_physics(delta, move_speed)
 	elif movement_mode == MovementMode.FALLING:
@@ -158,6 +159,10 @@ func ground_movement_physics(delta: float, move_speed: float, input_dir: Vector2
 		player.velocity.z = move_toward(player.velocity.z, 0, move_speed)
 	player.move_and_slide()
 	move_colliding_rigid_bodies()
+
+func horse_riding_movement_physics(delta: float, move_speed: float, input_dir: Vector2):
+	# TODO: special physics, just copy walking physics for now
+	ground_movement_physics(delta, move_speed, input_dir)
 
 var current_swing_radius: float = 0.0
 

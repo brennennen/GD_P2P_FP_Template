@@ -8,20 +8,18 @@ var game_mode_type: GameModeType
 var players: Node
 var spawn_points: Node3D
 var player_scene: PackedScene
+var allow_spawn_on_join_after_start: bool
 
 var reserved_spawn_points_this_frame: Array[SpawnPoint] = []
 
 var allow_player_join_spawn_mid_match: bool = true
 
-# No struct, so using dictionary for player states
-#var player_state = {
-#	"peer_id": 1,
-#	"spawned_once": false,
-#}
-var player_states: Array = []
+@onready var game_mode_1hz_timer: Timer = $Timer
 
 func _ready() -> void:
 	player_scene = load("res://Core/Character/Player/Player.tscn")
+	game_mode_1hz_timer.start(1.0)
+	game_mode_1hz_timer.timeout.connect(_on_game_mode_1_hz_timer_timeout)
 
 func _physics_process(_delta: float) -> void:
 	reserved_spawn_points_this_frame.clear()
@@ -35,6 +33,9 @@ func set_player_spawn_points(new_spawn_points: Node3D):
 func set_player_scene(player_scene_path: String):
 	player_scene = load(player_scene_path)
 
+func handle_peer_join(peer_id) -> void:
+	spawn_player(peer_id)
+
 ## Spawns a player into the level. Only callable by the server.
 func spawn_player(peer_id) -> Player:
 	Logger.info("spawn_player: %d" % [peer_id])
@@ -46,9 +47,6 @@ func spawn_player(peer_id) -> Player:
 	if is_instance_valid(spawn_points) and spawn_points.get_children().size() > 0:
 		var spawn_point = get_spawn_point() # TODO: add a random vector offset incase the player is spawned at the same point?
 		Logger.info("%s:spawn_player: player: %s pos: %v, rot.y: %d" % [name, player.name, spawn_point.global_position, spawn_point.rotation_degrees.y])
-		#player.set_spawn_rotation(spawn_point.rotation)
-		Logger.info("player rot_deg.y: %f" % [player.rotation_degrees.y])
-		#player.global_position = spawn_point.global_position
 		spawn_point_global_position = spawn_point.global_position
 		spawn_point_rotation = spawn_point.rotation
 	else:
@@ -59,6 +57,11 @@ func spawn_player(peer_id) -> Player:
 	player.set_spawn_rotation(spawn_point_rotation)
 	player.global_position = spawn_point_global_position
 	player.network_controller.network_target_position = spawn_point_global_position
+	
+	GameInstance.networking.peers[peer_id].player_last_broadcast_position = player.global_position
+	GameInstance.networking.peers[peer_id].player_last_broadcast_rotation_y = player.global_rotation_degrees.y
+	GameInstance.networking.peers[peer_id].player_camera_last_broadcast_rotation_x = player.camera.global_rotation_degrees.x
+	GameInstance.networking.peers[peer_id].player = player
 	return player
 
 var last_spawn_index: int = 0
@@ -67,7 +70,6 @@ func get_spawn_point() -> SpawnPoint:
 	var spawn_points_array: Array[Node] = spawn_points.get_children()
 	var spawn_point_count: int = spawn_points.get_child_count()
 	var next_spawn_index = last_spawn_index
-	
 	while(true):
 		sentinel += 1
 		if sentinel > 100:
@@ -79,16 +81,6 @@ func get_spawn_point() -> SpawnPoint:
 				last_spawn_index = next_spawn_index
 				return spawn_point
 	return spawn_points.get_children().pick_random()
-
-	#for child in spawn_points.get_children():
-		#var spawn_point = child as SpawnPoint
-		#if !spawn_point.is_occupied() and spawn_point not in reserved_spawn_points_this_frame:
-			#reserved_spawn_points_this_frame.append(spawn_point)
-			#return spawn_point
-	#return spawn_points.get_children().pick_random() # if all spawn points are occupied, pick a random one
-
-# TODO: create a spawn queue? respawning adds players to the spawn queue, only spawn 1 player per physics tick?
-
 
 func handle_player_death(player: Player):
 	Logger.info("handle_player_death: %s" % [ player.name ])
@@ -111,22 +103,22 @@ func respawn_player(player: Player, spectator: bool = false):
 	else:
 		Logger.error("%s:respawn_player: NO VALID SPAWN POINTS!" % [name])
 
-func register_new_player(peer_id):
-	var new_player_state = {
-		"peer_id": peer_id,
-		"spawned_once": false,
-	}
-	player_states.append(new_player_state)
-
 func _on_game_mode_1_hz_timer_timeout():
-	#if multiplayer.is_server():
 	if GameInstance.networking.is_server():
 		check_players_to_spawn()
 
 func check_players_to_spawn():
-	for player_state in player_states:
-		if player_state["spawned"] == false:
-			spawn_player(player_state["peer_id"])
+	if allow_player_join_spawn_mid_match:
+		for peer in GameInstance.networking.peers:
+			if !GameInstance.networking.peers[peer].player:
+				Logger.info("Found player not spawned, spawning them: %s" % [str(peer)])
+				spawn_player(peer)
+	# TODO: check dead players and respawn them if needed?
+
+func debug_imgui_game_instance_window(_delta: float) -> void:
+	ImGui.Begin("GameMode")
+	
+	ImGui.End()
 
 func reset_game_mode():
 	pass

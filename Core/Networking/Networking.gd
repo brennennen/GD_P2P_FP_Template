@@ -211,7 +211,7 @@ func get_multiplayer_id() -> String:
 	# for editor builds, always use the run index
 	if OS.has_feature("editor"):
 		return str(in_editor_lobby.get_multiplayer_id())
-	if GameInstance.network.multiplayer_mode == Networking.MultiplayerMode.IN_EDITOR:
+	if multiplayer_mode == Networking.MultiplayerMode.IN_EDITOR:
 		return str(in_editor_lobby.get_multiplayer_id())
 	else:
 		if multiplayer:
@@ -273,8 +273,8 @@ func send_ping_response(peer_id: int, ping_send_time: int):
 	packet_bytes.encode_s32(1, ping_send_time)
 	send_bytes(packet_bytes, peer_id, MultiplayerPeer.TRANSFER_MODE_RELIABLE, 0)
 
-func add_player(peer_id):
-	Logger.info("add_player: peer_id: %s" % [str(peer_id)])
+func add_peer(peer_id):
+	Logger.info("add_peer: peer_id: %s" % [str(peer_id)])
 	#var player = GameInstance.game_mode.spawn_player(peer_id)
 	# TODO: switch from parallel arrays to something cleaner #peer_list.append()
 	var peer_metadata: PeerMetadata
@@ -284,10 +284,14 @@ func add_player(peer_id):
 		peer_metadata = PeerMetadata.new()
 		peer_metadata.peer_id = peer_id
 		peers[peer_id] = peer_metadata
-	peer_metadata.player = GameInstance.game_mode.spawn_player(peer_id)
-	peer_metadata.player_last_broadcast_position = peer_metadata.player.global_position
-	peer_metadata.player_last_broadcast_rotation_y = peer_metadata.player.global_rotation_degrees.y
-	peer_metadata.player_camera_last_broadcast_rotation_x = peer_metadata.player.camera.global_rotation_degrees.x
+	# TODO: notify game mode to spawn player?
+	
+	GameInstance.game_mode.handle_peer_join(peer_id)
+	#GameInstance.game_mode.spawn_player(peer_id)
+	#peer_metadata.player = GameInstance.game_mode.spawn_player(peer_id)
+	#peer_metadata.player_last_broadcast_position = peer_metadata.player.global_position
+	#peer_metadata.player_last_broadcast_rotation_y = peer_metadata.player.global_rotation_degrees.y
+	#peer_metadata.player_camera_last_broadcast_rotation_x = peer_metadata.player.camera.global_rotation_degrees.x
 
 func remove_peer(peer_id: int):
 	peers.erase(peer_id)
