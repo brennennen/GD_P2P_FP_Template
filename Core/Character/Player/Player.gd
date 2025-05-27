@@ -20,7 +20,7 @@ static func EquipmentMode_str(_equipment_mode: EquipmentMode):
 
 @export_category("Misc")
 @export var inventory_data: InventoryData
-
+@onready var vision_center_raycast: RayCast3D = $CameraPivot/RayCast3D
 #@export_category("Misc")
 
 # Nodes
@@ -43,6 +43,7 @@ static func EquipmentMode_str(_equipment_mode: EquipmentMode):
 @onready var footstep_animation_player: AnimationPlayer = $FootstepAnimationPlayer
 @onready var head_bob_animation_player: AnimationPlayer = $CameraPivot/HeadBobAnimationPlayer
 @onready var movement_controller: PlayerMovementController = $MovementController
+@onready var collision_shape: CollisionShape3D = $CollisionShape3D
 # ... animation players, etc.
 
 # # Misc
@@ -91,6 +92,8 @@ var spawning_delay: float
 
 
 var multiplayer_id: int = 0
+
+var vision_center_raycast_collider: Object = null
 
 # Functions
 
@@ -196,8 +199,11 @@ func set_stamina(new_stamina: float) -> void:
 
 @rpc("any_peer", "call_local", "reliable")
 func die():
+	Logger.info("%s player died." % [name])
 	# TODO: hide all visuals, still allow rotating camera? spectating? etc?
 	velocity = Vector3(0.0, 0.0, 0.0)
+	if movement_controller.movement_mode == PlayerMovementController.MovementMode.HORSE_RIDING:
+		unmount_horse()
 	third_person.hide()
 	alive = false
 	movement_controller.change_movement_mode(PlayerMovementController.MovementMode.UNKNOWN)
@@ -299,6 +305,10 @@ func handle_gameplay_inputs(event: InputEvent) -> void:
 		jump_action_pressed()
 	if event.is_action_pressed("primary_action"):
 		primary_action()
+	if event.is_action_pressed("interact"):
+		interact_action()
+		#primary_action()
+		pass
 	if event.is_action_pressed("hotbar_1"):
 		change_equipment_mode.rpc(EquipmentMode.NONE)
 	if event.is_action_pressed("hotbar_2"):
@@ -315,26 +325,55 @@ func handle_gameplay_inputs(event: InputEvent) -> void:
 		debug_misc()
 
 
-const horse_scene = preload("res://Core/Character/NPC/Mountables/Horse/Horse.tscn")
-
-var horse: Horse
+const horse_mount_scene = preload("res://Core/Character/NPC/Mountables/Horse/HorseMount.tscn")
+var horse_mount: HorseMount
 
 func debug_misc():
 	Logger.info("debug_misc")
 	if movement_controller.movement_mode == PlayerMovementController.MovementMode.HORSE_RIDING:
-		if horse:
-			horse.queue_free()
+		unmount_horse.rpc()
 		movement_controller.change_movement_mode(PlayerMovementController.MovementMode.WALKING)
 	else:
-		var new_horse = horse_scene.instantiate()
-		add_child(horse)
-		horse = new_horse
-		movement_controller.change_movement_mode(PlayerMovementController.MovementMode.HORSE_RIDING)
+		mount_horse.rpc()
+		#spawn_horse_mount.rpc()
+		#var new_horse_mount = horse_mount_scene.instantiate()
+		#add_child(new_horse_mount)
+		#horse_mount = new_horse_mount
+		#movement_controller.change_movement_mode(PlayerMovementController.MovementMode.HORSE_RIDING)
 
+@rpc("any_peer", "call_local", "reliable")
+func mount_horse():
+	spawn_horse_mount()
+	self.third_person.position.y += 0.5
+	self.camera_pivot.position.y += 0.5
+	movement_controller.change_movement_mode(PlayerMovementController.MovementMode.HORSE_RIDING)
+	# TODO: move player up to slot attach points and play animation
+
+@rpc("any_peer", "call_local", "reliable")
+func unmount_horse():
+	despawn_hourse_mount()
+	self.third_person.position.y -= 0.5
+	self.camera_pivot.position.y -= 0.5
+	movement_controller.change_movement_mode(PlayerMovementController.MovementMode.WALKING)
+
+func spawn_horse_mount():
+	var new_horse_mount = horse_mount_scene.instantiate()
+	new_horse_mount.rotation_degrees.y = 180
+	add_child(new_horse_mount)
+	horse_mount = new_horse_mount
+	third_person_animation_tree.set("parameters/LocomotiveStateMachine/conditions/punch", true)
+
+func despawn_hourse_mount():
+	if horse_mount:
+		horse_mount.queue_free()
 
 func set_spawn_rotation(new_rotation: Vector3):
 	player_rotation = Vector3(0.0, new_rotation.y, 0.0)
 	mouse_rotation = Vector3(0.0, new_rotation.y, 0.0)
+
+func interact_action() -> void:
+	# TODO: display "E" or something
+	pass
 
 func primary_action():
 	#Logger.info("primary_action: %s" % [name])
@@ -565,7 +604,6 @@ func _on_animation_player_animation_started(anim_name):
 	if anim_name == "Crouch":
 		is_crouching = !is_crouching
 
-
 func jump_action_pressed():
 	# Jumping uncrouches
 	if is_crouching == true:
@@ -641,15 +679,10 @@ func update_rope():
 	swing_rope.look_at(grapple_hook_point)
 	swing_rope.scale = Vector3(1, 1, dist)
 
-@rpc("any_peer", "call_local", "reliable")
-func respawn(respawn_position: Vector3, respawn_rot_y: float, spectator: bool = false):
-	Logger.info("respawn() player: %s, pos: %v, rot_y: %f, spectator: %s" % [ name, respawn_position, respawn_rot_y, str(spectator) ])
-	fade_from_black(1.0)
-	movement_controller.change_movement_mode(PlayerMovementController.MovementMode.WALKING)
-	if is_multiplayer_authority():
-		pass
-	else:
-		third_person.visible = true
+func respawn_as_spectator(respawn_position: Vector3, respawn_rot_y: float) -> void:
+	movement_controller.change_movement_mode(PlayerMovementController.MovementMode.SPECTATE)
+	collision_shape.visible = false
+	third_person.visible = false
 	global_position = respawn_position
 	global_rotation_degrees.y = respawn_rot_y
 	# TODO: make a simple "reset_networking" or something that resets these to global_position
@@ -657,6 +690,30 @@ func respawn(respawn_position: Vector3, respawn_rot_y: float, spectator: bool = 
 	network_controller.server_last_valid_target_position = respawn_position
 	network_controller.server_last_valid_on_ground_target_position = respawn_position
 	spawning_delay = 1.0
+
+@rpc("any_peer", "call_local", "reliable")
+func respawn(respawn_position: Vector3, respawn_rot_y: float, spectator: bool = false):
+	Logger.info("respawn() player: %s, pos: %v, rot_y: %f, spectator: %s" % [ name, respawn_position, respawn_rot_y, str(spectator) ])
+	fade_from_black(1.0)
+	
+	if spectator:
+		respawn_as_spectator(respawn_position, respawn_rot_y)
+	else:
+		movement_controller.change_movement_mode(PlayerMovementController.MovementMode.WALKING)
+		collision_shape.visible = true
+
+		if is_multiplayer_authority():
+			pass
+		else:
+			third_person.visible = true
+
+		global_position = respawn_position
+		global_rotation_degrees.y = respawn_rot_y
+		# TODO: make a simple "reset_networking" or something that resets these to global_position
+		network_controller.network_target_position = respawn_position
+		network_controller.server_last_valid_target_position = respawn_position
+		network_controller.server_last_valid_on_ground_target_position = respawn_position
+		spawning_delay = 1.0
 
 var black_screen_tween: Tween = null
 func fade_from_black(duration: float):

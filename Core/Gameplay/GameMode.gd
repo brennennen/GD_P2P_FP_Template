@@ -86,11 +86,11 @@ func handle_player_death(player: Player):
 	Logger.info("handle_player_death: %s" % [ player.name ])
 	match(game_mode_type):
 		GameModeType.LAST_MAN_STANDING:
-			player.die()
+			player.die.rpc()
 			# TODO: start spectate mode after x seconds...
 			respawn_player(player, true)
 		_:
-			player.die()
+			player.die.rpc()
 			# TODO: respawn after x seconds...
 			respawn_player(player, false)
 
@@ -98,7 +98,7 @@ func handle_player_death(player: Player):
 func respawn_player(player: Player, spectator: bool = false):
 	if is_instance_valid(spawn_points) and spawn_points.get_children().size() > 0:
 		var spawn_point = get_spawn_point()
-		Logger.info("respawn_player: %s, pos: %v" % [ player.name, spawn_point.global_position ])
+		Logger.info("respawn_player: %s, pos: %v, spectate: %s" % [ player.name, spawn_point.global_position, str(spectator) ])
 		player.respawn.rpc(spawn_point.global_position + Vector3(0.0, 0.1, 0.0), spawn_point.global_rotation_degrees.y, spectator) # spawn a bit above the point?
 	else:
 		Logger.error("%s:respawn_player: NO VALID SPAWN POINTS!" % [name])
@@ -106,6 +106,8 @@ func respawn_player(player: Player, spectator: bool = false):
 func _on_game_mode_1_hz_timer_timeout():
 	if GameInstance.networking.is_server():
 		check_players_to_spawn()
+		if game_mode_type == GameModeType.LAST_MAN_STANDING:
+			last_man_standing_1hz()
 
 func check_players_to_spawn():
 	if allow_player_join_spawn_mid_match:
@@ -115,10 +117,27 @@ func check_players_to_spawn():
 				spawn_player(peer)
 	# TODO: check dead players and respawn them if needed?
 
+func last_man_standing_1hz():
+	var players_alive: int = 0
+	for player in GameInstance.get_players():
+		if player.alive:
+			players_alive += 1
+	if players_alive == 1:
+		# TODO: start end game timer!
+		Logger.info("TODO! game over! player still alive wins!")
+		handle_game_over()
+		
+	Logger.info("last_man_standing_1hz: players_alive: %d" % [players_alive])
+
+func handle_game_over():
+	# TODO: start timer and teleport to hub world after 10 seconds?
+	GameInstance.lobby_load_and_change_scene("res://Maps/HUBLevel/HUBLevel.tscn")
+
 func debug_imgui_game_instance_window(_delta: float) -> void:
-	ImGui.Begin("GameMode")
-	
-	ImGui.End()
+	#ImGui.Begin("GameMode")
+	#ImGui.Text("")
+	#ImGui.End()
+	pass
 
 func reset_game_mode():
 	pass

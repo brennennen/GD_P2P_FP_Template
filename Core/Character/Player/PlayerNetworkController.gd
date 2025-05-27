@@ -145,13 +145,19 @@ func remote_pawn_physics_process(_delta):
 	#third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/on_ground", is_on_floor())
 	#if (!is_on_ground and player.third_person_animation_tree.get("parameters/LocomotionStateMachine/conditions/jump")):
 	#	player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/jump", false)
+	if player.movement_controller.movement_mode == PlayerMovementController.MovementMode.HORSE_RIDING:
+		if player.horse_mount:
+			if ground_locomotion_blend_position.length() != 0:
+				player.horse_mount.locomotion_state_machine_playback.travel("walk")
+			else:
+				player.horse_mount.locomotion_state_machine_playback.travel("idle")
+	else:
+		player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/walk", is_on_ground and !input_crouch)
+		player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/on_ground", is_on_ground)
+		player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/crouch", input_crouch)
 
-	player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/walk", is_on_ground and !input_crouch)
-	player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/on_ground", is_on_ground)
-	player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/crouch", input_crouch)
-
-	player.third_person_animation_tree.set("parameters/LocomotionStateMachine/WalkBlendSpace2D/blend_position", ground_locomotion_blend_position)
-	player.third_person_animation_tree.set("parameters/LocomotionStateMachine/CrouchBlendSpace2D/blend_position", ground_locomotion_blend_position)
+		player.third_person_animation_tree.set("parameters/LocomotionStateMachine/WalkBlendSpace2D/blend_position", ground_locomotion_blend_position)
+		player.third_person_animation_tree.set("parameters/LocomotionStateMachine/CrouchBlendSpace2D/blend_position", ground_locomotion_blend_position)
 	# TODO: how to set falling blend position?
 	# third_person_animation_tree["parameters/LocomotionStateMachine/FallingBlendSpace2D/blend_position"] = ???
 	player.last_global_position = player.global_position

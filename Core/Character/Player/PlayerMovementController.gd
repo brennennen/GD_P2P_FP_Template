@@ -11,6 +11,7 @@ enum WalkingSubMovementMode { NONE, CROUCHING, SPRINTING }
 @export var walk_speed: float = 2.5
 @export var crouch_speed: float = 1.5
 @export var sprint_speed: float = 5.0
+@export var horse_mounted_speed: float = 9.0
 @export var swim_speed: float = 3.0
 @export var air_strafe_speed: float = 1.0
 @export var debug_fly_speed: float = 10.0
@@ -29,7 +30,8 @@ func _ready() -> void:
 
 @rpc("any_peer", "call_local", "reliable")
 func change_movement_mode(new_movement_mode: MovementMode) -> void:
-	Logger.info("change_movement_mode: %s -> %s" % [ MovementMode.keys()[movement_mode], MovementMode.keys()[new_movement_mode] ])
+	Logger.info("%s: change_movement_mode: %s -> %s" % [ player.name, MovementMode.keys()[movement_mode], MovementMode.keys()[new_movement_mode] ])
+	
 	match movement_mode:
 		MovementMode.SWINGING:
 			match new_movement_mode:
@@ -40,6 +42,11 @@ func change_movement_mode(new_movement_mode: MovementMode) -> void:
 			pass
 		_:
 			pass
+
+	match new_movement_mode:
+		MovementMode.HORSE_RIDING:
+			player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/walk", false)
+			player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/horse_riding", true)
 	if movement_mode == MovementMode.SWINGING:
 		pass
 		#movement_controller.change_movement_mode(PlayerMovementController.MovementMode.FALLING)
@@ -81,7 +88,7 @@ func movement_mode_transition_swinging_to_walking():
 
 func movement_mode_transition_swinging_to_falling():
 	#
-	movement_mode = MovementMode.FALLING
+	#movement_mode = MovementMode.FALLING
 	pass
 
 func get_movement_speed() -> float:
@@ -108,8 +115,10 @@ func start_jump():
 
 func player_physics_process(delta: float, input_dir: Vector2, sprint_held: bool, jump_pressed: bool) -> void:
 	#movement_mode = determine_movement_mode(delta, movement_mode)
+
 	# Handle Jump.
 	if !player.is_paused:
+		#if movement_mode != PlayerMovementController.MovementMode.HORSE_RIDING:
 		if jump_pressed and player.is_on_floor():
 			start_jump.rpc() # TODO: this no longer makes sense to do in the physics frame given it's an rpc... need to rethink this...
 
@@ -138,11 +147,13 @@ func player_physics_process(delta: float, input_dir: Vector2, sprint_held: bool,
 			player.footstep_animation_player.play("Walk")
 			player.head_bob_animation_player.play("HeadBob")
 	elif movement_mode == MovementMode.HORSE_RIDING:
-		horse_riding_movement_physics(delta, move_speed, input_dir)
+		horse_riding_movement_physics(delta, input_dir)
 	elif movement_mode == MovementMode.SWINGING:
 		swinging_movement_physics(delta, move_speed)
 	elif movement_mode == MovementMode.FALLING:
 		falling_movement_physics(delta, move_speed)
+	elif movement_mode == MovementMode.SPECTATE:
+		spectate_movement_physics(delta)
 	elif movement_mode == MovementMode.DEBUG_FLY:
 		debug_flying_physics(delta, move_speed)
 	if !GameInstance.networking.is_server() and is_multiplayer_authority():
@@ -160,9 +171,31 @@ func ground_movement_physics(delta: float, move_speed: float, input_dir: Vector2
 	player.move_and_slide()
 	move_colliding_rigid_bodies()
 
-func horse_riding_movement_physics(delta: float, move_speed: float, input_dir: Vector2):
-	# TODO: special physics, just copy walking physics for now
-	ground_movement_physics(delta, move_speed, input_dir)
+# TODO: lerp to target_dir?
+var target_dir: Vector2
+var actual_dir: Vector2
+
+var target_speed: float
+var actual_speed: float
+
+func horse_riding_movement_physics(delta: float, input_dir: Vector2):
+	ground_movement_physics(delta, horse_mounted_speed, input_dir)
+	# TODO: special physics, move fast but slow acceleration and no strafing, also slow backwards movement
+	#player.velocity.y -= player.gravity * delta
+	#target_dir = input_dir
+	#actual_dir = lerp(actual_dir, target_dir, 0.5)
+	#var direction = (player.transform.basis * Vector3(0, 0, actual_dir.y)).normalized()
+	## TOOD: make going backwards really slow?
+	#target_speed = horse_mounted_speed
+	#actual_speed = lerpf(actual_speed, target_speed, 0.05)
+	#if direction:
+		#player.velocity.x = lerp(player.velocity.x, direction.x * actual_speed, delta * 3.0)
+		#player.velocity.z = lerp(player.velocity.z, direction.z * actual_speed, delta * 3.0)
+	#else:
+		#player.velocity.x = move_toward(player.velocity.x, 0, actual_speed)
+		#player.velocity.z = move_toward(player.velocity.z, 0, actual_speed)
+	#player.move_and_slide()
+	#move_colliding_rigid_bodies()
 
 var current_swing_radius: float = 0.0
 
@@ -208,6 +241,10 @@ func swinging_movement_physics(delta: float, _move_speed: float) -> void:
 		force = spring_force + local_dampening
 	player.velocity += force * delta
 	player.move_and_slide()
+
+func spectate_movement_physics(delta: float) -> void:
+	# No move?
+	pass
 
 func falling_movement_physics(delta, _speed):
 	player.velocity.y -= player.gravity * delta

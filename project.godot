@@ -20,10 +20,11 @@ config/icon="res://icon.svg"
 Logger="*res://Core/Infrastructure/Logger.gd"
 GameInstance="*res://Core/GameInstance.tscn"
 ImGuiRoot="*res://addons/imgui-godot/data/ImGuiRoot.tscn"
+ControllerIcons="*res://addons/controller_icons/ControllerIcons.gd"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/imgui-godot/plugin.cfg")
+enabled=PackedStringArray("res://addons/controller_icons/plugin.cfg", "res://addons/imgui-godot/plugin.cfg", "res://addons/script-ide/plugin.cfg")
 
 [input]
 

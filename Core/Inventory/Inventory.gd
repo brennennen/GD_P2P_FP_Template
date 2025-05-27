@@ -24,12 +24,12 @@ var grabbed_slot_data: InventorySlotData
 func populate_item_grid() -> void:
 	for child in item_grid.get_children():
 		child.queue_free()
-	
+
 	for slot_data in inventory_data.slot_datas:
 		var slot = slot_scene.instantiate()
 		#slot.inventory = self
 		item_grid.add_child(slot)
-		
+
 		if slot_data:
 			slot.set_slot_data(slot_data)
 			pass

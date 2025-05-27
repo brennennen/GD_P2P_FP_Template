@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://dw5t6y8huyf2u"]
+
+[ext_resource type="Script" uid="uid://debel35y0yyc5" path="res://Core/Gameplay/Level.gd" id="1_oyes7"]
+
+[node name="Jousting1" type="Node3D"]
+script = ExtResource("1_oyes7")
+metadata/_custom_type_script = "uid://debel35y0yyc5"

@@ -25,7 +25,7 @@ func last_man_server_start() -> void:
 	pre_start_timer.start(pre_start_timer_time)
 	for player in GameInstance.get_players():
 		GameInstance.game_mode.respawn_player(player)
-		player.server_lock_movement.rpc()
+		player.server_lock_movement.rpc_id(int(player.name))
 
 func _process(delta: float) -> void:
 	handle_start_timer_label()
@@ -72,4 +72,5 @@ func debug_imgui_last_man_window(_delta: float) -> void:
 	ImGui.Begin("LastMan")
 	ImGui.Text("pre_start_timer: %f" % pre_start_timer.time_left)
 	ImGui.Text("start_timer: %f" % start_timer.time_left)
+	ImGui.Text("players_alive: %d" % start_timer.time_left)
 	ImGui.End()

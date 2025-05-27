@@ -14,13 +14,13 @@ func _ready() -> void:
 		for player in GameInstance.get_players():
 			GameInstance.game_mode.respawn_player(player)
 
+	get_viewport()
+
 func _process(delta) -> void:
 	debug_imgui_hub_level_window(delta)
 
 func debug_imgui_hub_level_window(_delta: float) -> void:
-	ImGui.Begin("My HUBLevel Window")
-	#ImGui.Text("hello from GDScript")
-	ImGui.End()
+	pass
 
 func _on_kill_box_area_3d_body_entered(body: Node3D) -> void:
 	if GameInstance.networking.is_server():

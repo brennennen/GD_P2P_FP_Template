@@ -1,10 +1,92 @@
-[gd_scene load_steps=2 format=3 uid="uid://c0hkijhcuc843"]
+[gd_scene load_steps=10 format=3 uid="uid://c0hkijhcuc843"]
 
 [ext_resource type="PackedScene" uid="uid://cwlna3eas8sti" path="res://Assets/Characters/Horsequin/horsequin.glb" id="1_wpsxw"]
+[ext_resource type="Script" uid="uid://bqd4tu5p12370" path="res://Core/Character/NPC/Mountables/Horse/HorseMount.gd" id="1_wxhs2"]
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_wxhs2"]
+animation = &"idle"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_1n6yx"]
+animation = &"walk"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_et8rd"]
+advance_mode = 2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_y8qnn"]
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_wbinp"]
+
+[sub_resource type="AnimationNodeStateMachine" id="AnimationNodeStateMachine_u6q3i"]
+states/Start/position = Vector2(-351, 100)
+states/idle/node = SubResource("AnimationNodeAnimation_wxhs2")
+states/idle/position = Vector2(-131, 100)
+states/walk/node = SubResource("AnimationNodeAnimation_1n6yx")
+states/walk/position = Vector2(190, 100)
+transitions = ["Start", "idle", SubResource("AnimationNodeStateMachineTransition_et8rd"), "idle", "walk", SubResource("AnimationNodeStateMachineTransition_y8qnn"), "walk", "idle", SubResource("AnimationNodeStateMachineTransition_wbinp")]
+graph_offset = Vector2(-696, -82)
+
+[sub_resource type="AnimationNodeBlendTree" id="AnimationNodeBlendTree_614jo"]
+graph_offset = Vector2(-744.831, -59.726)
+nodes/LocomotionStateMachine/node = SubResource("AnimationNodeStateMachine_u6q3i")
+nodes/LocomotionStateMachine/position = Vector2(-180, 140)
+node_connections = [&"output", 0, &"LocomotionStateMachine"]
 
 [node name="HorseMount" type="Node3D"]
+script = ExtResource("1_wxhs2")
 
 [node name="horsequin2" parent="." instance=ExtResource("1_wpsxw")]
+
+[node name="Skeleton3D" parent="horsequin2/horsequin" index="0"]
+bones/2/rotation = Quaternion(0.469126, -0.051006, 0.0463969, 0.880436)
+bones/2/scale = Vector3(1, 1, 1)
+bones/3/rotation = Quaternion(-0.357126, 0.0369051, -0.0317473, 0.932787)
+bones/3/scale = Vector3(1, 1, 1)
+bones/4/rotation = Quaternion(-0.132894, -1.23051e-06, -2.54378e-06, 0.99113)
+bones/4/scale = Vector3(1, 1, 1)
+bones/7/rotation = Quaternion(0.469126, 0.051006, -0.0463969, 0.880436)
+bones/7/scale = Vector3(1, 1, 1)
+bones/8/rotation = Quaternion(-0.357126, -0.0369051, 0.0317472, 0.932787)
+bones/8/scale = Vector3(1, 1, 1)
+bones/9/rotation = Quaternion(-0.132894, 1.23748e-06, 2.56558e-06, 0.99113)
+bones/9/scale = Vector3(1, 1, 1)
+bones/15/rotation = Quaternion(0.877438, 1.14367e-07, 2.09198e-07, 0.479689)
+bones/15/scale = Vector3(1, 1, 1)
+bones/16/rotation = Quaternion(-0.239693, -1.38883e-06, 2.28594e-07, 0.970849)
+bones/16/scale = Vector3(1, 1, 1)
+bones/17/rotation = Quaternion(-0.253531, 1.84505e-06, 1.20899e-07, 0.967327)
+bones/17/scale = Vector3(1, 1, 1)
+bones/18/rotation = Quaternion(-0.169656, -8.22365e-07, -1.01122e-07, 0.985503)
+bones/18/scale = Vector3(1, 1, 1)
+bones/19/rotation = Quaternion(-1.3411e-07, -3.57628e-07, 1.15463e-13, 1)
+bones/19/scale = Vector3(1, 1, 1)
+bones/20/position = Vector3(-4.66029e-08, 0.365199, -0.0488664)
+bones/20/rotation = Quaternion(0.767854, 3.81842e-07, -2.74607e-07, 0.640624)
+bones/23/position = Vector3(0.06, 0.416335, -0.0185784)
+bones/23/rotation = Quaternion(-0.0447688, 0.0843812, 0.0340712, 0.994844)
+bones/24/position = Vector3(-0.0600001, 0.416335, -0.0185781)
+bones/24/rotation = Quaternion(-0.0447688, -0.0843802, -0.0340711, 0.994844)
+bones/25/rotation = Quaternion(0.650316, -0.204932, -0.0442315, 0.730161)
+bones/25/scale = Vector3(1, 1, 1)
+bones/26/rotation = Quaternion(0.571576, 0.114988, -0.205734, 0.785972)
+bones/26/scale = Vector3(1, 0.999999, 1)
+bones/27/rotation = Quaternion(-0.247363, -0.00576569, -0.00624167, 0.968886)
+bones/27/scale = Vector3(1, 1, 1)
+bones/28/rotation = Quaternion(0.00302897, -0.0346466, 0.0266209, 0.99904)
+bones/28/scale = Vector3(1, 1, 1)
+bones/29/position = Vector3(5.32693e-09, 0.261885, 6.48423e-09)
+bones/29/rotation = Quaternion(-0.279504, 0.0123809, 0.00354497, 0.960058)
+bones/29/scale = Vector3(1, 1, 1)
+bones/31/rotation = Quaternion(0.650316, 0.204931, 0.0442324, 0.730161)
+bones/31/scale = Vector3(1, 1, 1)
+bones/32/rotation = Quaternion(0.571576, -0.114988, 0.205734, 0.785972)
+bones/32/scale = Vector3(1, 0.999999, 1)
+bones/33/rotation = Quaternion(-0.247363, 0.00576569, 0.00624166, 0.968886)
+bones/33/scale = Vector3(1, 1, 1)
+bones/34/rotation = Quaternion(0.00302897, 0.0346466, -0.0266209, 0.99904)
+bones/34/scale = Vector3(1, 1, 1)
+bones/35/position = Vector3(-3.00324e-11, 0.261885, -3.93268e-09)
+bones/35/rotation = Quaternion(-0.279504, -0.0123809, -0.00354497, 0.960058)
+bones/35/scale = Vector3(1, 1, 1)
 
 [node name="PlayerBoneAttachment3D" type="BoneAttachment3D" parent="."]
 transform = Transform3D(1, 0, -8.74228e-08, -8.74228e-08, 0, -1, 0, 1, 0, -1.87246e-16, 1.36748, -0.125557)
@@ -12,5 +94,10 @@ bone_name = "slot_player_attach"
 bone_idx = 37
 use_external_skeleton = true
 external_skeleton = NodePath("../horsequin2/horsequin/Skeleton3D")
+
+[node name="AnimationTree" type="AnimationTree" parent="."]
+root_node = NodePath("../horsequin2")
+tree_root = SubResource("AnimationNodeBlendTree_614jo")
+anim_player = NodePath("../horsequin2/AnimationPlayer")
 
 [editable path="horsequin2"]

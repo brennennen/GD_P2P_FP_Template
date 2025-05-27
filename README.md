@@ -53,4 +53,6 @@ platform wins.
 	* godotsteam
 	* steam-multiplayer-peer
 	* imgui-godot
+	* controller-icons
+	* Script-IDE
 * Some larger art assets that are "work in progress" have also not been committed to prevent too much lfs churn and repo size issues.

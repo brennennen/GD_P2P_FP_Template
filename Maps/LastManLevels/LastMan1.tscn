@@ -44,7 +44,7 @@ roughness = 0.3
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_butgl"]
 height = 0.5
-radius = 7.75
+radius = 8.0
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_xbxkw"]
 top_radius = 1.5
@@ -53,7 +53,7 @@ height = 0.5
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_xbxkw"]
 height = 0.5
-radius = 1.75
+radius = 2.0
 
 [sub_resource type="BoxMesh" id="BoxMesh_nr2y3"]
 size = Vector3(3, 0.5, 3)
@@ -137,7 +137,7 @@ surface_material_override/0 = SubResource("StandardMaterial3D_1i3dp")
 shape = SubResource("CylinderShape3D_butgl")
 
 [node name="MeshInstance3D3" type="MeshInstance3D" parent="World"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, -0.25, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, -0.25, 0)
 mesh = SubResource("CylinderMesh_xbxkw")
 skeleton = NodePath("../..")
 surface_material_override/0 = SubResource("StandardMaterial3D_1i3dp")
@@ -148,7 +148,7 @@ surface_material_override/0 = SubResource("StandardMaterial3D_1i3dp")
 shape = SubResource("CylinderShape3D_xbxkw")
 
 [node name="MeshInstance3D4" type="MeshInstance3D" parent="World"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, -0.25, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, -0.25, 0)
 mesh = SubResource("CylinderMesh_xbxkw")
 skeleton = NodePath("../..")
 surface_material_override/0 = SubResource("StandardMaterial3D_1i3dp")
@@ -159,7 +159,7 @@ surface_material_override/0 = SubResource("StandardMaterial3D_1i3dp")
 shape = SubResource("CylinderShape3D_xbxkw")
 
 [node name="MeshInstance3D7" type="MeshInstance3D" parent="World"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, -0.25, -9)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -0.25, -8)
 mesh = SubResource("CylinderMesh_xbxkw")
 skeleton = NodePath("../..")
 surface_material_override/0 = SubResource("StandardMaterial3D_1i3dp")
@@ -170,7 +170,7 @@ surface_material_override/0 = SubResource("StandardMaterial3D_1i3dp")
 shape = SubResource("CylinderShape3D_xbxkw")
 
 [node name="MeshInstance3D8" type="MeshInstance3D" parent="World"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, -0.25, -9)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -0.25, -8)
 mesh = SubResource("CylinderMesh_xbxkw")
 skeleton = NodePath("../..")
 surface_material_override/0 = SubResource("StandardMaterial3D_1i3dp")
@@ -181,7 +181,7 @@ surface_material_override/0 = SubResource("StandardMaterial3D_1i3dp")
 shape = SubResource("CylinderShape3D_xbxkw")
 
 [node name="MeshInstance3D9" type="MeshInstance3D" parent="World"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, -0.25, 9)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -0.25, 8)
 mesh = SubResource("CylinderMesh_xbxkw")
 skeleton = NodePath("../..")
 surface_material_override/0 = SubResource("StandardMaterial3D_1i3dp")
@@ -192,7 +192,7 @@ surface_material_override/0 = SubResource("StandardMaterial3D_1i3dp")
 shape = SubResource("CylinderShape3D_xbxkw")
 
 [node name="MeshInstance3D10" type="MeshInstance3D" parent="World"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, -0.25, 9)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -0.25, 8)
 mesh = SubResource("CylinderMesh_xbxkw")
 skeleton = NodePath("../..")
 surface_material_override/0 = SubResource("StandardMaterial3D_1i3dp")
@@ -203,7 +203,7 @@ surface_material_override/0 = SubResource("StandardMaterial3D_1i3dp")
 shape = SubResource("CylinderShape3D_xbxkw")
 
 [node name="MeshInstance3D5" type="MeshInstance3D" parent="World"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, -12)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, -11)
 mesh = SubResource("CylinderMesh_xbxkw")
 skeleton = NodePath("../..")
 surface_material_override/0 = SubResource("StandardMaterial3D_1i3dp")
@@ -214,7 +214,7 @@ surface_material_override/0 = SubResource("StandardMaterial3D_1i3dp")
 shape = SubResource("CylinderShape3D_xbxkw")
 
 [node name="MeshInstance3D6" type="MeshInstance3D" parent="World"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 12)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 11)
 mesh = SubResource("CylinderMesh_xbxkw")
 skeleton = NodePath("../..")
 surface_material_override/0 = SubResource("StandardMaterial3D_1i3dp")
