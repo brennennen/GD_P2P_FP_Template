@@ -184,7 +184,7 @@ func handle_gravity(delta: float):
 		player.velocity.y = -0.1 # just a small amount of force to "stick" the player to the ground
 
 # TODO: lerp to target_dir?
-var target_dir: Vector2
+#var target_dir: Vector2
 var actual_dir: Vector2
 
 var target_speed: float
@@ -287,7 +287,7 @@ func swinging_movement_physics(delta: float, _move_speed: float) -> void:
 	player.velocity += force * delta
 	player.move_and_slide()
 
-func spectate_movement_physics(delta: float) -> void:
+func spectate_movement_physics(_delta: float) -> void:
 	# No move?
 	pass
 

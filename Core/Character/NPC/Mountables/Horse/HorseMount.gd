@@ -35,7 +35,7 @@ var horse_neigh_audio_streams: Array[Resource] = [
 func _ready() -> void:
 	locomotion_state_machine_playback = animation_tree.get("parameters/LocomotionStateMachine/playback") as AnimationNodeStateMachinePlayback
 	#locomotion_state_machine_playback.travel("idle")
-	neigh_or_snort_timer.start(randi_range(10.0, 30.0))
+	neigh_or_snort_timer.start(randi_range(10, 30))
 	neigh_or_snort_timer.timeout.connect(_on_neigh_or_snort_timer_timeout)
 
 func play_random_audio(audio_player: AudioStreamPlayer3D, audio_streams: Array[Resource], last_index: int) -> int:
@@ -62,4 +62,4 @@ func _on_neigh_or_snort_timer_timeout() -> void:
 		#play_snort_audio()
 	#else:
 		#play_neigh_audio()
-	neigh_or_snort_timer.start(randi_range(10.0, 30.0))
+	neigh_or_snort_timer.start(randi_range(10, 30))

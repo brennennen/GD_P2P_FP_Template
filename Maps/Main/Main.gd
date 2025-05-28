@@ -13,18 +13,4 @@ func _ready():
 func open_main_menu():
 	Logger.debug("open_main_menu")
 	var menu = ResourceLoader.load("res://Maps/Menus/MainMenu.tscn")
-	
-	#multiplayer.get_default_interface()
-	print("mp default interface: %s" % MultiplayerAPI.get_default_interface())
-	#multiplayer.multiplayer_peer.close()
-	#multiplayer.multiplayer_peer = OfflineMultiplayerPeer.new()
-	#change_scene_to_file(menu)
 	GameInstance.change_scene(menu)
-
-func change_scene_to_file(resource : Resource):
-	Logger.debug("change_scene_to_file: '%s'" % resource.resource_path)
-	var node = resource.instantiate()
-	for child in get_children():
-		#remove_child(child)
-		child.queue_free()
-	add_child(node)

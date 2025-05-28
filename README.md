@@ -56,3 +56,31 @@ platform wins.
 	* controller-icons
 	* Script-IDE
 * Some larger art assets that are "work in progress" have also not been committed to prevent too much lfs churn and repo size issues.
+
+
+## Design
+### Directory Structure
+* `/Assets` - Artist corner. Art assets that are pointed to by scenes (ex: textures, audio files, meshes, animation data, etc.)
+* `/Core` - Programmer/game design corner. Infrastructure and most things where a script is complex enough to deserve a `class_name` should probably go here (ex: player, npc, inventory system, netcode system, procedural generation system, etc.).
+* `/Maps` - Level design corner. Where all the "scenes" that are intended to be played via `change_scene` type mechanisms or the editor's `Run Current Scene` button. (ex: Main menu, HUB world level, tutorial levels, puzzle level 1, puzzle level 2, etc.).
+* `/addons` - Where addons go, I generally choose not to commit this to save on repo size, which makes setup a bit more difficult, but I think the tradeoff is worth it.
+* `/Logs` - Logs generated when playing in editor (production logs go to `user://`).
+
+### Core Classes/Singletons
+(`/Core` and `/Core/Infrastructure`)
+* `Logger` - Top level singleton, used to print debug messages to console/file (`Logger.info("my message")`, `Logger.debug(...)`, etc.).
+* `GameInstance` - Top level singleton, handles admin responsibilities like changing levels and holding other admin classes.
+  * `GameMode` - Responsible for handling score keeping, player deaths, respawning, etc.
+  * `Networking` - Manages multiplayer lobbies and syncing peer pawns.
+
+### Networking
+(`/Core/Networking`)
+* `ServerNetworking` - Netcode running on the server to communicate with clients.
+* `ClientNetworking` - Netcode running on clients to communicate with the server/host.
+* Lobbies:
+  * `InEditorLobby` - Handles running multiple debug instances from the godot editor and connecting them over localhost.
+  * `DirectConnectLobby` - Handles connecting multiple game instances over traditional direct connections over UDP with godot's built-in ENET stack on an arbitrary port (requires port forwarding).
+  * `SteamLobby` - Handles steam lobbies (uses `steam-multiplayer-peer` and `godotsteam` addons).
+
+### Levels
+All non-menu scenes that are intended to be loaded/played as top level levels (ex: the `Run Current Scene` button) need to inherit from the `Level` class and also call `GameInstance.initialize_level(...)`. This sets up a default camera and registers the spawn points that determine where the players will spawn in.

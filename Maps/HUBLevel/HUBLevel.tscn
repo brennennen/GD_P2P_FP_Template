@@ -1,11 +1,12 @@
-[gd_scene load_steps=22 format=3 uid="uid://csmy5aw3v1gbq"]
+[gd_scene load_steps=23 format=3 uid="uid://csmy5aw3v1gbq"]
 
 [ext_resource type="PackedScene" uid="uid://dq3k1gmfnaxit" path="res://Core/Gameplay/SpawnPoint.tscn" id="1_46c6v"]
 [ext_resource type="Script" uid="uid://wqb1mmmb8bln" path="res://Maps/HUBLevel/HUBLevel.gd" id="1_kb0kb"]
 [ext_resource type="PackedScene" uid="uid://b8lytvha5krpa" path="res://Core/Gameplay/LevelTeleporter.tscn" id="3_84xh2"]
+[ext_resource type="PackedScene" uid="uid://cp7xhlkwk8opm" path="res://Core/Gameplay/KillBox.tscn" id="4_1ro3f"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_kb0kb"]
-size = Vector3(1000, 10, 1000)
+[sub_resource type="BoxShape3D" id="BoxShape3D_1ro3f"]
+size = Vector3(2500, 50, 2500)
 
 [sub_resource type="PhysicalSkyMaterial" id="PhysicalSkyMaterial_kb0kb"]
 rayleigh_color = Color(0.137575, 0.200307, 0.317419, 1)
@@ -105,11 +106,12 @@ transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, 
 [node name="DefaultLevelCamera" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
 
-[node name="KillBoxArea3D" type="Area3D" parent="."]
+[node name="KillBox" parent="." instance=ExtResource("4_1ro3f")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -50, 0)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="KillBoxArea3D"]
-shape = SubResource("BoxShape3D_kb0kb")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="KillBox"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -50, 0)
+shape = SubResource("BoxShape3D_1ro3f")
 
 [node name="SceneLabel3D" type="Label3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -10)
@@ -280,5 +282,3 @@ scene_path = "res://Maps/Sandboxes/DebugSandbox.tscn"
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="Audio"]
 volume_db = -8.0
 bus = &"Ambient"
-
-[connection signal="body_entered" from="KillBoxArea3D" to="." method="_on_kill_box_area_3d_body_entered"]

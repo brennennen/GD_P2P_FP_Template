@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://cp7xhlkwk8opm"]
+
+[ext_resource type="Script" uid="uid://c2a23amlgnmwl" path="res://Core/Gameplay/KillBox.gd" id="1_use2d"]
+
+[node name="KillBox" type="Area3D"]
+script = ExtResource("1_use2d")

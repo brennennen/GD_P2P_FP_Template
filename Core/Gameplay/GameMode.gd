@@ -86,12 +86,8 @@ func handle_player_death(player: Player):
 	Logger.info("handle_player_death: %s" % [ player.name ])
 	match(game_mode_type):
 		GameModeType.LAST_MAN_STANDING:
-			player.die.rpc()
-			# TODO: start spectate mode after x seconds...
 			respawn_player(player, true)
 		_:
-			player.die.rpc()
-			# TODO: respawn after x seconds...
 			respawn_player(player, false)
 
 #@rpc("authority", "call_local", "reliable")

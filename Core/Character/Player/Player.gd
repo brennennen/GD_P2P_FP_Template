@@ -187,8 +187,8 @@ func change_equipment_mode(new_equipment_mode: EquipmentMode):
 func set_health(new_health: float) -> void:
 	health = new_health
 	hud_health.text = str(int(health))
-	#if health <= 0.0:
-	#	die.rpc()
+	if health <= 0.0:
+		die.rpc()
 
 func set_stamina(new_stamina: float) -> void:
 	stamina = new_stamina
@@ -207,6 +207,8 @@ func die():
 	third_person.hide()
 	alive = false
 	movement_controller.change_movement_mode(PlayerMovementController.MovementMode.UNKNOWN)
+	if GameInstance.networking.is_server():
+		GameInstance.game_mode.handle_player_death(self)
 
 func is_menu_open() -> bool:
 	if pause_menu.visible == true: # or options menu, or interactable menu, etc.
@@ -695,6 +697,12 @@ func respawn_as_spectator(respawn_position: Vector3, respawn_rot_y: float) -> vo
 @rpc("any_peer", "call_local", "reliable")
 func respawn(respawn_position: Vector3, respawn_rot_y: float, spectator: bool = false):
 	Logger.info("respawn() player: %s, pos: %v, rot_y: %f, spectator: %s" % [ name, respawn_position, respawn_rot_y, str(spectator) ])
+	set_health(100.0)
+	if fishing_lure_projectile:
+		last_fishing_lure_projectile = fishing_lure_projectile
+		fishing_lure_projectile = null
+		last_fishing_lure_projectile.queue_free()
+
 	fade_from_black(1.0)
 	
 	if spectator:
