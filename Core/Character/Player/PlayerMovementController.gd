@@ -8,14 +8,20 @@ enum WalkingSubMovementMode { NONE, CROUCHING, SPRINTING }
 @onready var player: Player = $".."
 
 @export_category("Movement")
-@export var walk_speed: float = 2.5
+@export var walk_speed: float = 2.0
 @export var crouch_speed: float = 1.5
-@export var sprint_speed: float = 5.0
-@export var horse_mounted_speed: float = 9.0
+@export var sprint_speed: float = 4.0
+
 @export var swim_speed: float = 3.0
 @export var air_strafe_speed: float = 1.0
 @export var debug_fly_speed: float = 10.0
 @export var jump_height: float = 1.0 # meters
+
+@export_category("Mounted Movement")
+@export var horse_walk_speed: float = 2.0
+@export var horse_canter_speed: float = 3.0
+@export var horse_gallop_speed: float = 6.0
+@export var horse_backward_speed: float = 1.0
 
 var jump_velocity: float = 0.0
 
@@ -124,7 +130,7 @@ func player_physics_process(delta: float, input_dir: Vector2, sprint_held: bool,
 
 	# Handle Sprint
 	player.is_sprinting = false
-	if !player.is_paused:
+	if !player.is_paused and movement_mode != MovementMode.HORSE_RIDING:
 		if sprint_held:
 			if player.stamina <= 1.0:
 				player.is_sprinting = false
@@ -147,7 +153,7 @@ func player_physics_process(delta: float, input_dir: Vector2, sprint_held: bool,
 			player.footstep_animation_player.play("Walk")
 			player.head_bob_animation_player.play("HeadBob")
 	elif movement_mode == MovementMode.HORSE_RIDING:
-		horse_riding_movement_physics(delta, input_dir)
+		horse_riding_movement_physics(delta, input_dir, sprint_held)
 	elif movement_mode == MovementMode.SWINGING:
 		swinging_movement_physics(delta, move_speed)
 	elif movement_mode == MovementMode.FALLING:
@@ -161,7 +167,7 @@ func player_physics_process(delta: float, input_dir: Vector2, sprint_held: bool,
 
 func ground_movement_physics(delta: float, move_speed: float, input_dir: Vector2) -> void:
 	player.velocity.y -= player.gravity * delta
-	var direction = (player.transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
+	var direction = (player.transform.basis * Vector3(input_dir.x, 0, -input_dir.y)).normalized()
 	if direction:
 		player.velocity.x = lerp(player.velocity.x, direction.x * move_speed, delta * 3.0)
 		player.velocity.z = lerp(player.velocity.z, direction.z * move_speed, delta * 3.0)
@@ -171,6 +177,12 @@ func ground_movement_physics(delta: float, move_speed: float, input_dir: Vector2
 	player.move_and_slide()
 	move_colliding_rigid_bodies()
 
+func handle_gravity(delta: float):
+	if not player.is_on_floor():
+		player.velocity.y -= player.gravity * delta
+	else:
+		player.velocity.y = -0.1 # just a small amount of force to "stick" the player to the ground
+
 # TODO: lerp to target_dir?
 var target_dir: Vector2
 var actual_dir: Vector2
@@ -178,27 +190,60 @@ var actual_dir: Vector2
 var target_speed: float
 var actual_speed: float
 
-func horse_riding_movement_physics(delta: float, input_dir: Vector2):
-	ground_movement_physics(delta, horse_mounted_speed, input_dir)
-	# TODO: special physics, move fast but slow acceleration and no strafing, also slow backwards movement
-	#player.velocity.y -= player.gravity * delta
-	#target_dir = input_dir
-	#actual_dir = lerp(actual_dir, target_dir, 0.5)
-	#var direction = (player.transform.basis * Vector3(0, 0, actual_dir.y)).normalized()
-	## TOOD: make going backwards really slow?
-	#target_speed = horse_mounted_speed
-	#actual_speed = lerpf(actual_speed, target_speed, 0.05)
-	#if direction:
-		#player.velocity.x = lerp(player.velocity.x, direction.x * actual_speed, delta * 3.0)
-		#player.velocity.z = lerp(player.velocity.z, direction.z * actual_speed, delta * 3.0)
-	#else:
-		#player.velocity.x = move_toward(player.velocity.x, 0, actual_speed)
-		#player.velocity.z = move_toward(player.velocity.z, 0, actual_speed)
-	#player.move_and_slide()
-	#move_colliding_rigid_bodies()
+var horse_smoothed_input: float = 0.0
+var horse_input_smoothing_factor: float = 0.2
+var current_actual_speed: float = 0.0 # The current speed magnitude of the horse, this ramps up/down
+
+var speed_ramp_factor: float = 0.01  
+var deceleration_ramp_factor: float = 0.03
+
+var velocity_follow_strength: float = 5.0
+
+enum horse_move_mode { WALK, CANTER, GALLOP }
+
+func horse_riding_movement_physics(delta: float, input_dir: Vector2, sprint_held: bool):
+	handle_gravity(delta)
+	
+	# TODO: tier this so you can canter? right now, you go straight from walking to galloping
+	var target_max_move_speed = horse_walk_speed
+	if sprint_held:
+		target_max_move_speed = horse_canter_speed
+		if current_actual_speed > (horse_canter_speed - 0.25):
+			target_max_move_speed = horse_gallop_speed
+	#Logger.info("current_actual_speed: %f" % [current_actual_speed])
+	
+	var input_dir_z: float = input_dir.y
+	#var input_dir_z: float = Input.get_action_strength("move_forward") - Input.get_action_strength("move_backward")
+	horse_smoothed_input = lerpf(horse_smoothed_input, input_dir_z, horse_input_smoothing_factor)
+
+	var target_max_speed: float = 0.0
+	var movement_sign: float = 0.0 # -1 for backward, 0 for none, 1 for forward
+
+	if horse_smoothed_input > 0.01: # Moving forward
+		target_max_speed = target_max_move_speed * horse_smoothed_input # Scale by smoothed input intensity
+		movement_sign = 1.0
+	elif horse_smoothed_input < -0.01: # Moving backward
+		target_max_speed = horse_backward_speed * abs(horse_smoothed_input) # Scale by smoothed input intensity
+		movement_sign = -1.0
+
+	if movement_sign != 0.0: # If there's any forward/backward input intention
+		current_actual_speed = lerpf(current_actual_speed, target_max_speed, speed_ramp_factor)
+	else:
+		current_actual_speed = lerpf(current_actual_speed, 0.0, deceleration_ramp_factor)
+
+	if abs(current_actual_speed) < 0.01:
+		current_actual_speed = 0.0
+
+	var world_direction_vector: Vector3 = Vector3.ZERO
+	if movement_sign != 0.0:
+		world_direction_vector = (player.transform.basis * Vector3(0, 0, -movement_sign)).normalized() 
+	var target_horizontal_velocity: Vector3 = world_direction_vector * current_actual_speed
+	player.velocity.x = lerpf(player.velocity.x, target_horizontal_velocity.x, velocity_follow_strength * delta)
+	player.velocity.z = lerpf(player.velocity.z, target_horizontal_velocity.z, velocity_follow_strength * delta)
+
+	player.move_and_slide()
 
 var current_swing_radius: float = 0.0
-
 @export var swing_control_strength: float = 1.0
 @export var swing_initial_boost_factor: float = 0.5
 @export var swing_damping_factor: float = 1.0

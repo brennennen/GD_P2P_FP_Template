@@ -82,7 +82,7 @@ var physics_delay_running_delta: float = 0.0
 var physics_delay_time: float = 3.0
 var stored_collision_layer: int = 0
 var last_global_position: Vector3 = Vector3(0.0, 0.0, 0.0)
-var last_input_dir: Vector2 = Vector2(0.0, 0.0)
+var last_input_dir: Vector2 = Vector2(0.0, 0.0) # left/right, forward/backward
 
 # # Misc
 var equipment_mode: EquipmentMode = EquipmentMode.NONE
@@ -530,7 +530,8 @@ func _physics_process(delta):
 			collision_layer = stored_collision_layer
 			delay_physics = false
 		return
-	var input_dir = Input.get_vector("move_left", "move_right", "move_forward", "move_backward")
+
+	var input_dir = Input.get_vector("move_left", "move_right", "move_backward", "move_forward") # forward = "+y", right = "+x"
 	last_input_dir = input_dir
 	if not self.is_alive: # If the player is dead, allow them to move the camera, but don't do much else.
 		update_camera(delta, input_dir)
@@ -752,6 +753,7 @@ func debug_imgui_handle_player_window(_delta: float) -> void:
 	ImGui.Text("mp_auth: %s" % [ str(get_multiplayer_authority()) ])
 	ImGui.Text("pos: %v" % [ global_position ])
 	ImGui.Text("rot_y: %f" % [ rotation_degrees.y ])
+	ImGui.Text("velocity: %f (%v)" % [ velocity.length(), velocity ])
 	ImGui.Text("mov_mode: %s" % [ str(PlayerMovementController.MovementMode.keys()[movement_controller.movement_mode]) ])
 	ImGui.Text("equipment_mode: %s" % [ EquipmentMode_str(equipment_mode) ])
 	ImGui.Text("mov_status: %d" % [network_controller.network_movement_status_bitmap])

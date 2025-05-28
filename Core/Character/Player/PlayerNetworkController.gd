@@ -109,26 +109,28 @@ func remote_pawn_physics_process(_delta):
 		return
 	if player.global_position != network_target_position:
 		if interpolate_networked_movement:
-			# TODO: don't lerp? slerp or bicubic interpolation? 
+			# TODO: don't lerp? slerp or bicubic interpolation?
 			player.global_position = lerp(player.global_position, network_target_position, network_movement_interpolation_rate)
 		else:
 			player.global_position = network_target_position
+	player.velocity = (player.global_position - player.last_global_position) / _delta #0.06667
 	if player.global_rotation_degrees.y != network_target_rotation_degrees_y:
 		player.global_rotation_degrees.y = network_target_rotation_degrees_y
 	if player.camera.global_rotation_degrees.x != network_target_rotation_degrees_x:
 		player.camera.global_rotation_degrees.x = network_target_rotation_degrees_x
 
-	var forward = network_inputs1 & INPUTS1_FORWARD_MASK
-	var back =  network_inputs1 & INPUTS1_BACK_MASK
-	var right = network_inputs1 & INPUTS1_RIGHT_MASK
-	var left = network_inputs1 & INPUTS1_LEFT_MASK
-	var sprint = true if (network_inputs1 & INPUTS1_SPRINT_MASK > 0) else false
-	var input_crouch = true if (network_inputs1 & INPUTS1_CROUCH_MASK > 0) else false
+	var forward := bool(network_inputs1 & INPUTS1_FORWARD_MASK)
+	var back :=  bool(network_inputs1 & INPUTS1_BACK_MASK)
+	var right := bool(network_inputs1 & INPUTS1_RIGHT_MASK)
+	var left := bool(network_inputs1 & INPUTS1_LEFT_MASK)
+	var sprint := bool(network_inputs1 & INPUTS1_SPRINT_MASK)
+	var input_crouch := bool(network_inputs1 & INPUTS1_CROUCH_MASK)
 	#var lean_right = network_inputs1 & INPUTS1_LEAN_RIGHT_MASK
 	#var lean_left = network_inputs1 & INPUTS1_LEAN_LEFT_MASK
 
-	var is_on_ground = true if (network_movement_status_bitmap & MOVEMENT_STATES_ON_GROUND_MASK > 0) else false
+	var is_on_ground := bool(network_movement_status_bitmap & MOVEMENT_STATES_ON_GROUND_MASK)
 
+	# Rather than basing animation data on movement inputs, could also just use movement vector since last packet
 	var ground_locomotion_blend_position = Vector2(0.0, 0.0)
 	if forward:
 		ground_locomotion_blend_position.y = 1.0 # -z is forward
@@ -142,15 +144,22 @@ func remote_pawn_physics_process(_delta):
 	if !sprint:
 		ground_locomotion_blend_position = ground_locomotion_blend_position * 0.5
 
+	#Logger.debug("f: %s, b: %s, r: %s, l: %s " % [str(forward), str(back), str(right), str(left)])
+
 	#third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/on_ground", is_on_floor())
 	#if (!is_on_ground and player.third_person_animation_tree.get("parameters/LocomotionStateMachine/conditions/jump")):
 	#	player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/jump", false)
 	if player.movement_controller.movement_mode == PlayerMovementController.MovementMode.HORSE_RIDING:
 		if player.horse_mount:
-			if ground_locomotion_blend_position.length() != 0:
-				player.horse_mount.locomotion_state_machine_playback.travel("walk")
+
+			#Logger.info("y: %f" % [ground_locomotion_blend_position.y])
+
+			#player.third_person_animation_tree.set("parameters/LocomotionStateMachine/WalkBlendSpace2D/blend_position", player.velocity.length())
+			if back:
+				player.horse_mount.animation_tree.set("parameters/LocomotionStateMachine/LocomotionSpace1D/blend_position", -1.0)
 			else:
-				player.horse_mount.locomotion_state_machine_playback.travel("idle")
+				if player.velocity.length() != 0.0:
+					player.horse_mount.animation_tree.set("parameters/LocomotionStateMachine/LocomotionSpace1D/blend_position", player.velocity.length() / player.movement_controller.horse_gallop_speed)
 	else:
 		player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/walk", is_on_ground and !input_crouch)
 		player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/on_ground", is_on_ground)
@@ -160,6 +169,7 @@ func remote_pawn_physics_process(_delta):
 		player.third_person_animation_tree.set("parameters/LocomotionStateMachine/CrouchBlendSpace2D/blend_position", ground_locomotion_blend_position)
 	# TODO: how to set falling blend position?
 	# third_person_animation_tree["parameters/LocomotionStateMachine/FallingBlendSpace2D/blend_position"] = ???
+
 	player.last_global_position = player.global_position
 
 var send_move_data_ticks: int = 0
@@ -246,7 +256,7 @@ func server_handle_client_pawn_movement(peer_id: int, new_position: Vector3, rot
 	# Only allow server pawn to move if they are not colliding.
 	continuous_floor_collisions = 0
 	continuous_corner_collisions = 0
-	
+
 	# TODO: have both server_last_valid_target_position and server_last_valid_on_ground_target_position
 	# try and use server_last_valid_target_position first, then fall back to on_ground version if it fails?
 	server_last_valid_target_position = network_target_position # TODO: only set this when the player is on the ground

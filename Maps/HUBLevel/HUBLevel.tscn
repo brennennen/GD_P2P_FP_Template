@@ -275,4 +275,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -8)
 label_name = "Debug Sandbox"
 scene_path = "res://Maps/Sandboxes/DebugSandbox.tscn"
 
+[node name="Audio" type="Node3D" parent="."]
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="Audio"]
+volume_db = -8.0
+bus = &"Ambient"
+
 [connection signal="body_entered" from="KillBoxArea3D" to="." method="_on_kill_box_area_3d_body_entered"]
