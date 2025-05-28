@@ -24,11 +24,15 @@ var log_folder: String = "res://Logs"
 var user_data_log_folder: String = "user://Logs"
 var multiplayer_id: String = "?"
 
+var running_in_editor: bool = false
+
 # #####################
 # Functions
 # #####################
 func _ready() -> void:
-	if !OS.has_feature("editor"):
+	if OS.has_feature("editor"):
+		running_in_editor = true
+	else:
 		log_folder = user_data_log_folder
 
 func set_multiplayer_id(new_id: String) -> void:
@@ -40,7 +44,7 @@ func set_logs_folder(folder : String) -> void:
 
 func create_log_file() -> int:
 	if (not DirAccess.dir_exists_absolute(log_folder)):
-		print("log dir doesn't exist, attempting to create. if godot crashes, manually create the %s folder" % log_folder)
+		print("log dir doesn't exist, attempting to create. if godot crashes, manually create the folder: %s" % [log_folder])
 		DirAccess.make_dir_absolute(log_folder)
 	var date_string = Time.get_date_string_from_system(true)
 	var log_file_full_path = "%s/%s_%s.log" % [log_folder, log_file_name_prefix, date_string]
@@ -71,7 +75,13 @@ func set_default_log_color() -> void:
 		var hue: float = int(30.0 + (multiplayer_id_int * 137.508)) % 360 # Golden ratio - good balance of minimally overlapping hues to compute cost
 		log_color.h = hue / 360
 
-func log_message(message : String, severity : Severity) -> void:
+func log_message(message: String, severity: Severity) -> void:
+	if running_in_editor:
+		editor_log_message(message, severity)
+	else:
+		production_log_message(message, severity)
+
+func editor_log_message(message: String, severity: Severity) -> void:
 	if (minimum_severity <= severity):
 		var time_string = Time.get_time_string_from_system(false)
 		var formatted_message : String = "%s|%s|%s|%s" % \
@@ -87,14 +97,17 @@ func log_message(message : String, severity : Severity) -> void:
 				print_rich("[color=%s]" % [log_color.to_html()] + formatted_message + "[/color]")
 		write_to_file(formatted_message)
 
-func print_log_message(message : String) -> void:
-	print(message)
+func production_log_message(message: String, severity: Severity) -> void:
+	if (minimum_severity <= severity):
+		var time_string = Time.get_time_string_from_system(false)
+		var formatted_message : String = "%s|%s|%s" % [ time_string, get_severity_name(severity), message ]
+		print(formatted_message)
+		write_to_file(formatted_message)
 
 func write_to_file(message : String) -> void:
 	# Don't write logs for production yet, TODO: figure out how to rotate smartly before tackling this
 	if !OS.has_feature("editor"):
 		return
-
 	if current_log_file == null:
 		create_log_file()
 	if current_log_file != null: # create_log_file() doesn't work with linux file system for some reason
