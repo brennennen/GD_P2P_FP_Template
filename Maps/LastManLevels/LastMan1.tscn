@@ -1,8 +1,9 @@
-[gd_scene load_steps=16 format=3 uid="uid://d0jqkvtuhnup7"]
+[gd_scene load_steps=15 format=3 uid="uid://d0jqkvtuhnup7"]
 
 [ext_resource type="PackedScene" uid="uid://dq3k1gmfnaxit" path="res://Core/Gameplay/SpawnPoint.tscn" id="1_nr2y3"]
 [ext_resource type="Script" uid="uid://cy8awcvjolqo" path="res://Maps/LastManLevels/LastMan1.gd" id="1_xbxkw"]
 [ext_resource type="PackedScene" uid="uid://b8lytvha5krpa" path="res://Core/Gameplay/LevelTeleporter.tscn" id="2_xbxkw"]
+[ext_resource type="PackedScene" uid="uid://cmu6iryj00p8w" path="res://Assets/Environment/GameShow/Platforms/Ring.tscn" id="3_butgl"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_s06he"]
 size = Vector3(1000, 10, 1000)
@@ -33,23 +34,14 @@ dof_blur_far_enabled = true
 dof_blur_far_distance = 50.0
 dof_blur_amount = 0.01
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_nr2y3"]
-top_radius = 7.5
-bottom_radius = 8.0
+[sub_resource type="CylinderMesh" id="CylinderMesh_xbxkw"]
+top_radius = 1.5
+bottom_radius = 2.0
 height = 0.5
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1i3dp"]
 albedo_color = Color(0.099986, 0.099986, 0.099986, 1)
 roughness = 0.3
-
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_butgl"]
-height = 0.5
-radius = 8.0
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_xbxkw"]
-top_radius = 1.5
-bottom_radius = 2.0
-height = 0.5
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_xbxkw"]
 height = 0.5
@@ -69,28 +61,28 @@ default_level_camera = NodePath("DefaultLevelCamera")
 [node name="SpawnPoints" type="Node3D" parent="."]
 
 [node name="SpawnPoint2" parent="SpawnPoints" instance=ExtResource("1_nr2y3")]
-transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 9, 0, 9)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 10)
 
 [node name="SpawnPoint7" parent="SpawnPoints" instance=ExtResource("1_nr2y3")]
-transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 12, 0, 0)
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 10, 0, 6)
 
 [node name="SpawnPoint" parent="SpawnPoints" instance=ExtResource("1_nr2y3")]
-transform = Transform3D(-0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, -0.707107, -9, 0, -9)
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -4, 0, -3)
 
 [node name="SpawnPoint8" parent="SpawnPoints" instance=ExtResource("1_nr2y3")]
-transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -12, 0, 0)
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -10, 0, 6)
 
 [node name="SpawnPoint3" parent="SpawnPoints" instance=ExtResource("1_nr2y3")]
-transform = Transform3D(0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, 0.707107, -9, 0, 9)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, 10)
 
 [node name="SpawnPoint6" parent="SpawnPoints" instance=ExtResource("1_nr2y3")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 12)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 11)
 
 [node name="SpawnPoint4" parent="SpawnPoints" instance=ExtResource("1_nr2y3")]
-transform = Transform3D(-0.5, 0, 0.866025, 0, 1, 0, -0.866025, 0, -0.5, 9, 0, -9)
+transform = Transform3D(-2.08616e-07, 0, 1, 0, 1, 0, -1, 0, -2.08616e-07, 4, 0, -3)
 
 [node name="SpawnPoint5" parent="SpawnPoints" instance=ExtResource("1_nr2y3")]
-transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, -12)
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, -7)
 
 [node name="DefaultLevelCamera" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
@@ -123,117 +115,38 @@ shadow_enabled = true
 environment = SubResource("Environment_5xgs0")
 camera_attributes = SubResource("CameraAttributesPractical_djnc1")
 
-[node name="World" type="Node3D" parent="."]
+[node name="Environment" type="Node3D" parent="."]
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="World"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
-mesh = SubResource("CylinderMesh_nr2y3")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_1i3dp")
-
-[node name="StaticBody3D" type="StaticBody3D" parent="World/MeshInstance3D"]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="World/MeshInstance3D/StaticBody3D"]
-shape = SubResource("CylinderShape3D_butgl")
-
-[node name="MeshInstance3D3" type="MeshInstance3D" parent="World"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, -0.25, 0)
-mesh = SubResource("CylinderMesh_xbxkw")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_1i3dp")
-
-[node name="StaticBody3D" type="StaticBody3D" parent="World/MeshInstance3D3"]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="World/MeshInstance3D3/StaticBody3D"]
-shape = SubResource("CylinderShape3D_xbxkw")
-
-[node name="MeshInstance3D4" type="MeshInstance3D" parent="World"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, -0.25, 0)
-mesh = SubResource("CylinderMesh_xbxkw")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_1i3dp")
-
-[node name="StaticBody3D" type="StaticBody3D" parent="World/MeshInstance3D4"]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="World/MeshInstance3D4/StaticBody3D"]
-shape = SubResource("CylinderShape3D_xbxkw")
-
-[node name="MeshInstance3D7" type="MeshInstance3D" parent="World"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -0.25, -8)
-mesh = SubResource("CylinderMesh_xbxkw")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_1i3dp")
-
-[node name="StaticBody3D" type="StaticBody3D" parent="World/MeshInstance3D7"]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="World/MeshInstance3D7/StaticBody3D"]
-shape = SubResource("CylinderShape3D_xbxkw")
-
-[node name="MeshInstance3D8" type="MeshInstance3D" parent="World"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -0.25, -8)
-mesh = SubResource("CylinderMesh_xbxkw")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_1i3dp")
-
-[node name="StaticBody3D" type="StaticBody3D" parent="World/MeshInstance3D8"]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="World/MeshInstance3D8/StaticBody3D"]
-shape = SubResource("CylinderShape3D_xbxkw")
-
-[node name="MeshInstance3D9" type="MeshInstance3D" parent="World"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -0.25, 8)
-mesh = SubResource("CylinderMesh_xbxkw")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_1i3dp")
-
-[node name="StaticBody3D" type="StaticBody3D" parent="World/MeshInstance3D9"]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="World/MeshInstance3D9/StaticBody3D"]
-shape = SubResource("CylinderShape3D_xbxkw")
-
-[node name="MeshInstance3D10" type="MeshInstance3D" parent="World"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -0.25, 8)
-mesh = SubResource("CylinderMesh_xbxkw")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_1i3dp")
-
-[node name="StaticBody3D" type="StaticBody3D" parent="World/MeshInstance3D10"]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="World/MeshInstance3D10/StaticBody3D"]
-shape = SubResource("CylinderShape3D_xbxkw")
-
-[node name="MeshInstance3D5" type="MeshInstance3D" parent="World"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, -11)
-mesh = SubResource("CylinderMesh_xbxkw")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_1i3dp")
-
-[node name="StaticBody3D" type="StaticBody3D" parent="World/MeshInstance3D5"]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="World/MeshInstance3D5/StaticBody3D"]
-shape = SubResource("CylinderShape3D_xbxkw")
-
-[node name="MeshInstance3D6" type="MeshInstance3D" parent="World"]
+[node name="MeshInstance3D6" type="MeshInstance3D" parent="Environment"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 11)
 mesh = SubResource("CylinderMesh_xbxkw")
 skeleton = NodePath("../..")
 surface_material_override/0 = SubResource("StandardMaterial3D_1i3dp")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="World/MeshInstance3D6"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Environment/MeshInstance3D6"]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="World/MeshInstance3D6/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Environment/MeshInstance3D6/StaticBody3D"]
 shape = SubResource("CylinderShape3D_xbxkw")
 
-[node name="MeshInstance3D2" type="MeshInstance3D" parent="World"]
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="Environment"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 16.75, 14)
 mesh = SubResource("BoxMesh_nr2y3")
 skeleton = NodePath("../..")
 surface_material_override/0 = SubResource("StandardMaterial3D_1i3dp")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="World/MeshInstance3D2"]
+[node name="StaticBody3D" type="StaticBody3D" parent="Environment/MeshInstance3D2"]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="World/MeshInstance3D2/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Environment/MeshInstance3D2/StaticBody3D"]
 shape = SubResource("ConcavePolygonShape3D_nr2y3")
+
+[node name="Ring" parent="Environment" instance=ExtResource("3_butgl")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -3)
+
+[node name="Ring2" parent="Environment" instance=ExtResource("3_butgl")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 6)
+
+[node name="Ring3" parent="Environment" instance=ExtResource("3_butgl")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, 6)
 
 [node name="LevelTeleporter" parent="." instance=ExtResource("2_xbxkw")]
 transform = Transform3D(-0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, -0.707107, -14, 17, 14)

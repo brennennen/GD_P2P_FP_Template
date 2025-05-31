@@ -3,8 +3,6 @@ extends Level
 @export var player_spawn_points: Node3D
 @export var default_level_camera: Camera3D
 
-@onready var kill_box = $Area3D
-
 @onready var pre_start_timer: Timer = $GamePreStartTimer
 @onready var start_timer: Timer = $GameStartTimer
 
@@ -56,17 +54,6 @@ func start_game() -> void:
 	start_timer.stop()
 	pre_start_timer.stop()
 	start_timer_label_3d.text = "FIGHT!"
-
-func _on_kill_box_area_3d_body_entered(body: Node3D) -> void:
-	if GameInstance.networking.is_server():
-		if body is Player:
-			var player := body as Player
-			Logger.info("player: %s entered killbox" % [str(player.name)])
-			# TODO: do not respawn player, instead move dead player to 0,0,0 and start "spectate" mode?
-			# TODO: trigger checking for game end state
-			#player.server_teleport_player.rpc(Vector3(0.0, 0.0, 0.0))
-			#GameInstance.game_mode.respawn_player(player)
-			GameInstance.game_mode.handle_player_death(player)
 
 func debug_imgui_last_man_window(_delta: float) -> void:
 	ImGui.Begin("LastMan")

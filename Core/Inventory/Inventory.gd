@@ -24,23 +24,19 @@ var grabbed_slot_data: InventorySlotData
 func populate_item_grid() -> void:
 	for child in item_grid.get_children():
 		child.queue_free()
-
 	for slot_data in inventory_data.slot_datas:
 		var slot = slot_scene.instantiate()
-		#slot.inventory = self
+		slot.inventory = self
 		item_grid.add_child(slot)
-
 		if slot_data:
 			slot.set_slot_data(slot_data)
-			pass
-	pass
 
 func set_inventory_data(new_inventory_data: InventoryData) -> void:
 	inventory_data = new_inventory_data
 	populate_item_grid()
 
 func slot_clicked(slot_index: int, event_index: int) -> void:
-	#Logger.info("inventory.slot_clicked: slot: %d" % [ slot_index ])
+	Logger.info("inventory.slot_clicked: slot: %d" % [ slot_index ])
 	if player_interface:
 		player_interface.slot_clicked(slot_index, event_index)
 	#if grabbed_slot_data == null and event_index == MOUSE_BUTTON_LEFT:

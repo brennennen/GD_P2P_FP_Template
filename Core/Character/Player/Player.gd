@@ -35,6 +35,8 @@ static func EquipmentMode_str(_equipment_mode: EquipmentMode):
 @onready var pause_menu: Control = $PauseMenu
 @onready var hud_health: Label = $HUD/MarginContainer/VBoxContainer/HealthHBoxContainer/HealthValue
 @onready var hud_stamina: Label = $HUD/MarginContainer/VBoxContainer/StaminaHBoxContainer/StaminaValue
+@onready var player_list: PlayerList = $PauseMenu/PlayerListMarginContainer/PlayerList
+
 # ... inventory, health/status bars, interactable menus, etc.
 
 # # Movement
@@ -51,7 +53,6 @@ static func EquipmentMode_str(_equipment_mode: EquipmentMode):
 @onready var third_person_animation_tree: AnimationTree = $ThirdPerson/ThirdPersonAnimationTree
 @onready var first_person = $CameraPivot/FirstPerson
 @onready var network_controller: PlayerNetworkController = $NetworkController
-@onready var alive: bool = true
 @onready var inventory_interface: PlayerInventoryInterface = $UI/MarginContainer/PlayerInventoryInterface
 
 
@@ -205,7 +206,7 @@ func die():
 	if movement_controller.movement_mode == PlayerMovementController.MovementMode.HORSE_RIDING:
 		unmount_horse()
 	third_person.hide()
-	alive = false
+	is_alive = false
 	movement_controller.change_movement_mode(PlayerMovementController.MovementMode.UNKNOWN)
 	if GameInstance.networking.is_server():
 		GameInstance.game_mode.handle_player_death(self)
@@ -224,8 +225,6 @@ func _unhandled_input(event):
 			rotation_input = -event.relative.x
 			tilt_input = -event.relative.y
 			#GameInstance.debug_panel.update_entry("mouse", ("%.2f, %.2f" % [_rotation_input, _tilt_input]))
-		#todo
-		pass
 
 func toggle_pause():
 	is_paused = !is_paused
@@ -239,21 +238,11 @@ func toggle_pause():
 		pause_menu.hide()
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
-@onready var player_list: VBoxContainer = $PauseMenu/PlayerListMarginContainer/PlayerListVBoxContainer/PlayerListScrollContainer/PlayerListVBoxContainer
-
 func load_player_list():
-	pass
-	# TODO: rewrite to use peers and PeerMetadata
-	#for player_label in player_list.get_children():
-		#player_label.queue_free()
-	#for id: int in GameInstance.networking.player_id_list:
-		#var player_label := Label.new()
-		#if id == 1:
-			#var ping = GameInstance.networking.client_networking.client_latency_ms
-			#player_label.text = "%s   %s ms" % [str(id), str(ping)]
-		#else:
-			#player_label.text = "%s" % [str(id)]
-		#player_list.add_child(player_label)
+	player_list.clear()
+	for peer_id in GameInstance.networking.peers:
+		var ping: float = GameInstance.networking.peers[peer_id].ping
+		player_list.add_player(peer_id, str(peer_id), ping)
 
 # authority vs any_peer is complicated because we set authority to the local client for the player class
 # ideally this would only be callable by the server, need to work through a way to handle this...
@@ -309,8 +298,6 @@ func handle_gameplay_inputs(event: InputEvent) -> void:
 		primary_action()
 	if event.is_action_pressed("interact"):
 		interact_action()
-		#primary_action()
-		pass
 	if event.is_action_pressed("hotbar_1"):
 		change_equipment_mode.rpc(EquipmentMode.NONE)
 	if event.is_action_pressed("hotbar_2"):
@@ -505,9 +492,6 @@ func _process(delta) -> void:
 	debug_imgui_handle_player_window(delta)
 	if !is_multiplayer_authority():
 		third_person.debug_imgui_handle_3rd_person_animation_window(delta)
-	if is_paused:
-		load_player_list()
-	
 	#if movement_controller.movement_mode == PlayerMovementController.MovementMode.HORSE_RIDING \
 			#and horse:
 		## ????
@@ -556,18 +540,6 @@ func _physics_process(delta):
 
 	movement_controller.player_physics_process(delta, input_dir, sprint_held, jump_pressed)
 
-func physics_process_handle_hit():
-	match(hit_type):
-		HitType.MELEE:
-			var dir = hit_source_position.direction_to(global_position)
-			velocity += (Vector3(dir.x, 0.0, dir.z) * hit_force)
-			velocity += Vector3(0.0, 5.0, 0.0) # add some up force for flavor
-		HitType.YOINK:
-			var dir = global_position.direction_to(hit_source_position)
-			velocity += (Vector3(dir.x, 0.0, dir.z) * hit_force)
-			velocity += Vector3(0.0, 5.0, 0.0) # add some up force for flavor
-		_:
-			pass
 
 var last_player_basis: Basis
 var last_mouse_rotation: Vector3
@@ -603,6 +575,14 @@ func update_camera(delta, input_dir):
 			else:
 				camera_pivot.rotation.z = lerp_angle(camera_pivot.rotation.z, deg_to_rad(0), 0.01)
 
+## Slow periodic tick for things that don't need to be checked every frame.
+func _on_player_timer_1_hz_timeout():
+	# If the player clipped out of the map or is falling forever, kill them at some point
+	if global_position.y <= -1000.0:
+		die.rpc()
+	if is_paused:
+		load_player_list()
+
 func _on_animation_player_animation_started(anim_name):
 	if anim_name == "Crouch":
 		is_crouching = !is_crouching
@@ -633,12 +613,12 @@ func toggle_crouch():
 func toggle_inventory():
 	if !is_multiplayer_authority():
 		return
-	
+
 	if is_paused:
 		return
 
 	$UI.visible = !$UI.visible
-	
+
 	if $UI.visible:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	else:
@@ -676,7 +656,7 @@ func update_rope():
 	if movement_controller.movement_mode != PlayerMovementController.MovementMode.SWINGING:
 		swing_rope.visible = false
 		return
-	
+
 	swing_rope.visible = true
 	var dist = global_position.distance_to(grapple_hook_point)
 	swing_rope.look_at(grapple_hook_point)
@@ -684,6 +664,7 @@ func update_rope():
 
 func respawn_as_spectator(respawn_position: Vector3, respawn_rot_y: float) -> void:
 	movement_controller.change_movement_mode(PlayerMovementController.MovementMode.SPECTATE)
+	is_alive = false
 	collision_shape.visible = false
 	third_person.visible = false
 	global_position = respawn_position
@@ -697,19 +678,20 @@ func respawn_as_spectator(respawn_position: Vector3, respawn_rot_y: float) -> vo
 @rpc("any_peer", "call_local", "reliable")
 func respawn(respawn_position: Vector3, respawn_rot_y: float, spectator: bool = false):
 	Logger.info("respawn() player: %s, pos: %v, rot_y: %f, spectator: %s" % [ name, respawn_position, respawn_rot_y, str(spectator) ])
-	set_health(100.0)
+
 	if fishing_lure_projectile:
 		last_fishing_lure_projectile = fishing_lure_projectile
 		fishing_lure_projectile = null
 		last_fishing_lure_projectile.queue_free()
-
 	fade_from_black(1.0)
-	
+
 	if spectator:
 		respawn_as_spectator(respawn_position, respawn_rot_y)
 	else:
 		movement_controller.change_movement_mode(PlayerMovementController.MovementMode.WALKING)
 		collision_shape.visible = true
+		is_alive = true
+		set_health(100.0)
 
 		if is_multiplayer_authority():
 			pass

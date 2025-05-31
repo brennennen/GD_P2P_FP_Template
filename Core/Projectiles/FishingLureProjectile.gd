@@ -18,7 +18,8 @@ func _physics_process(_delta: float) -> void:
 			for node in get_colliding_bodies():
 				if node is StaticBody3D:
 					# TODO: instead of "is_on_floor" maybe if player is holding left click?
-					if owning_player.is_on_floor():
+					if owning_player.is_on_floor() and global_position.y - 1.0 < owning_player.global_position.y:
+					#if owning_player.is_on_floor():
 						owning_player.receive_fishing_lure_yoink.rpc(global_position)
 						cleanup.rpc()
 					else:
@@ -26,15 +27,12 @@ func _physics_process(_delta: float) -> void:
 					cleanup.rpc()
 
 func _on_player_collision_area_3d_body_entered(body: Node3D) -> void:
-	# Player to player: only allow on server?
+	# Player to player: only allow on server
 	if GameInstance.networking.is_server():
 		if body is Player and body != owning_player:
 			var player_hit = body as Player
 			Logger.info("player: %s (%v) fishing lure hit player: %s (%v)" % [owning_player.name, owning_player.global_position, player_hit.name, player_hit.global_position])
-			# TODO: yoink player hit toward owning player?
 			player_hit.receive_fishing_lure_yoink.rpc(owning_player.global_position)
-			# TODO: queue_free() rpc
-			#queue_free()
 			cleanup.rpc()
 
 @rpc("any_peer", "call_local", "reliable")

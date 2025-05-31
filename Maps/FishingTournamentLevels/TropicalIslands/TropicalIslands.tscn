@@ -1,0 +1,172 @@
+[gd_scene load_steps=15 format=3 uid="uid://ff63qne513i4"]
+
+[ext_resource type="Script" uid="uid://bodec2rxhgylh" path="res://Maps/FishingTournamentLevels/TropicalIslands/TropicalIslands.gd" id="1_p21q6"]
+[ext_resource type="PackedScene" uid="uid://cp7xhlkwk8opm" path="res://Core/Gameplay/KillBox.tscn" id="3_ip8fy"]
+[ext_resource type="PackedScene" uid="uid://dq3k1gmfnaxit" path="res://Core/Gameplay/SpawnPoint.tscn" id="5_3cqhk"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_0jb0i"]
+size = Vector3(2000, 50, 2000)
+
+[sub_resource type="PhysicalSkyMaterial" id="PhysicalSkyMaterial_3cqhk"]
+rayleigh_color = Color(0.137575, 0.200307, 0.317419, 1)
+mie_eccentricity = 0.99
+mie_color = Color(0.7958, 0.822937, 0.880384, 1)
+
+[sub_resource type="Sky" id="Sky_84xh2"]
+sky_material = SubResource("PhysicalSkyMaterial_3cqhk")
+
+[sub_resource type="Environment" id="Environment_ful6n"]
+background_mode = 2
+sky = SubResource("Sky_84xh2")
+ambient_light_source = 3
+tonemap_mode = 4
+ssr_enabled = true
+ssao_enabled = true
+glow_enabled = true
+glow_intensity = 0.05
+glow_strength = 0.49
+volumetric_fog_density = 0.0001
+volumetric_fog_albedo = Color(0.895052, 0.995096, 0.976932, 1)
+
+[sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_c4elb"]
+dof_blur_far_enabled = true
+dof_blur_far_distance = 50.0
+dof_blur_amount = 0.01
+
+[sub_resource type="BoxMesh" id="BoxMesh_rmef4"]
+size = Vector3(20, 0.5, 20)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qsrsg"]
+albedo_color = Color(0.099986, 0.099986, 0.099986, 1)
+roughness = 0.3
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_3cqhk"]
+data = PackedVector3Array(-10, 0.25, 10, 10, 0.25, 10, -10, -0.25, 10, 10, 0.25, 10, 10, -0.25, 10, -10, -0.25, 10, 10, 0.25, -10, -10, 0.25, -10, 10, -0.25, -10, -10, 0.25, -10, -10, -0.25, -10, 10, -0.25, -10, 10, 0.25, 10, 10, 0.25, -10, 10, -0.25, 10, 10, 0.25, -10, 10, -0.25, -10, 10, -0.25, 10, -10, 0.25, -10, -10, 0.25, 10, -10, -0.25, -10, -10, 0.25, 10, -10, -0.25, 10, -10, -0.25, -10, 10, 0.25, 10, -10, 0.25, 10, 10, 0.25, -10, -10, 0.25, 10, -10, 0.25, -10, 10, 0.25, -10, -10, -0.25, 10, 10, -0.25, 10, -10, -0.25, -10, 10, -0.25, 10, 10, -0.25, -10, -10, -0.25, -10)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rmef4"]
+albedo_color = Color(0.0156182, 0.191507, 0.284366, 1)
+roughness = 0.15
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_rmef4"]
+material = SubResource("StandardMaterial3D_rmef4")
+size = Vector2(200, 200)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_rmef4"]
+
+[node name="TropicalIslands" type="Node3D" node_paths=PackedStringArray("player_spawn_points", "default_level_camera")]
+script = ExtResource("1_p21q6")
+player_spawn_points = NodePath("SpawnPoints")
+default_level_camera = NodePath("DefaultLevelCamera")
+
+[node name="KillBox" parent="." instance=ExtResource("3_ip8fy")]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="KillBox"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -28, 0)
+shape = SubResource("BoxShape3D_0jb0i")
+
+[node name="SpawnPoints" type="Node3D" parent="."]
+
+[node name="SpawnPoint2" parent="SpawnPoints" instance=ExtResource("5_3cqhk")]
+transform = Transform3D(1, 0, 1.06581e-14, 0, 1, 0, -1.06581e-14, 0, 1, 3, 0, 7)
+
+[node name="SpawnPoint6" parent="SpawnPoints" instance=ExtResource("5_3cqhk")]
+transform = Transform3D(1, 0, 1.06581e-14, 0, 1, 0, -1.06581e-14, 0, 1, 5, 0, 7)
+
+[node name="SpawnPoint" parent="SpawnPoints" instance=ExtResource("5_3cqhk")]
+transform = Transform3D(1, 0, -1.06581e-14, 0, 1, 0, 1.06581e-14, 0, 1, -3, 0, 7)
+
+[node name="SpawnPoint5" parent="SpawnPoints" instance=ExtResource("5_3cqhk")]
+transform = Transform3D(1, 0, -1.06581e-14, 0, 1, 0, 1.06581e-14, 0, 1, -5, 0, 7)
+
+[node name="SpawnPoint3" parent="SpawnPoints" instance=ExtResource("5_3cqhk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0, 7)
+
+[node name="SpawnPoint8" parent="SpawnPoints" instance=ExtResource("5_3cqhk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 7)
+
+[node name="SpawnPoint4" parent="SpawnPoints" instance=ExtResource("5_3cqhk")]
+transform = Transform3D(1, 0, 1.74846e-07, 0, 1, 0, -1.74846e-07, 0, 1, 7, 0, 7)
+
+[node name="SpawnPoint7" parent="SpawnPoints" instance=ExtResource("5_3cqhk")]
+transform = Transform3D(1, 0, 2.13163e-14, 0, 1, 0, -2.13163e-14, 0, 1, -1, 0, 7)
+
+[node name="DefaultLevelCamera" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+
+[node name="EnvironmentAndAtmosphere" type="Node3D" parent="."]
+
+[node name="ReflectionProbe" type="ReflectionProbe" parent="EnvironmentAndAtmosphere"]
+size = Vector3(30, 30, 30)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="EnvironmentAndAtmosphere"]
+transform = Transform3D(0.490524, -0.713526, 0.500266, 0, 0.574077, 0.818802, -0.871428, -0.401641, 0.281598, 0, 4.18616, 6)
+light_color = Color(0.977318, 0.916539, 0.885586, 1)
+light_energy = 10.0
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="EnvironmentAndAtmosphere"]
+environment = SubResource("Environment_ful6n")
+camera_attributes = SubResource("CameraAttributesPractical_c4elb")
+
+[node name="Environment" type="Node3D" parent="."]
+
+[node name="Island" type="MeshInstance3D" parent="Environment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
+mesh = SubResource("BoxMesh_rmef4")
+skeleton = NodePath("../..")
+surface_material_override/0 = SubResource("StandardMaterial3D_qsrsg")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Environment/Island"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Environment/Island/StaticBody3D"]
+shape = SubResource("ConcavePolygonShape3D_3cqhk")
+
+[node name="Water" type="MeshInstance3D" parent="Environment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+mesh = SubResource("PlaneMesh_rmef4")
+
+[node name="SceneLabel3D" type="Label3D" parent="Environment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -10)
+text = "Fishing Tournament
+Tropical Islands"
+font_size = 128
+
+[node name="Market" type="Node3D" parent="Environment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, -7)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Environment/Market"]
+transform = Transform3D(0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, 0.707107, 0, 1, 0)
+mesh = SubResource("CylinderMesh_rmef4")
+
+[node name="Label3D" type="Label3D" parent="Environment/Market"]
+transform = Transform3D(0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, 0.707107, -0.5, 2, 0.5)
+text = "Sell me feesh"
+
+[node name="StartTimerLabel3D" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -8)
+text = "{start time timer}"
+font_size = 128
+
+[node name="GameTimerLabel3D" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, -8)
+text = "{game time timer}"
+font_size = 128
+
+[node name="GameTimerLabel3D2" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, -8)
+text = "{winner}"
+font_size = 128
+
+[node name="GameStartTimer" type="Timer" parent="."]
+process_callback = 0
+one_shot = true
+
+[node name="GamePreStartTimer" type="Timer" parent="."]
+process_callback = 0
+one_shot = true
+
+[node name="GameTimer" type="Timer" parent="."]
+process_callback = 0
+one_shot = true
+
+[node name="GameEndTransitionTimer" type="Timer" parent="."]

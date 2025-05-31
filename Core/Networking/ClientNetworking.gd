@@ -466,6 +466,8 @@ func on_receive_ping_response(_from_peer_id: int, packet: PackedByteArray):
 		Networking.NetworkMessageId_str(Networking.NetworkMessageId.PING_RESPONSE), current_tick, sent_tick, ping_delta
 	])
 	client_latency_ms = int(ping_delta / 2.0) # round trip ping, not the most accurate, but good enough for now
+	if 1 in GameInstance.networking.peers:
+		GameInstance.networking.peers[1].ping = client_latency_ms
 	client_latency_history[client_latency_history_index] = client_latency_ms
 	client_latency_history_index = (client_latency_history_index + 1) % (client_latency_history_size - 1)
 

@@ -116,13 +116,16 @@ func check_players_to_spawn():
 func last_man_standing_1hz():
 	var players_alive: int = 0
 	for player in GameInstance.get_players():
-		if player.alive:
+		if player.is_alive:
 			players_alive += 1
 	if players_alive == 1:
 		# TODO: start end game timer!
 		Logger.info("TODO! game over! player still alive wins!")
 		handle_game_over()
-		
+	if players_alive == 0:
+		# gotta handle this
+		Logger.info("TODO! game over! figure out which player died last?")
+		handle_game_over()
 	Logger.info("last_man_standing_1hz: players_alive: %d" % [players_alive])
 
 func handle_game_over():

@@ -37,7 +37,7 @@ func _ready() -> void:
 @rpc("any_peer", "call_local", "reliable")
 func change_movement_mode(new_movement_mode: MovementMode) -> void:
 	Logger.info("%s: change_movement_mode: %s -> %s" % [ player.name, MovementMode.keys()[movement_mode], MovementMode.keys()[new_movement_mode] ])
-	
+
 	match movement_mode:
 		MovementMode.SWINGING:
 			match new_movement_mode:
@@ -61,7 +61,7 @@ func change_movement_mode(new_movement_mode: MovementMode) -> void:
 
 func determine_movement_mode(_delta, last_movement_mode) -> MovementMode:
 	# TODO: don't change movement mode?
-	
+
 	var new_movement_mode = last_movement_mode
 	if player.is_on_floor():
 		if last_movement_mode == MovementMode.FALLING:
@@ -115,12 +115,18 @@ func get_movement_speed() -> float:
 
 @rpc("any_peer", "call_local", "reliable")
 func start_jump():
-	player.velocity.y = jump_velocity
+	player.velocity.y += jump_velocity
 	player.third_person.jump_third_person_visuals()
 	player.play_footstep_audio()
 
 func player_physics_process(delta: float, input_dir: Vector2, sprint_held: bool, jump_pressed: bool) -> void:
 	#movement_mode = determine_movement_mode(delta, movement_mode)
+	if movement_mode == MovementMode.FALLING:
+		if player.is_on_floor():
+			change_movement_mode(MovementMode.WALKING)
+	if movement_mode == MovementMode.WALKING:
+		if !player.is_on_floor():
+			change_movement_mode(MovementMode.FALLING)
 
 	# Handle Jump.
 	if !player.is_paused:
@@ -143,7 +149,7 @@ func player_physics_process(delta: float, input_dir: Vector2, sprint_held: bool,
 				player.set_stamina(player.stamina + 0.25)
 
 	if player.handle_hit_next_physics_frame:
-		player.physics_process_handle_hit()
+		physics_process_handle_hit()
 		player.handle_hit_next_physics_frame = false
 
 	var move_speed: float = get_movement_speed()
@@ -178,10 +184,10 @@ func ground_movement_physics(delta: float, move_speed: float, input_dir: Vector2
 	move_colliding_rigid_bodies()
 
 func handle_gravity(delta: float):
-	if not player.is_on_floor():
-		player.velocity.y -= player.gravity * delta
-	else:
+	if player.is_on_floor():
 		player.velocity.y = -0.1 # just a small amount of force to "stick" the player to the ground
+	else:
+		player.velocity.y -= player.gravity * delta
 
 # TODO: lerp to target_dir?
 #var target_dir: Vector2
@@ -194,7 +200,7 @@ var horse_smoothed_input: float = 0.0
 var horse_input_smoothing_factor: float = 0.2
 var current_actual_speed: float = 0.0 # The current speed magnitude of the horse, this ramps up/down
 
-var speed_ramp_factor: float = 0.01  
+var speed_ramp_factor: float = 0.01
 var deceleration_ramp_factor: float = 0.03
 
 var velocity_follow_strength: float = 5.0
@@ -203,7 +209,7 @@ enum horse_move_mode { WALK, CANTER, GALLOP }
 
 func horse_riding_movement_physics(delta: float, input_dir: Vector2, sprint_held: bool):
 	handle_gravity(delta)
-	
+
 	# TODO: tier this so you can canter? right now, you go straight from walking to galloping
 	var target_max_move_speed = horse_walk_speed
 	if sprint_held:
@@ -211,7 +217,7 @@ func horse_riding_movement_physics(delta: float, input_dir: Vector2, sprint_held
 		if current_actual_speed > (horse_canter_speed - 0.25):
 			target_max_move_speed = horse_gallop_speed
 	#Logger.info("current_actual_speed: %f" % [current_actual_speed])
-	
+
 	var input_dir_z: float = input_dir.y
 	#var input_dir_z: float = Input.get_action_strength("move_forward") - Input.get_action_strength("move_backward")
 	horse_smoothed_input = lerpf(horse_smoothed_input, input_dir_z, horse_input_smoothing_factor)
@@ -236,7 +242,7 @@ func horse_riding_movement_physics(delta: float, input_dir: Vector2, sprint_held
 
 	var world_direction_vector: Vector3 = Vector3.ZERO
 	if movement_sign != 0.0:
-		world_direction_vector = (player.transform.basis * Vector3(0, 0, -movement_sign)).normalized() 
+		world_direction_vector = (player.transform.basis * Vector3(0, 0, -movement_sign)).normalized()
 	var target_horizontal_velocity: Vector3 = world_direction_vector * current_actual_speed
 	player.velocity.x = lerpf(player.velocity.x, target_horizontal_velocity.x, velocity_follow_strength * delta)
 	player.velocity.z = lerpf(player.velocity.z, target_horizontal_velocity.z, velocity_follow_strength * delta)
@@ -277,7 +283,7 @@ func swinging_movement_physics(delta: float, _move_speed: float) -> void:
 	var target_dist = player.global_position.distance_to(player.grapple_hook_point)
 	var displacement = target_dist - rest_length
 	var force := Vector3.ZERO
-	
+
 	if displacement > 0.0001:
 		var spring_force_magnitude = stiffness * displacement
 		var spring_force = target_dir * spring_force_magnitude
@@ -296,6 +302,19 @@ func falling_movement_physics(delta, _speed):
 	#velocity.y -= gravity * delta
 	#Logger.info("gravity: %f, y_veloc: %f" % [gravity, velocity.y])
 	player.move_and_slide()
+
+func physics_process_handle_hit():
+	match(player.hit_type):
+		Player.HitType.MELEE:
+			var dir = player.hit_source_position.direction_to(global_position)
+			player.velocity += (Vector3(dir.x, 0.0, dir.z) * player.hit_force)
+			player.velocity += Vector3(0.0, 5.0, 0.0) # add some up force for flavor
+		Player.HitType.YOINK:
+			var dir = global_position.direction_to(player.hit_source_position)
+			player.velocity += (Vector3(dir.x, 0.0, dir.z) * player.hit_force)
+			player.velocity += Vector3(0.0, 5.0, 0.0) # add some up force for flavor
+		_:
+			pass
 
 func move_colliding_rigid_bodies():
 	for col_idx in player.get_slide_collision_count():

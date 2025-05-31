@@ -1,0 +1,52 @@
+[gd_scene load_steps=2 format=3 uid="uid://c57d6gb67un1r"]
+
+[ext_resource type="Script" uid="uid://cqse3mm3e31u6" path="res://Core/Character/Player/PlayerUI/PlayerListEntry.gd" id="1_ybww0"]
+
+[node name="PlayerListEntry" type="Control"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 3
+anchors_preset = 10
+anchor_right = 1.0
+grow_horizontal = 2
+script = ExtResource("1_ybww0")
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 31.0
+grow_horizontal = 2
+
+[node name="LeftMarginContainer" type="MarginContainer" parent="PanelContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+
+[node name="NameLabel" type="Label" parent="PanelContainer/LeftMarginContainer"]
+layout_mode = 2
+text = "{player name}"
+
+[node name="MiddleMarginContainer" type="MarginContainer" parent="PanelContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="PingLabel" type="Label" parent="PanelContainer/MiddleMarginContainer"]
+layout_mode = 2
+text = "{ping}"
+
+[node name="RightMarginContainer" type="MarginContainer" parent="PanelContainer"]
+layout_mode = 2
+size_flags_horizontal = 8
+
+[node name="HBoxContainer" type="HBoxContainer" parent="PanelContainer/RightMarginContainer"]
+layout_mode = 2
+
+[node name="KickButton" type="Button" parent="PanelContainer/RightMarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 8
+text = "kick"
+
+[node name="MuteButton" type="Button" parent="PanelContainer/RightMarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 8
+text = "mute"
