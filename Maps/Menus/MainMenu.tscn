@@ -1,6 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://dn0n5ci8vhewt"]
+[gd_scene load_steps=5 format=3 uid="uid://dn0n5ci8vhewt"]
 
 [ext_resource type="Script" uid="uid://ktrhw54kiq8d" path="res://Maps/Menus/MainMenu.gd" id="1_quj26"]
+[ext_resource type="AudioStream" uid="uid://bc4cmw0iheacm" path="res://Assets/Audio/Misc/GuitarNotes/low_e_palm_mute.mp3" id="2_cdrwl"]
+[ext_resource type="AudioStream" uid="uid://bunogafs7h0eb" path="res://Assets/Audio/Misc/GuitarNotes/a_sharp_harmonic.mp3" id="3_v3pus"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mtgdw"]
 bg_color = Color(0.16, 0.16, 0.16, 0.917647)
@@ -71,7 +73,17 @@ color = Color(0, 0, 0, 1)
 
 [node name="Audio" type="Node" parent="."]
 
+[node name="ButtonHoverAudio" type="AudioStreamPlayer" parent="Audio"]
+stream = ExtResource("2_cdrwl")
+volume_db = -12.0
+bus = &"UI"
+
+[node name="ButtonPressedAudio" type="AudioStreamPlayer" parent="Audio"]
+stream = ExtResource("3_v3pus")
+volume_db = -12.0
+
 [node name="ErrorPanel" type="Panel" parent="."]
+visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -126,7 +138,10 @@ text = "ERROR!"
 layout_mode = 2
 text = "{error}"
 
+[connection signal="mouse_entered" from="MainMenuControl/CenterMarginContainer/VBoxContainer/PlayButton" to="." method="_on_any_button_mouse_entered"]
 [connection signal="pressed" from="MainMenuControl/CenterMarginContainer/VBoxContainer/PlayButton" to="." method="_on_play_button_pressed"]
+[connection signal="mouse_entered" from="MainMenuControl/CenterMarginContainer/VBoxContainer/OptionsButton" to="." method="_on_any_button_mouse_entered"]
+[connection signal="mouse_entered" from="MainMenuControl/CenterMarginContainer/VBoxContainer/QuitButton" to="." method="_on_any_button_mouse_entered"]
 [connection signal="pressed" from="MainMenuControl/CenterMarginContainer/VBoxContainer/QuitButton" to="." method="_on_quit_button_pressed"]
 [connection signal="gui_input" from="ErrorPanel" to="." method="_on_error_panel_gui_input"]
 [connection signal="pressed" from="ErrorPanel/TopRightMarginContainer/ErrorPanelCloseButton" to="." method="_on_error_panel_close_button_pressed"]

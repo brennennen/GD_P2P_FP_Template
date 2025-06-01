@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://cy4f0n20yjext"]
+[gd_scene load_steps=4 format=3 uid="uid://cy4f0n20yjext"]
 
 [ext_resource type="Script" uid="uid://dig13focdj07l" path="res://Maps/Menus/SteamMenus/SteamJoinMenu.gd" id="1_o1bs0"]
+[ext_resource type="AudioStream" uid="uid://bc4cmw0iheacm" path="res://Assets/Audio/Misc/GuitarNotes/low_e_palm_mute.mp3" id="2_3yh4g"]
+[ext_resource type="AudioStream" uid="uid://bunogafs7h0eb" path="res://Assets/Audio/Misc/GuitarNotes/a_sharp_harmonic.mp3" id="3_h5a7p"]
 
 [node name="SteamJoinMenu" type="Control"]
 layout_mode = 3
@@ -33,12 +35,6 @@ text = "Steam Join Lobby Menu"
 [node name="RefreshButton" type="Button" parent="MarginContainer/VBoxContainer/VBoxContainer"]
 layout_mode = 2
 text = "Refresh"
-
-[node name="ButtonPressedAudio" type="AudioStreamPlayer" parent="MarginContainer/VBoxContainer/VBoxContainer/RefreshButton"]
-
-[node name="ButtonHoverAudio" type="AudioStreamPlayer" parent="MarginContainer/VBoxContainer/VBoxContainer/RefreshButton"]
-volume_db = -32.0
-pitch_scale = 0.66
 
 [node name="VBoxContainer2" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
@@ -111,5 +107,18 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 1)
 
+[node name="Audio" type="Node" parent="."]
+
+[node name="ButtonHoverAudio" type="AudioStreamPlayer" parent="Audio"]
+stream = ExtResource("2_3yh4g")
+volume_db = -12.0
+bus = &"UI"
+
+[node name="ButtonPressedAudio" type="AudioStreamPlayer" parent="Audio"]
+stream = ExtResource("3_h5a7p")
+volume_db = -12.0
+
+[connection signal="mouse_entered" from="MarginContainer/VBoxContainer/VBoxContainer/RefreshButton" to="." method="_on_any_button_mouse_entered"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/VBoxContainer/RefreshButton" to="." method="_on_refresh_button_pressed"]
+[connection signal="mouse_entered" from="MarginContainer/VBoxContainer/VBoxContainer3/BackButton" to="." method="_on_any_button_mouse_entered"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/VBoxContainer3/BackButton" to="." method="_on_back_button_pressed"]

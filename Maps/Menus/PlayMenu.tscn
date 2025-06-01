@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://c42fsjcj60en5"]
+[gd_scene load_steps=4 format=3 uid="uid://c42fsjcj60en5"]
 
 [ext_resource type="Script" uid="uid://be7ox6hhqk32o" path="res://Maps/Menus/PlayMenu.gd" id="1_btm7i"]
+[ext_resource type="AudioStream" uid="uid://bc4cmw0iheacm" path="res://Assets/Audio/Misc/GuitarNotes/low_e_palm_mute.mp3" id="2_n1fqb"]
+[ext_resource type="AudioStream" uid="uid://bunogafs7h0eb" path="res://Assets/Audio/Misc/GuitarNotes/a_sharp_harmonic.mp3" id="3_p3yfv"]
 
 [node name="PlayMenu" type="Control"]
 layout_mode = 3
@@ -76,8 +78,22 @@ color = Color(0, 0, 0, 1)
 
 [node name="Audio" type="Node" parent="."]
 
+[node name="ButtonHoverAudio" type="AudioStreamPlayer" parent="Audio"]
+stream = ExtResource("2_n1fqb")
+volume_db = -12.0
+bus = &"UI"
+
+[node name="ButtonPressedAudio" type="AudioStreamPlayer" parent="Audio"]
+stream = ExtResource("3_p3yfv")
+volume_db = -12.0
+
+[connection signal="mouse_entered" from="PlayMenuControl/CenterMarginContainer/VBoxContainer/SinglePlayerButton" to="." method="_on_any_button_mouse_entered"]
 [connection signal="pressed" from="PlayMenuControl/CenterMarginContainer/VBoxContainer/SinglePlayerButton" to="." method="_on_single_player_button_pressed"]
+[connection signal="mouse_entered" from="PlayMenuControl/CenterMarginContainer/VBoxContainer/HostButton" to="." method="_on_any_button_mouse_entered"]
 [connection signal="pressed" from="PlayMenuControl/CenterMarginContainer/VBoxContainer/HostButton" to="." method="_on_host_button_pressed"]
+[connection signal="mouse_entered" from="PlayMenuControl/CenterMarginContainer/VBoxContainer/JoinButton" to="." method="_on_any_button_mouse_entered"]
 [connection signal="pressed" from="PlayMenuControl/CenterMarginContainer/VBoxContainer/JoinButton" to="." method="_on_join_button_pressed"]
+[connection signal="mouse_entered" from="PlayMenuControl/CenterMarginContainer/VBoxContainer/DirectConnectButton" to="." method="_on_any_button_mouse_entered"]
 [connection signal="pressed" from="PlayMenuControl/CenterMarginContainer/VBoxContainer/DirectConnectButton" to="." method="_on_direct_connect_button_pressed"]
+[connection signal="mouse_entered" from="PlayMenuControl/CenterMarginContainer/VBoxContainer/BackButton" to="." method="_on_any_button_mouse_entered"]
 [connection signal="pressed" from="PlayMenuControl/CenterMarginContainer/VBoxContainer/BackButton" to="." method="_on_back_button_pressed"]

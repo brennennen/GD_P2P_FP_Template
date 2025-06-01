@@ -1,12 +1,10 @@
-[gd_scene load_steps=27 format=3 uid="uid://c1xyjf8804omj"]
+[gd_scene load_steps=28 format=3 uid="uid://c1xyjf8804omj"]
 
 [ext_resource type="Script" uid="uid://ba834ivl65ngb" path="res://Maps/Sandboxes/DebugSandbox.gd" id="1_dmo41"]
 [ext_resource type="PackedScene" uid="uid://dq3k1gmfnaxit" path="res://Core/Gameplay/SpawnPoint.tscn" id="2_t3lk3"]
 [ext_resource type="PackedScene" uid="uid://b8lytvha5krpa" path="res://Core/Gameplay/LevelTeleporter.tscn" id="3_ftmlj"]
 [ext_resource type="PackedScene" uid="uid://bw2qospayyty4" path="res://Core/Character/NPC/Mountables/Horse/Horse.tscn" id="3_jl181"]
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_ftmlj"]
-size = Vector3(1000, 10, 1000)
+[ext_resource type="PackedScene" uid="uid://cp7xhlkwk8opm" path="res://Core/Gameplay/KillBox.tscn" id="5_lnb8m"]
 
 [sub_resource type="PhysicalSkyMaterial" id="PhysicalSkyMaterial_jl181"]
 rayleigh_color = Color(0.137575, 0.200307, 0.317419, 1)
@@ -86,6 +84,9 @@ size = Vector3(3, 2, 3)
 [sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_ftmlj"]
 data = PackedVector3Array(1.5, 1, 1.5, 1.5, -1, 1.5, -1.5, -1, 1.5, 1.5, 1, -1.5, -1.5, -1, -1.5, 1.5, -1, -1.5, 1.5, 1, 1.5, 1.5, 1, -1.5, 1.5, -1, 1.5, 1.5, 1, -1.5, 1.5, -1, -1.5, 1.5, -1, 1.5, 1.5, 1, -1.5, 1.5, 1, 1.5, -1.5, -1, -1.5, 1.5, 1, 1.5, -1.5, -1, 1.5, -1.5, -1, -1.5, -1.5, -1, 1.5, 1.5, -1, 1.5, -1.5, -1, -1.5, 1.5, -1, 1.5, 1.5, -1, -1.5, -1.5, -1, -1.5)
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_8lsb3"]
+size = Vector3(2500, 50, 2500)
+
 [node name="DebugSandbox" type="Node3D" node_paths=PackedStringArray("player_spawn_points", "default_level_camera")]
 script = ExtResource("1_dmo41")
 player_spawn_points = NodePath("SpawnPoints")
@@ -119,12 +120,6 @@ transform = Transform3D(1, 0, 2.13163e-14, 0, 1, 0, -2.13163e-14, 0, 1, 0, 0, -6
 
 [node name="DefaultLevelCamera" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
-
-[node name="KillBoxArea3D" type="Area3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -50, 0)
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="KillBoxArea3D"]
-shape = SubResource("BoxShape3D_ftmlj")
 
 [node name="SceneLabel3D" type="Label3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -10)
@@ -331,3 +326,10 @@ transform = Transform3D(-1, 0, 8.74228e-08, 0, 1, 0, -8.74228e-08, 0, -1, -12, 0
 transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, -8, 0, -8)
 label_name = "HUB Level"
 scene_path = "res://Maps/HUBLevel/HUBLevel.tscn"
+
+[node name="KillBox" parent="." instance=ExtResource("5_lnb8m")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -50, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="KillBox"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -50, 0)
+shape = SubResource("BoxShape3D_8lsb3")

@@ -2,8 +2,15 @@ extends Control
 
 class_name SteamJoinMenu
 
+# # UI
 @onready var refresh_button: Button = $MarginContainer/VBoxContainer/VBoxContainer/RefreshButton
 @onready var lobbies_list: VBoxContainer = $MarginContainer/VBoxContainer/VBoxContainer2/ScrollContainer/LobbiesList
+
+# # Audio
+@onready var button_hover_audio: AudioStreamPlayer = $Audio/ButtonHoverAudio
+@onready var button_pressed_audio: AudioStreamPlayer = $Audio/ButtonPressedAudio
+
+# # Misc
 @onready var fade_color_rect: ColorRect = $ColorRect
 
 func _ready():
@@ -21,6 +28,7 @@ func clear_lobbies_list() -> void:
 		lobby_entry.free()
 
 func _on_refresh_button_pressed() -> void:
+	button_pressed_audio.play()
 	clear_lobbies_list()
 	refresh_button.set_disabled(true)
 	GameInstance.networking.steam_lobby.refresh_lobby_list()
@@ -56,12 +64,10 @@ func join_steam_lobby_callback(lobby_id: int):
 	Logger.info("Joining steam lobby: %s" % lobby_id)
 	GameInstance.networking.set_multiplayer_mode(Networking.MultiplayerMode.STEAM)
 	var join_game_result = GameInstance.networking.steam_lobby.join_lobby(lobby_id)
-	
-	#GameInstance.networking.on_join_scene_path = "res://Maps/Sandboxes/Sandbox.tscn"
-	#MultiplayerLobby.steam_join_lobby(lobby_id)
 
 func _on_back_button_pressed() -> void:
-	fade_out_and_change_scene("res://Maps/Menus/PlayMenu.tscn", 0.25)
+	button_pressed_audio.play()
+	fade_out_and_change_scene("res://Maps/Menus/PlayMenu.tscn", 0.5)
 
 func fade_out_and_change_scene(scene_path: String, duration: float):
 	var fade_out_tween = create_tween()
@@ -69,3 +75,6 @@ func fade_out_and_change_scene(scene_path: String, duration: float):
 	fade_out_tween.tween_callback(
 		func(): GameInstance.load_and_change_scene_blocking(scene_path)
 	)
+
+func _on_any_button_mouse_entered() -> void:
+	button_hover_audio.play()

@@ -1,14 +1,19 @@
 extends Control
 
-
-@onready var fade_color_rect = $ColorRect
-
+# # UI
 @onready var address_text_box = $MarginContainer/VBoxContainer/AddressHBoxContainer/AddressLineEdit
 @onready var port_text_box = $MarginContainer/VBoxContainer/PortBoxContainer/PortLineEdit
 @onready var password_text_box = $MarginContainer/VBoxContainer/PasswordHBoxContainer/PasswordLineEdit
 @onready var status_text = $StatusMarginContainer/StatusRichTextLabel
 @onready var join_button = $MarginContainer/VBoxContainer/JoinButton
 @onready var back_button = $MarginContainer/VBoxContainer/BackButton
+
+# # Audio
+@onready var button_hover_audio: AudioStreamPlayer = $Audio/ButtonHoverAudio
+@onready var button_pressed_audio: AudioStreamPlayer = $Audio/ButtonPressedAudio
+
+# # Misc
+@onready var fade_color_rect = $ColorRect
 
 
 func _ready():
@@ -28,6 +33,7 @@ func enable_buttons() -> void:
 	back_button.set_disabled(false)
 
 func _on_join_button_pressed():
+	button_pressed_audio.play()
 	disable_buttons()
 	var address: String = address_text_box.text
 	var port: int = int(port_text_box.text)
@@ -39,7 +45,8 @@ func _on_join_button_pressed():
 		# TODO: display an error message modal?
 
 func _on_back_button_pressed():
-	fade_out_and_change_scene("res://Maps/Menus/DirectConnectMenus/DirectConnectMenu.tscn", 0.25)
+	button_pressed_audio.play()
+	fade_out_and_change_scene("res://Maps/Menus/DirectConnectMenus/DirectConnectMenu.tscn", 0.5)
 
 func fade_out_and_change_scene(scene_path: String, duration: float):
 	var fade_out_tween = create_tween()
@@ -47,3 +54,6 @@ func fade_out_and_change_scene(scene_path: String, duration: float):
 	fade_out_tween.tween_callback(
 		func(): GameInstance.load_and_change_scene_blocking(scene_path)# GameInstance.load_and_change_scene(scene_path)
 	)
+
+func _on_any_button_mouse_entered() -> void:
+	button_hover_audio.play()

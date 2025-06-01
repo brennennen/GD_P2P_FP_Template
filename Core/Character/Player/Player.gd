@@ -406,7 +406,6 @@ func primary_action_server_request():
 			fists_punch_server_request()
 		EquipmentMode.FISHING_POLE:
 			fishing_primary_action_server_request()
-			pass
 		_:
 			pass
 	pass
@@ -459,6 +458,8 @@ func fishing_primary_action_third_person_visuals():
 	upper_body_state_machine_playback.travel("boxing-punch-right")
 
 func fishing_primary_action_server_request():
+	if movement_controller.movement_mode == PlayerMovementController.MovementMode.SWINGING:
+		movement_controller.change_movement_mode.rpc(PlayerMovementController.MovementMode.FALLING)
 	#Logger.info("fishing_primary_action_server_request");
 	# TODO: spawn fishing lure projectile
 	spawn_fishing_lure_projectile.rpc()
@@ -630,20 +631,20 @@ func _on_animation_player_animation_started(anim_name):
 		is_crouching = !is_crouching
 
 func jump_action_pressed():
+	if movement_controller.movement_mode == PlayerMovementController.MovementMode.SWINGING:
+		movement_controller.change_movement_mode.rpc(PlayerMovementController.MovementMode.FALLING)
 	# Jumping uncrouches
 	if is_crouching == true:
 		toggle_crouch.rpc()
 	# don't actually jump when pressed, wait until physics process 1/60th a second is fine to wait and it's easier to handle velocity changing behavior there
-	if movement_controller.movement_mode == PlayerMovementController.MovementMode.SWINGING:
-		movement_controller.change_movement_mode.rpc(PlayerMovementController.MovementMode.FALLING)
-		#movement_controller.movement_mode_transition_swinging_to_falling()
-
-func end_jump():
-	third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/jump", false)
 
 @rpc("any_peer", "call_local", "reliable")
 func toggle_crouch():
 	Logger.info("%s:toggle_crouch: is_crouching: %d, crouch_shapecast: %d" % [name, int(is_crouching), int(crouch_shapecast.is_colliding())])
+
+	if movement_controller.movement_mode == PlayerMovementController.MovementMode.SWINGING:
+		movement_controller.change_movement_mode.rpc(PlayerMovementController.MovementMode.FALLING)
+
 	if is_crouching == true:
 		if crouch_shapecast.is_colliding() == false:
 			crouch_animation_player.play("Crouch", -1, -1.0 * crouch_animation_speed)

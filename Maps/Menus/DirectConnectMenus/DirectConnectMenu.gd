@@ -1,6 +1,10 @@
 extends Control
 
 @onready var fade_color_rect = $ColorRect
+@onready var button_hover_audio: AudioStreamPlayer = $Audio/ButtonHoverAudio
+@onready var button_pressed_audio: AudioStreamPlayer = $Audio/ButtonPressedAudio
+
+
 
 func _ready():
 	fade_in()
@@ -11,13 +15,16 @@ func fade_in():
 	fade_tween.tween_property(fade_color_rect, "self_modulate", Color.TRANSPARENT, 0.25)
 
 func _on_host_button_pressed():
-	fade_out_and_change_scene("res://Maps/Menus/DirectConnectMenus/DirectConnectHostMenu.tscn", 0.25)
+	button_pressed_audio.play()
+	fade_out_and_change_scene("res://Maps/Menus/DirectConnectMenus/DirectConnectHostMenu.tscn", 0.5)
 
 func _on_join_button_pressed():
-	fade_out_and_change_scene("res://Maps/Menus/DirectConnectMenus/DirectConnectJoinMenu.tscn", 0.25)
+	button_pressed_audio.play()
+	fade_out_and_change_scene("res://Maps/Menus/DirectConnectMenus/DirectConnectJoinMenu.tscn", 0.5)
 
 func _on_back_button_pressed():
-	fade_out_and_change_scene("res://Maps/Menus/PlayMenu.tscn", 0.25)
+	button_pressed_audio.play()
+	fade_out_and_change_scene("res://Maps/Menus/PlayMenu.tscn", 0.5)
 
 func fade_out_and_change_scene(scene_path: String, duration: float):
 	var fade_out_tween = create_tween()
@@ -25,3 +32,6 @@ func fade_out_and_change_scene(scene_path: String, duration: float):
 	fade_out_tween.tween_callback(
 		func(): GameInstance.load_and_change_scene_blocking(scene_path)# GameInstance.load_and_change_scene(scene_path)
 	)
+
+func _on_any_button_mouse_entered() -> void:
+	button_hover_audio.play()

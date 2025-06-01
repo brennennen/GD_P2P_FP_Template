@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://0o82fl54j1uq"]
+[gd_scene load_steps=4 format=3 uid="uid://0o82fl54j1uq"]
 
 [ext_resource type="Script" uid="uid://gt7dl3rubg8d" path="res://Maps/Menus/DirectConnectMenus/DirectConnectJoinMenu.gd" id="1_gw7ps"]
+[ext_resource type="AudioStream" uid="uid://bc4cmw0iheacm" path="res://Assets/Audio/Misc/GuitarNotes/low_e_palm_mute.mp3" id="2_of4we"]
+[ext_resource type="AudioStream" uid="uid://bunogafs7h0eb" path="res://Assets/Audio/Misc/GuitarNotes/a_sharp_harmonic.mp3" id="3_egkrv"]
 
 [node name="DirectConnectJoinMenu" type="Control"]
 layout_mode = 3
@@ -120,5 +122,18 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 1)
 
+[node name="Audio" type="Node" parent="."]
+
+[node name="ButtonHoverAudio" type="AudioStreamPlayer" parent="Audio"]
+stream = ExtResource("2_of4we")
+volume_db = -12.0
+bus = &"UI"
+
+[node name="ButtonPressedAudio" type="AudioStreamPlayer" parent="Audio"]
+stream = ExtResource("3_egkrv")
+volume_db = -12.0
+
+[connection signal="mouse_entered" from="MarginContainer/VBoxContainer/JoinButton" to="." method="_on_any_button_mouse_entered"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/JoinButton" to="." method="_on_join_button_pressed"]
+[connection signal="mouse_entered" from="MarginContainer/VBoxContainer/BackButton" to="." method="_on_any_button_mouse_entered"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/BackButton" to="." method="_on_back_button_pressed"]

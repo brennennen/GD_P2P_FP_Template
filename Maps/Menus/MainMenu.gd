@@ -7,8 +7,9 @@ class_name MainMenu
 
 
 # # Audio
-#@onready var button_pressed_audio: AudioStreamPlayer = $Audio/ButtonPressedAudio
-#@onready var button_hover_audio: AudioStreamPlayer = $Audio/ButtonHoverAudio
+@onready var button_hover_audio: AudioStreamPlayer = $Audio/ButtonHoverAudio
+@onready var button_pressed_audio: AudioStreamPlayer = $Audio/ButtonPressedAudio
+
 
 # # Transition
 @onready var fade_color_rect = $MainMenuControl/ColorRect
@@ -34,10 +35,12 @@ func fade_out_and_change_scene(scene_path: String, duration: float):
 	)
 
 func _on_play_button_pressed() -> void:
-	#button_pressed_audio.play()
-	fade_out_and_change_scene("res://Maps/Menus/PlayMenu.tscn", 0.25)
+	button_pressed_audio.play()
+	fade_out_and_change_scene("res://Maps/Menus/PlayMenu.tscn", 0.5)
 
 func _on_quit_button_pressed() -> void:
+	button_pressed_audio.play()
+	await get_tree().create_timer(0.5).timeout
 	GameInstance.quit()
 
 func _on_error_panel_close_button_pressed() -> void:
@@ -49,3 +52,6 @@ func _on_error_panel_gui_input(event: InputEvent) -> void:
 		Logger.info("error panel _on_error_panel_gui_input: %s" % [event.as_text()])
 		GameInstance.menu_error_message = ""
 		error_panel.hide()
+
+func _on_any_button_mouse_entered() -> void:
+	button_hover_audio.play()

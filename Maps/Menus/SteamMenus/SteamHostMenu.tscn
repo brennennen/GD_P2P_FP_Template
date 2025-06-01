@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://ciftsfq2g671v"]
+[gd_scene load_steps=4 format=3 uid="uid://ciftsfq2g671v"]
 
 [ext_resource type="Script" uid="uid://u55w1xt8tnir" path="res://Maps/Menus/SteamMenus/SteamHostMenu.gd" id="1_xcos3"]
+[ext_resource type="AudioStream" uid="uid://bc4cmw0iheacm" path="res://Assets/Audio/Misc/GuitarNotes/low_e_palm_mute.mp3" id="2_jvrhh"]
+[ext_resource type="AudioStream" uid="uid://bunogafs7h0eb" path="res://Assets/Audio/Misc/GuitarNotes/a_sharp_harmonic.mp3" id="3_tdjwp"]
 
 [node name="SteamHostMenu" type="Control"]
 layout_mode = 3
@@ -112,5 +114,18 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 1)
 
+[node name="Audio" type="Node" parent="."]
+
+[node name="ButtonHoverAudio" type="AudioStreamPlayer" parent="Audio"]
+stream = ExtResource("2_jvrhh")
+volume_db = -12.0
+bus = &"UI"
+
+[node name="ButtonPressedAudio" type="AudioStreamPlayer" parent="Audio"]
+stream = ExtResource("3_tdjwp")
+volume_db = -12.0
+
+[connection signal="mouse_entered" from="MarginContainer/CenterVBoxContainer/HostButton" to="." method="_on_any_button_mouse_entered"]
 [connection signal="pressed" from="MarginContainer/CenterVBoxContainer/HostButton" to="." method="_on_host_button_pressed"]
+[connection signal="mouse_entered" from="MarginContainer/CenterVBoxContainer/BackButton" to="." method="_on_any_button_mouse_entered"]
 [connection signal="pressed" from="MarginContainer/CenterVBoxContainer/BackButton" to="." method="_on_back_button_pressed"]
