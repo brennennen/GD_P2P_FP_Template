@@ -42,6 +42,8 @@ var session_min_fps: float = 60.0
 
 var arguments: Dictionary = {}
 
+var menu_error_message: String = ""
+
 func _ready() -> void:
 	arguments = parse_command_line_arguments(OS.get_cmdline_args())
 	if OS.is_debug_build():
@@ -178,8 +180,9 @@ func change_scene(resource: Resource):
 
 func go_to_main_menu_with_error(error: String):
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	menu_error_message = error
 	load_and_change_scene_blocking(main_menu_scene_path)
-	print("going to main menu with error: %s" % error)
+	Logger.error("go_to_main_menu_with_error: %s" % error)
 	# TODO: figure out displaying the error
 
 func lobby_load_and_change_scene(scene_path: String):

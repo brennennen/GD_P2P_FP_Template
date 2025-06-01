@@ -23,7 +23,7 @@ func _ready():
 func fade_in():
 	fade_color_rect.visible = true
 	var fade_tween = create_tween()
-	fade_tween.tween_property(fade_color_rect, "self_modulate", Color.TRANSPARENT, 5.0)
+	fade_tween.tween_property(fade_color_rect, "self_modulate", Color.TRANSPARENT, 0.25)
 
 func _on_host_button_pressed() -> void:
 	var lobby_type: int = lobby_type_options.get_selected_id()
@@ -41,7 +41,7 @@ func _on_host_button_pressed() -> void:
 		GameInstance.networking.last_status_message = "Failed to host steam game: %d" % [host_game_result]
 
 func _on_back_button_pressed() -> void:
-	fade_out_and_change_scene("res://Maps/Menus/PlayMenu.tscn", 1.0)
+	fade_out_and_change_scene("res://Maps/Menus/PlayMenu.tscn", 0.25)
 
 func fade_out_and_change_scene(scene_path: String, duration: float):
 	var fade_out_tween = create_tween()

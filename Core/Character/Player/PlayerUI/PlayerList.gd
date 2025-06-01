@@ -15,3 +15,5 @@ func add_player(peer_id: int, player_name: String, ping: float):
 	player_list_entries.add_child(new_player_entry)
 	new_player_entry.set_player_name(player_name)
 	new_player_entry.set_ping(ping)
+	if GameInstance.networking.is_server() and peer_id != multiplayer.get_unique_id():
+		new_player_entry.show_kick_button()

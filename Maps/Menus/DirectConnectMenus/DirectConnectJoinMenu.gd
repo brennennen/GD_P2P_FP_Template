@@ -11,17 +11,13 @@ extends Control
 @onready var back_button = $MarginContainer/VBoxContainer/BackButton
 
 
-# Called when the node enters the scene tree for the first time.
 func _ready():
+	fade_in()
 	enable_buttons()
-	pass
-	#var last_status_message = GameInstance.multiplayer_lobby.last_status_message
-	#if last_status_message != "":
-		#status_text.text = last_status_message
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(_delta):
-	pass
+func fade_in():
+	fade_color_rect.visible = true
+	create_tween().tween_property(fade_color_rect, "self_modulate", Color.TRANSPARENT, 0.25)
 
 func disable_buttons() -> void:
 	join_button.set_disabled(true)
@@ -38,20 +34,12 @@ func _on_join_button_pressed():
 	Logger.debug("_on_join_button_pressed. address: %s, port: %d" % [ address, port ])
 	GameInstance.networking.set_multiplayer_mode(Networking.MultiplayerMode.DIRECT_CONNECT)
 	var join_game_result = GameInstance.networking.direct_connect_lobby.join_game(address, port)
-	if join_game_result == Error.OK:
-		# don't do anything, the server will dictate which scene to load
-		#load_start_game_scene()
-		pass
-	else:
+	if join_game_result != Error.OK:
 		Logger.error("FAILED TO JOIN GAME!")
-		# TODO: display an error message
-	
-	#GameInstance.multiplayer_lobby.initialize(MultiplayerLobby.MultiplayerMode.DIRECT_CONNECT)
-	#GameInstance.multiplayer_lobby.direct_connect_lobby.join_game(address, port)
-	#GameInstance.add_character()
+		# TODO: display an error message modal?
 
 func _on_back_button_pressed():
-	fade_out_and_change_scene("res://Maps/Menus/DirectConnectMenus/DirectConnectMenu.tscn", 1.0)
+	fade_out_and_change_scene("res://Maps/Menus/DirectConnectMenus/DirectConnectMenu.tscn", 0.25)
 
 func fade_out_and_change_scene(scene_path: String, duration: float):
 	var fade_out_tween = create_tween()

@@ -2,63 +2,64 @@
 
 [ext_resource type="Script" uid="uid://be7ox6hhqk32o" path="res://Maps/Menus/PlayMenu.gd" id="1_btm7i"]
 
-[node name="PlayMenu" type="Node3D"]
-script = ExtResource("1_btm7i")
-
-[node name="PlayMenuControl" type="Control" parent="."]
+[node name="PlayMenu" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_btm7i")
 
-[node name="PlayMenuMarginContainer" type="MarginContainer" parent="PlayMenuControl"]
+[node name="PlayMenuControl" type="Control" parent="."]
 layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
+grow_vertical = 2
 
-[node name="Label" type="Label" parent="PlayMenuControl/PlayMenuMarginContainer"]
-layout_mode = 2
-text = "
-Play"
-
-[node name="ButtonsMarginContainer" type="MarginContainer" parent="PlayMenuControl"]
+[node name="CenterMarginContainer" type="MarginContainer" parent="PlayMenuControl"]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -20.5
-offset_top = -20.0
-offset_right = 20.5
-offset_bottom = 20.0
+offset_left = -190.0
+offset_top = -85.0
+offset_right = 190.0
+offset_bottom = 86.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="PlayMenuControl/ButtonsMarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="PlayMenuControl/CenterMarginContainer"]
 layout_mode = 2
 
-[node name="SinglePlayerButton" type="Button" parent="PlayMenuControl/ButtonsMarginContainer/VBoxContainer"]
+[node name="Label" type="Label" parent="PlayMenuControl/CenterMarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Play"
+
+[node name="HSeparator" type="HSeparator" parent="PlayMenuControl/CenterMarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="SinglePlayerButton" type="Button" parent="PlayMenuControl/CenterMarginContainer/VBoxContainer"]
 layout_mode = 2
 text = "Single Player"
 
-[node name="HostButton" type="Button" parent="PlayMenuControl/ButtonsMarginContainer/VBoxContainer"]
+[node name="HostButton" type="Button" parent="PlayMenuControl/CenterMarginContainer/VBoxContainer"]
 layout_mode = 2
 text = "Host"
 
-[node name="JoinButton" type="Button" parent="PlayMenuControl/ButtonsMarginContainer/VBoxContainer"]
+[node name="JoinButton" type="Button" parent="PlayMenuControl/CenterMarginContainer/VBoxContainer"]
 layout_mode = 2
 text = "Join"
 
-[node name="DirectConnectButton" type="Button" parent="PlayMenuControl/ButtonsMarginContainer/VBoxContainer"]
+[node name="DirectConnectButton" type="Button" parent="PlayMenuControl/CenterMarginContainer/VBoxContainer"]
 layout_mode = 2
 text = "Direct Connect"
 
-[node name="BackButton" type="Button" parent="PlayMenuControl/ButtonsMarginContainer/VBoxContainer"]
+[node name="BackButton" type="Button" parent="PlayMenuControl/CenterMarginContainer/VBoxContainer"]
 layout_mode = 2
 text = "Back"
 
@@ -75,8 +76,8 @@ color = Color(0, 0, 0, 1)
 
 [node name="Audio" type="Node" parent="."]
 
-[connection signal="pressed" from="PlayMenuControl/ButtonsMarginContainer/VBoxContainer/SinglePlayerButton" to="." method="_on_single_player_button_pressed"]
-[connection signal="pressed" from="PlayMenuControl/ButtonsMarginContainer/VBoxContainer/HostButton" to="." method="_on_host_button_pressed"]
-[connection signal="pressed" from="PlayMenuControl/ButtonsMarginContainer/VBoxContainer/JoinButton" to="." method="_on_join_button_pressed"]
-[connection signal="pressed" from="PlayMenuControl/ButtonsMarginContainer/VBoxContainer/DirectConnectButton" to="." method="_on_direct_connect_button_pressed"]
-[connection signal="pressed" from="PlayMenuControl/ButtonsMarginContainer/VBoxContainer/BackButton" to="." method="_on_back_button_pressed"]
+[connection signal="pressed" from="PlayMenuControl/CenterMarginContainer/VBoxContainer/SinglePlayerButton" to="." method="_on_single_player_button_pressed"]
+[connection signal="pressed" from="PlayMenuControl/CenterMarginContainer/VBoxContainer/HostButton" to="." method="_on_host_button_pressed"]
+[connection signal="pressed" from="PlayMenuControl/CenterMarginContainer/VBoxContainer/JoinButton" to="." method="_on_join_button_pressed"]
+[connection signal="pressed" from="PlayMenuControl/CenterMarginContainer/VBoxContainer/DirectConnectButton" to="." method="_on_direct_connect_button_pressed"]
+[connection signal="pressed" from="PlayMenuControl/CenterMarginContainer/VBoxContainer/BackButton" to="." method="_on_back_button_pressed"]

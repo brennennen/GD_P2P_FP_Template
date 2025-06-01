@@ -1,6 +1,9 @@
-extends Node3D
+extends Control
 
 class_name MainMenu
+
+@onready var error_panel: Panel = $ErrorPanel
+@onready var error_content_label: Label = $ErrorPanel/MarginContainer/VBoxContainer/ErrorContentLabel
 
 
 # # Audio
@@ -12,10 +15,16 @@ class_name MainMenu
 
 func _ready() -> void:
 	fade_in()
+	# TODO: check if error message is set or not and display a modal?
+	if GameInstance.menu_error_message != "":
+		error_content_label.text = GameInstance.menu_error_message
+		error_panel.show()
+	else:
+		error_panel.hide()
 
 func fade_in():
 	fade_color_rect.visible = true
-	create_tween().tween_property(fade_color_rect, "self_modulate", Color.TRANSPARENT, 1.0)
+	create_tween().tween_property(fade_color_rect, "self_modulate", Color.TRANSPARENT, 0.25)
 
 func fade_out_and_change_scene(scene_path: String, duration: float):
 	var fade_out_tween = create_tween()
@@ -26,8 +35,17 @@ func fade_out_and_change_scene(scene_path: String, duration: float):
 
 func _on_play_button_pressed() -> void:
 	#button_pressed_audio.play()
-	fade_out_and_change_scene("res://Maps/Menus/PlayMenu.tscn", 1.0)
-	pass # Replace with function body.
+	fade_out_and_change_scene("res://Maps/Menus/PlayMenu.tscn", 0.25)
 
 func _on_quit_button_pressed() -> void:
 	GameInstance.quit()
+
+func _on_error_panel_close_button_pressed() -> void:
+	GameInstance.menu_error_message = ""
+	error_panel.hide()
+
+func _on_error_panel_gui_input(event: InputEvent) -> void:
+	if (event is InputEventMouseButton) and (event.button_index == MOUSE_BUTTON_LEFT):
+		Logger.info("error panel _on_error_panel_gui_input: %s" % [event.as_text()])
+		GameInstance.menu_error_message = ""
+		error_panel.hide()

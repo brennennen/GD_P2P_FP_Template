@@ -232,7 +232,7 @@ func on_peer_disconnected(peer_id):
 	if GameInstance.networking.is_server():
 		server_networking.on_peer_disconnected(peer_id)
 	else:
-		client_networking.on_peer_disconnected(peer_id)
+		client_networking.client_on_peer_disconnected(peer_id)
 
 func process_peer_packet(from_peer_id: int, packet: PackedByteArray):
 	if packet.size() == 0:
@@ -293,13 +293,23 @@ func add_peer(peer_id):
 	#peer_metadata.player_last_broadcast_rotation_y = peer_metadata.player.global_rotation_degrees.y
 	#peer_metadata.player_camera_last_broadcast_rotation_x = peer_metadata.player.camera.global_rotation_degrees.x
 
-func remove_peer(peer_id: int):
+func remove_peer(peer_id: int) -> void:
 	peers.erase(peer_id)
 
 	# Delete any pawns owned by the peer
 	for child in GameInstance.players.get_children():
 		if child.name.to_int() == peer_id:
 			child.queue_free()
+
+	# TODO: do different stuff for different lobbies?
+
+func remove_all_peers() -> void:
+	peers.clear()
+	GameInstance.remove_all_players()
+
+func kick_peer(peer_id: int) -> void:
+	multiplayer.multiplayer_peer.disconnect_peer(peer_id)
+	remove_peer(peer_id)
 
 func set_peer_pawn_data(_peer_id, _color):
 	pass

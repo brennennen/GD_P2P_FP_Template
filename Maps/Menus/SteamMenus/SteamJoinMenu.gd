@@ -14,7 +14,7 @@ func _ready():
 func fade_in():
 	fade_color_rect.visible = true
 	var fade_tween = create_tween()
-	fade_tween.tween_property(fade_color_rect, "self_modulate", Color.TRANSPARENT, 5.0)
+	fade_tween.tween_property(fade_color_rect, "self_modulate", Color.TRANSPARENT, 0.25)
 
 func clear_lobbies_list() -> void:
 	for lobby_entry in lobbies_list.get_children():
@@ -28,8 +28,7 @@ func _on_refresh_button_pressed() -> void:
 func handle_updated_steam_lobby_match_list(steam_lobbies: Array):
 	Logger.info("%s:handle_updated_steam_lobby_match_list: lobbies count: %d" % [ name, steam_lobbies.size() ])
 	refresh_button.set_disabled(false)
-	
-	# TODO: add button for each lobby
+
 	for steam_lobby in steam_lobbies:
 		# Pull lobby data from Steam, these are specific to our example
 		#Logger.info(steam_lobby)
@@ -62,7 +61,7 @@ func join_steam_lobby_callback(lobby_id: int):
 	#MultiplayerLobby.steam_join_lobby(lobby_id)
 
 func _on_back_button_pressed() -> void:
-	fade_out_and_change_scene("res://Maps/Menus/PlayMenu.tscn", 1.0)
+	fade_out_and_change_scene("res://Maps/Menus/PlayMenu.tscn", 0.25)
 
 func fade_out_and_change_scene(scene_path: String, duration: float):
 	var fade_out_tween = create_tween()

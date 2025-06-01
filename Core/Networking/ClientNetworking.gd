@@ -11,7 +11,7 @@ enum ClientSyncState {
 	SYNCING_PEERS,
 	SYNCED
 }
-var client_sync_state_names: Array[String] = [
+const client_sync_state_names: Array[String] = [
 	"NONE",
 	"SYNCING_START",
 	"SYNCING_LEVEL",
@@ -97,11 +97,12 @@ func _ready() -> void:
 	client_latency_history.resize(client_latency_history_size)
 
 func debug_imgui_append_client_networking_debug_window(_delta: float):
+	#if multiplayer.
 	ImGui.Text("client_id: %s (%d)" % [ networking.get_multiplayer_id(), multiplayer.get_unique_id() ]);
 	ImGui.Text("latency: %d ms" % [ client_latency_ms ]);
 	ImGui.PlotLines("latency", client_latency_history, client_latency_history_size);
 	ImGui.Text("server_peer_id_list: %s" % [ JSON.stringify(server_peer_id_list) ]);
-	ImGui.Text("init_sync_state: %s" % [ ClientSyncState_str(initial_synchronization["current_state"]) ]);
+	ImGui.Text("init_sync_state: %s" % [ ClientSyncState_str(initial_synchronization.get("current_state", ClientSyncState.NONE)) ]);
 	# TODO: estimated packet loss?
 
 func initialize(p_networking: Networking):
@@ -110,14 +111,14 @@ func initialize(p_networking: Networking):
 func on_peer_connected(peer_id):
 	Logger.debug("client:peer_connected: %d" % [ peer_id ])
 
-func on_peer_disconnected(peer_id):
-	Logger.debug("peer_disconnected: %d" % [ peer_id ])
+func client_on_peer_disconnected(peer_id):
+	Logger.debug("client_on_peer_disconnected: %d" % [ peer_id ])
 	networking.remove_peer(peer_id)
 
 func on_client_connected_to_server():
 	Logger.info("on_client_connected_to_server")
 	if networking.multiplayer_mode == Networking.MultiplayerMode.IN_EDITOR:
-		await get_tree().create_timer(1.0).timeout
+		await get_tree().create_timer(0.5).timeout
 		client_start_sync_process()
 	else:
 		client_start_sync_process()
@@ -128,8 +129,16 @@ func on_client_to_server_connection_failed():
 
 func on_client_disconnected_from_server():
 	Logger.info("on_client_disconnected_from_server")
-	GameInstance.remove_all_players()
+	disconnect_from_server()
 	GameInstance.go_to_main_menu_with_error("Server disconnected.")
+
+func disconnect_from_server() -> void:
+	multiplayer.multiplayer_peer.close()
+	multiplayer.multiplayer_peer = OfflineMultiplayerPeer.new()
+	networking.remove_all_peers()
+	server_peer_id_list.clear()
+	initial_synchronization.clear()
+	GameInstance.remove_all_players()
 
 func tick(delta: float) -> void:
 	client_tick += 1
@@ -500,5 +509,5 @@ func client_debug_log() -> void:
 	var server_scene_path = networking.game_network_state["scene_path"]
 	Logger.debug("client_debug_log: my_id: %d, peers: %s, scene_path: %s, sync_state: %s" % [
 		int(multiplayer.get_unique_id()), JSON.stringify(multiplayer.get_peers()), str(server_scene_path),
-		ClientSyncState_str(initial_synchronization["current_state"])
+		ClientSyncState_str(initial_synchronization.get("current_state", ClientSyncState.NONE))
 	])

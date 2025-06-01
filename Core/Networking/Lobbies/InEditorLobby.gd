@@ -12,7 +12,7 @@ var enet_peer: ENetMultiplayerPeer# = ENetMultiplayerPeer.new()
 @export var instance_num := -1
 var instance_socket: TCPServer
 var networking: Networking
-var port: int = 7000
+var port: int = 7999
 var player_scene: Resource
 
 func _init() -> void:

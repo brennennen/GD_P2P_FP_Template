@@ -6,9 +6,9 @@
 [ext_resource type="Script" uid="uid://7lgfoarrlxb6" path="res://Core/Networking/ClientNetworking.gd" id="3_h3teu"]
 [ext_resource type="Script" uid="uid://ctyae7stktnwq" path="res://Core/Networking/ServerNetworking.gd" id="4_q6w5n"]
 [ext_resource type="Script" uid="uid://dnkfb2cd1vv2m" path="res://Core/Networking/NetworkClock.gd" id="5_0c0u2"]
-[ext_resource type="Script" uid="uid://dnl10jx6xkkwb" path="res://Core/Networking/InEditorLobby.gd" id="6_260b4"]
-[ext_resource type="Script" uid="uid://bcrrosf4j2ugd" path="res://Core/Networking/DirectConnectLobby.gd" id="8_p8qfo"]
-[ext_resource type="Script" uid="uid://dt5n0jpml4p85" path="res://Core/Networking/SteamLobby.gd" id="9_dqerq"]
+[ext_resource type="Script" uid="uid://dnl10jx6xkkwb" path="res://Core/Networking/Lobbies/InEditorLobby.gd" id="6_260b4"]
+[ext_resource type="Script" uid="uid://bcrrosf4j2ugd" path="res://Core/Networking/Lobbies/DirectConnectLobby.gd" id="8_p8qfo"]
+[ext_resource type="Script" uid="uid://dt5n0jpml4p85" path="res://Core/Networking/Lobbies/SteamLobby.gd" id="9_dqerq"]
 
 [node name="GameInstance" type="Node"]
 script = ExtResource("1_kfnhb")

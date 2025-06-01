@@ -731,6 +731,8 @@ func black_screen_tween_done():
 	black_screen_tween = null
 
 func _on_main_menu_button_pressed() -> void:
+	if !GameInstance.networking.is_server():
+		GameInstance.networking.client_networking.disconnect_from_server()
 	GameInstance.return_to_main_menu()
 
 func _on_quit_button_pressed() -> void:

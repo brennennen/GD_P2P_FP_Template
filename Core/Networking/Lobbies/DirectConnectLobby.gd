@@ -2,7 +2,7 @@ extends Node
 
 class_name DirectConnectLobby
 
-var port: int = 7000
+var port: int = 7999
 var password: String = ""
 var max_connections: int = 4
 var enet_peer: ENetMultiplayerPeer = ENetMultiplayerPeer.new()
@@ -21,15 +21,15 @@ func host_game() -> Error:
 	multiplayer.multiplayer_peer = enet_peer
 	return Error.OK
 
-func join_game(address: String = "127.0.0.1", join_port: int = 7000) -> Error:
-	var peer = ENetMultiplayerPeer.new()
+func join_game(address: String = "127.0.0.1", join_port: int = 7999) -> Error:
+	#var peer = ENetMultiplayerPeer.new()
 	Logger.info("Creating direct connect join client with address: %s, port: %d" % [address, join_port])
-	var error = peer.create_client(address, join_port)
-	peer.get_peer(1).set_timeout(0, 0, 3000) # 3 second timeout # TODO: figure out what 1 is? does that need to be multiplyer id?
+	var error = enet_peer.create_client(address, join_port)
+	enet_peer.get_peer(1).set_timeout(0, 0, 3000) # 3 second timeout # TODO: figure out what 1 is? does that need to be multiplyer id?
 	if error:
 		Logger.error("join_game error: (%d) %s" % [error, error_string(error)])
 		return error
-	multiplayer.multiplayer_peer = peer
+	multiplayer.multiplayer_peer = enet_peer
 	return Error.OK
 
 @rpc("authority", "call_remote", "reliable", 0)

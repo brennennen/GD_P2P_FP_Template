@@ -12,6 +12,8 @@ var peer_id: int
 func _ready() -> void:
 	kick_button.pressed.connect(_on_kick_button_pressed)
 	mute_button.pressed.connect(_on_mute_button_pressed)
+	kick_button.hide()
+	mute_button.hide()
 
 func set_player_name(new_name: String) -> void:
 	name_label.text = new_name
@@ -19,14 +21,18 @@ func set_player_name(new_name: String) -> void:
 func set_ping(new_ping: float) -> void:
 	ping_label.text = "%f" % [new_ping]
 
+func show_kick_button() -> void:
+	kick_button.show()
+
+func show_mute_button() -> void:
+	mute_button.show()
+
 func _on_kick_button_pressed() -> void:
-	Logger.info("_on_kick_button_pressed: %s" % [name_label])
 	if GameInstance.networking.is_server():
-		# TODO: force disconnect
 		Logger.info("_on_kick_button_pressed on server: %s" % [name_label.text])
-		pass
-	pass
+		GameInstance.networking.kick_peer(peer_id)
 
 func _on_mute_button_pressed() -> void:
 	Logger.info("_on_mute_button_pressed: %s" % [name_label.text])
+	# TODO
 	pass

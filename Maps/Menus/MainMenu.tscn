@@ -1,56 +1,60 @@
-[gd_scene load_steps=2 format=3 uid="uid://dn0n5ci8vhewt"]
+[gd_scene load_steps=3 format=3 uid="uid://dn0n5ci8vhewt"]
 
 [ext_resource type="Script" uid="uid://ktrhw54kiq8d" path="res://Maps/Menus/MainMenu.gd" id="1_quj26"]
 
-[node name="MainMenu" type="Node3D"]
-script = ExtResource("1_quj26")
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mtgdw"]
+bg_color = Color(0.16, 0.16, 0.16, 0.917647)
 
-[node name="MainMenuControl" type="Control" parent="."]
+[node name="MainMenu" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_quj26")
 
-[node name="GameNameMarginContainer" type="MarginContainer" parent="MainMenuControl"]
+[node name="MainMenuControl" type="Control" parent="."]
 layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
+grow_vertical = 2
 
-[node name="Label" type="Label" parent="MainMenuControl/GameNameMarginContainer"]
-layout_mode = 2
-text = "
-Casual Multiplayer Demo"
-
-[node name="ButtonsMarginContainer" type="MarginContainer" parent="MainMenuControl"]
+[node name="CenterMarginContainer" type="MarginContainer" parent="MainMenuControl"]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -20.5
-offset_top = -20.0
-offset_right = 20.5
-offset_bottom = 20.0
+offset_left = -190.0
+offset_top = -50.0
+offset_right = 190.0
+offset_bottom = 51.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MainMenuControl/ButtonsMarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="MainMenuControl/CenterMarginContainer"]
 layout_mode = 2
 
-[node name="PlayButton" type="Button" parent="MainMenuControl/ButtonsMarginContainer/VBoxContainer"]
+[node name="Label" type="Label" parent="MainMenuControl/CenterMarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Godot P2P First Person Template"
+
+[node name="HSeparator" type="HSeparator" parent="MainMenuControl/CenterMarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="PlayButton" type="Button" parent="MainMenuControl/CenterMarginContainer/VBoxContainer"]
 layout_mode = 2
 text = "Play"
 
-[node name="OptionsButton" type="Button" parent="MainMenuControl/ButtonsMarginContainer/VBoxContainer"]
+[node name="OptionsButton" type="Button" parent="MainMenuControl/CenterMarginContainer/VBoxContainer"]
 layout_mode = 2
 text = "Options"
 
-[node name="QuitButton" type="Button" parent="MainMenuControl/ButtonsMarginContainer/VBoxContainer"]
+[node name="QuitButton" type="Button" parent="MainMenuControl/CenterMarginContainer/VBoxContainer"]
 layout_mode = 2
 text = "Quit"
 
@@ -67,5 +71,62 @@ color = Color(0, 0, 0, 1)
 
 [node name="Audio" type="Node" parent="."]
 
-[connection signal="pressed" from="MainMenuControl/ButtonsMarginContainer/VBoxContainer/PlayButton" to="." method="_on_play_button_pressed"]
-[connection signal="pressed" from="MainMenuControl/ButtonsMarginContainer/VBoxContainer/QuitButton" to="." method="_on_quit_button_pressed"]
+[node name="ErrorPanel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 110.0
+offset_top = 42.0
+offset_right = -110.0
+offset_bottom = -42.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_mtgdw")
+
+[node name="TopRightMarginContainer" type="MarginContainer" parent="ErrorPanel"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -40.0
+offset_bottom = 40.0
+grow_horizontal = 0
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 15
+
+[node name="ErrorPanelCloseButton" type="Button" parent="ErrorPanel/TopRightMarginContainer"]
+layout_mode = 2
+text = "close"
+
+[node name="MarginContainer" type="MarginContainer" parent="ErrorPanel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ErrorPanel/MarginContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="ErrorPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "ERROR!"
+
+[node name="ErrorContentLabel" type="Label" parent="ErrorPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "{error}"
+
+[connection signal="pressed" from="MainMenuControl/CenterMarginContainer/VBoxContainer/PlayButton" to="." method="_on_play_button_pressed"]
+[connection signal="pressed" from="MainMenuControl/CenterMarginContainer/VBoxContainer/QuitButton" to="." method="_on_quit_button_pressed"]
+[connection signal="gui_input" from="ErrorPanel" to="." method="_on_error_panel_gui_input"]
+[connection signal="pressed" from="ErrorPanel/TopRightMarginContainer/ErrorPanelCloseButton" to="." method="_on_error_panel_close_button_pressed"]
