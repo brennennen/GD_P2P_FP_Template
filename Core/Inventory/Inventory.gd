@@ -1,7 +1,6 @@
 # https://www.youtube.com/watch?v=V79YabQZC1s
-# 27:00
+# 48:50
 # TODO: rip out and ignore the inventory interface stuff
-
 
 extends PanelContainer
 
@@ -16,11 +15,6 @@ var player_interface: PlayerInventoryInterface
 var inventory_data: InventoryData
 var grabbed_slot_data: InventorySlotData
 
-#func _ready() -> void:
-	#var inv_data = preload("res://Core/Inventory/TestInventory.tres")
-	#populate_item_grid(inv_data.slot_datas)
-
-#func populate_item_grid(slot_data_list: Array[InventorySlotData]) -> void:
 func populate_item_grid() -> void:
 	for child in item_grid.get_children():
 		child.queue_free()
@@ -35,12 +29,10 @@ func set_inventory_data(new_inventory_data: InventoryData) -> void:
 	inventory_data = new_inventory_data
 	populate_item_grid()
 
+func clear_inventory_data() -> void:
+	inventory_data = null
+
 func slot_clicked(slot_index: int, event_index: int) -> void:
-	Logger.info("inventory.slot_clicked: slot: %d" % [ slot_index ])
+	Logger.debug("inventory.slot_clicked: slot: %d" % [ slot_index ])
 	if player_interface:
-		player_interface.slot_clicked(slot_index, event_index)
-	#if grabbed_slot_data == null and event_index == MOUSE_BUTTON_LEFT:
-		#grabbed_slot_data = inventory_data.grab_slot_data(slot_index)
-		#Logger.info("grabbed_slot_data: %s" % [grabbed_slot_data])
-		#pass
-	pass
+		player_interface.slot_clicked(self, slot_index, event_index)

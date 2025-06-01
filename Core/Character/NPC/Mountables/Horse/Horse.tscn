@@ -8,6 +8,7 @@ radius = 0.25
 height = 1.4
 
 [node name="Horse" type="CharacterBody3D"]
+collision_layer = 5
 script = ExtResource("1_rejuq")
 metadata/_custom_type_script = "uid://bhllc885f6a17"
 

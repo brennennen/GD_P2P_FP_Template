@@ -20,7 +20,7 @@ static func EquipmentMode_str(_equipment_mode: EquipmentMode):
 
 @export_category("Misc")
 @export var inventory_data: InventoryData
-@onready var vision_center_raycast: RayCast3D = $CameraPivot/RayCast3D
+@onready var vision_center_raycast: RayCast3D = $CameraPivot/PlayerCamera/RayCast3D
 #@export_category("Misc")
 
 # Nodes
@@ -36,7 +36,10 @@ static func EquipmentMode_str(_equipment_mode: EquipmentMode):
 @onready var hud_health: Label = $HUD/MarginContainer/VBoxContainer/HealthHBoxContainer/HealthValue
 @onready var hud_stamina: Label = $HUD/MarginContainer/VBoxContainer/StaminaHBoxContainer/StaminaValue
 @onready var player_list: PlayerList = $PauseMenu/PlayerListMarginContainer/PlayerList
-
+@onready var reticle: Reticle = $HUD/Reticle
+@onready var interact_margin_container: MarginContainer = $HUD/InteractMarginContainer
+@onready var interact_icon_texture_rect: TextureRect = $HUD/InteractMarginContainer/HBoxContainer/InteractIconTextureRect
+@onready var interact_action_label: Label = $HUD/InteractMarginContainer/HBoxContainer/InteractActionLabel
 # ... inventory, health/status bars, interactable menus, etc.
 
 # # Movement
@@ -54,7 +57,6 @@ static func EquipmentMode_str(_equipment_mode: EquipmentMode):
 @onready var first_person = $CameraPivot/FirstPerson
 @onready var network_controller: PlayerNetworkController = $NetworkController
 @onready var inventory_interface: PlayerInventoryInterface = $UI/MarginContainer/PlayerInventoryInterface
-
 
 
 # Data Members
@@ -108,6 +110,7 @@ func _ready():
 	spawning_delay = 1.0
 	pause_menu.visible = false
 	stored_collision_layer = collision_layer
+	interact_margin_container.hide()
 	if is_multiplayer_authority():
 		authoritative_player_ready() # TODO rename this to something about "autonomouse proxy"
 	else:
@@ -361,8 +364,16 @@ func set_spawn_rotation(new_rotation: Vector3):
 	mouse_rotation = Vector3(0.0, new_rotation.y, 0.0)
 
 func interact_action() -> void:
-	# TODO: display "E" or something
-	pass
+	Logger.info("interact_action: colliding: %s" % [str(vision_center_raycast.is_colliding())])
+	if vision_center_raycast.is_colliding():
+		var collider: Object = vision_center_raycast.get_collider()
+		if collider is StaticBodyInteractable:
+			var static_body_interactable = collider as StaticBodyInteractable
+			static_body_interactable.interact_local(self) # TODO: rpc?
+		Logger.info("interact_action: %s" % [str(collider)])
+		if collider is Horse:
+			Logger.info("interact_action: horse!: %s" % [str(collider)])
+
 
 func primary_action():
 	#Logger.info("primary_action: %s" % [name])
@@ -530,6 +541,7 @@ func _physics_process(delta):
 		return
 
 	update_camera(delta, input_dir)
+	process_vision_center_raycast()
 	network_controller.local_controlled_pawn_physics_process(delta)
 
 	if is_movement_locked:
@@ -575,6 +587,36 @@ func update_camera(delta, input_dir):
 			else:
 				camera_pivot.rotation.z = lerp_angle(camera_pivot.rotation.z, deg_to_rad(0), 0.01)
 
+func process_vision_center_raycast() -> void:
+	process_vision_center_interactable()
+
+func process_vision_center_interactable() -> void:
+	if vision_center_raycast.is_colliding() == true:
+		var collider = vision_center_raycast.get_collider()
+		if collider is StaticBodyInteractable:
+			var static_body_interactable = collider as StaticBodyInteractable
+			if static_body_interactable.interactions_enabled():
+				show_interaction_ui(collider, static_body_interactable.interact_text)
+				vision_center_raycast_collider = collider
+		if collider is NPC:
+			var npc = collider as NPC
+			if npc.interactions_enabled():
+				show_interaction_ui(collider, npc.interact_text)
+			pass
+			
+	else:
+		vision_center_raycast_collider = null
+		hide_interaction_ui()
+
+func show_interaction_ui(_collider: Object, text: String, _show_interact_button: bool = true) -> void:
+	interact_margin_container.show()
+	interact_action_label.text = text
+	reticle.hide()
+
+func hide_interaction_ui() -> void:
+	interact_margin_container.hide()
+	reticle.show()
+
 ## Slow periodic tick for things that don't need to be checked every frame.
 func _on_player_timer_1_hz_timeout():
 	# If the player clipped out of the map or is falling forever, kill them at some point
@@ -618,9 +660,11 @@ func toggle_inventory():
 		return
 
 	$UI.visible = !$UI.visible
+	inventory_interface.toggle_inventory_ui()
 
 	if $UI.visible:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		
 	else:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 

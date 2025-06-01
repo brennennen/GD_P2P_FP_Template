@@ -1,10 +1,15 @@
-[gd_scene load_steps=22 format=3 uid="uid://csmy5aw3v1gbq"]
+[gd_scene load_steps=30 format=3 uid="uid://csmy5aw3v1gbq"]
 
 [ext_resource type="PackedScene" uid="uid://dq3k1gmfnaxit" path="res://Core/Gameplay/SpawnPoint.tscn" id="1_46c6v"]
 [ext_resource type="Script" uid="uid://wqb1mmmb8bln" path="res://Maps/HUBLevel/HUBLevel.gd" id="1_kb0kb"]
 [ext_resource type="PackedScene" uid="uid://b8lytvha5krpa" path="res://Core/Gameplay/LevelTeleporter.tscn" id="3_84xh2"]
 [ext_resource type="PackedScene" uid="uid://cp7xhlkwk8opm" path="res://Core/Gameplay/KillBox.tscn" id="4_1ro3f"]
 [ext_resource type="PackedScene" uid="uid://b4pwmguc4biwk" path="res://Assets/Environment/GameShow/Misc/GrapplePoint.tscn" id="4_i8wm5"]
+[ext_resource type="PackedScene" uid="uid://djvgy8wh1522c" path="res://Assets/Environment/Placeholder/Interactable/Containers/Chest.tscn" id="5_b0y6d"]
+[ext_resource type="Script" uid="uid://bybibu57hp37d" path="res://Core/Inventory/InventoryData.gd" id="6_sj7u5"]
+[ext_resource type="Script" uid="uid://p2hhvkj7ls7n" path="res://Core/Inventory/InventorySlotData.gd" id="7_ca44i"]
+[ext_resource type="Resource" uid="uid://53f8bnjtbmvl" path="res://Core/Inventory/Items/SpeedPotion.tres" id="8_ghjng"]
+[ext_resource type="Resource" uid="uid://b8i08ee74phcc" path="res://Core/Inventory/Items/Fish.tres" id="9_fwcc3"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1ro3f"]
 size = Vector3(2500, 50, 2500)
@@ -67,6 +72,23 @@ roughness = 0.3
 
 [sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_kb0kb"]
 data = PackedVector3Array(-10, 0.25, 10, 10, 0.25, 10, -10, -0.25, 10, 10, 0.25, 10, 10, -0.25, 10, -10, -0.25, 10, 10, 0.25, -10, -10, 0.25, -10, 10, -0.25, -10, -10, 0.25, -10, -10, -0.25, -10, 10, -0.25, -10, 10, 0.25, 10, 10, 0.25, -10, 10, -0.25, 10, 10, 0.25, -10, 10, -0.25, -10, 10, -0.25, 10, -10, 0.25, -10, -10, 0.25, 10, -10, -0.25, -10, -10, 0.25, 10, -10, -0.25, 10, -10, -0.25, -10, 10, 0.25, 10, -10, 0.25, 10, 10, 0.25, -10, -10, 0.25, 10, -10, 0.25, -10, 10, 0.25, -10, -10, -0.25, 10, 10, -0.25, 10, -10, -0.25, -10, 10, -0.25, 10, 10, -0.25, -10, -10, -0.25, -10)
+
+[sub_resource type="Resource" id="Resource_flsoh"]
+script = ExtResource("7_ca44i")
+inventory_item_data = ExtResource("8_ghjng")
+quantity = 3
+metadata/_custom_type_script = "uid://p2hhvkj7ls7n"
+
+[sub_resource type="Resource" id="Resource_1iu2m"]
+script = ExtResource("7_ca44i")
+inventory_item_data = ExtResource("9_fwcc3")
+quantity = 9
+metadata/_custom_type_script = "uid://p2hhvkj7ls7n"
+
+[sub_resource type="Resource" id="Resource_e5dpf"]
+script = ExtResource("6_sj7u5")
+slot_datas = Array[ExtResource("7_ca44i")]([SubResource("Resource_flsoh"), null, SubResource("Resource_1iu2m"), null, null, null])
+metadata/_custom_type_script = "uid://bybibu57hp37d"
 
 [node name="HubLevel" type="Node3D" node_paths=PackedStringArray("player_spawn_points", "default_level_camera")]
 script = ExtResource("1_kb0kb")
@@ -216,6 +238,10 @@ surface_material_override/0 = SubResource("StandardMaterial3D_kb0kb")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="World/Ground/StaticBody3D"]
 shape = SubResource("ConcavePolygonShape3D_kb0kb")
+
+[node name="Chest" parent="World" instance=ExtResource("5_b0y6d")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 8)
+inventory_data = SubResource("Resource_e5dpf")
 
 [node name="Teleporters" type="Node3D" parent="."]
 

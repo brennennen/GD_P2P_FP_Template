@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://4mua3gfj4ggl"]
+
+[ext_resource type="Script" uid="uid://dasd2mpsxac17" path="res://Core/Enviornment/StaticBodyInteractable.gd" id="1_pn3o6"]
+
+[node name="StaticBodyInteractable" type="StaticBody3D"]
+script = ExtResource("1_pn3o6")

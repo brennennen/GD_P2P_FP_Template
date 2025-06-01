@@ -22,6 +22,11 @@ var player_perception_check_running_delta: float = 0.0
 var player_perception_check_interval: float = 1.0
 var players_in_sight: Array[Player] = []
 
+var interact_text: String
+
+func interactions_enabled() -> bool:
+	return true
+
 # #################
 # Functions
 # #################
@@ -29,6 +34,7 @@ func _ready():
 	super()
 	npc_ai_tick_running_delta = randf_range(0.0, npc_ai_tick_rate)
 	#var enemy_tick_running_delta: float = 0.0
+
 
 
 func _process(delta: float) -> void:

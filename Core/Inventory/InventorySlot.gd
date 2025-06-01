@@ -2,8 +2,6 @@ extends PanelContainer
 
 class_name InventorySlot
 
-
-# TODO: create a reference up to the inventory...
 var inventory: Inventory
 
 @onready var texture_rect: TextureRect = $MarginContainer/TextureRect
@@ -16,6 +14,8 @@ func set_slot_data(slot_data: InventorySlotData) -> void:
 	if slot_data.quantity > 1:
 		quantity_label.text = "%s" % [ slot_data.quantity ]
 		quantity_label.show()
+	else:
+		quantity_label.hide()
 
 func _on_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton \
@@ -24,7 +24,3 @@ func _on_gui_input(event: InputEvent) -> void:
 			and event.is_pressed():
 		if inventory:
 			inventory.slot_clicked(get_index(), event.button_index)
-		#inventory.slot_clicked(get_index(), event.button_index)
-		# slot_clicked.emit(get_index(), event.button_index)
-		pass
-	pass # Replace with function body.
