@@ -1,0 +1,10 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://clti4xil84n60"]
+
+[ext_resource type="Shader" uid="uid://jgpsrv4mwrxg" path="res://Assets/Materials/Basic/basic_material_shader.tres" id="1_aoo1y"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_aoo1y")
+shader_parameter/Albedo = Color(0.501961, 0.501961, 0.501961, 1)
+shader_parameter/Metallic = 1.0
+shader_parameter/Roughness = 0.1

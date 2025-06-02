@@ -1,0 +1,104 @@
+[gd_resource type="VisualShader" load_steps=10 format=3 uid="uid://bn4nmugrdatlq"]
+
+[sub_resource type="VisualShaderNodeTexture2DParameter" id="VisualShaderNodeTexture2DParameter_o40kp"]
+parameter_name = "Grunge"
+color_default = 1
+
+[sub_resource type="VisualShaderNodeInput" id="VisualShaderNodeInput_k0j0o"]
+input_name = "uv2"
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_sga3g"]
+parameter_name = "Albedo"
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_0c6rk"]
+parameter_name = "Metallic"
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_6u06p"]
+parameter_name = "Roughness"
+
+[sub_resource type="VisualShaderNodeFloatConstant" id="VisualShaderNodeFloatConstant_fxxc7"]
+
+[sub_resource type="VisualShaderNodeMix" id="VisualShaderNodeMix_4fupc"]
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_68gd2"]
+parameter_name = "GrungeRoughness"
+default_value_enabled = true
+default_value = 0.24
+
+[sub_resource type="VisualShaderNodeTexture" id="VisualShaderNodeTexture_lb7en"]
+source = 5
+
+[resource]
+code = "shader_type spatial;
+render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_lambert, specular_schlick_ggx;
+
+uniform vec4 Albedo : source_color;
+uniform float Metallic;
+uniform float Roughness;
+uniform float GrungeRoughness = 0.23999999463558;
+uniform sampler2D Grunge : hint_default_black;
+
+
+
+void fragment() {
+// ColorParameter:3
+	vec4 n_out3p0 = Albedo;
+
+
+// FloatParameter:4
+	float n_out4p0 = Metallic;
+
+
+// FloatParameter:5
+	float n_out5p0 = Roughness;
+
+
+// FloatParameter:8
+	float n_out8p0 = GrungeRoughness;
+
+
+// Input:11
+	vec2 n_out11p0 = UV2;
+
+
+	vec4 n_out9p0;
+// Texture2D:9
+	n_out9p0 = texture(Grunge, n_out11p0);
+
+
+// Mix:7
+	float n_out7p0 = mix(n_out5p0, n_out8p0, n_out9p0.x);
+
+
+// FloatConstant:6
+	float n_out6p0 = 0.000000;
+
+
+// Output:0
+	ALBEDO = vec3(n_out3p0.xyz);
+	METALLIC = n_out4p0;
+	ROUGHNESS = n_out7p0;
+	EMISSION = vec3(n_out6p0);
+
+
+}
+"
+nodes/fragment/3/node = SubResource("VisualShaderNodeColorParameter_sga3g")
+nodes/fragment/3/position = Vector2(-80, -160)
+nodes/fragment/4/node = SubResource("VisualShaderNodeFloatParameter_0c6rk")
+nodes/fragment/4/position = Vector2(-400, 0)
+nodes/fragment/5/node = SubResource("VisualShaderNodeFloatParameter_6u06p")
+nodes/fragment/5/position = Vector2(-1040, 20)
+nodes/fragment/6/node = SubResource("VisualShaderNodeFloatConstant_fxxc7")
+nodes/fragment/6/position = Vector2(-100, 320)
+nodes/fragment/7/node = SubResource("VisualShaderNodeMix_4fupc")
+nodes/fragment/7/position = Vector2(-580, 220)
+nodes/fragment/8/node = SubResource("VisualShaderNodeFloatParameter_68gd2")
+nodes/fragment/8/position = Vector2(-1000, 480)
+nodes/fragment/9/node = SubResource("VisualShaderNodeTexture_lb7en")
+nodes/fragment/9/position = Vector2(-1000, 260)
+nodes/fragment/10/node = SubResource("VisualShaderNodeTexture2DParameter_o40kp")
+nodes/fragment/10/position = Vector2(-1340, 260)
+nodes/fragment/11/node = SubResource("VisualShaderNodeInput_k0j0o")
+nodes/fragment/11/position = Vector2(-1340, 140)
+nodes/fragment/connections = PackedInt32Array(3, 0, 0, 0, 4, 0, 0, 2, 6, 0, 0, 5, 10, 0, 9, 2, 11, 0, 9, 0, 9, 0, 7, 2, 8, 0, 7, 1, 5, 0, 7, 0, 7, 0, 0, 3)

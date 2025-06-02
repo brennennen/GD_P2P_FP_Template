@@ -4,13 +4,18 @@ extends Level
 @export var default_level_camera: Camera3D
 @export var end_race_return_scene_path: String
 
-@onready var kill_box = $KillBoxArea3D
 @onready var start_timer_label_3d = $StartTimerLabel3D
 @onready var pre_start_timer = $GamePreStartTimer
 @onready var start_timer = $GameStartTimer
 @onready var first_cross_end_timer = $FirstCrossEndTimer
 
 @onready var winner_label3d = $WinnerLabel3D
+
+@onready var start_beep_audio: AudioStreamPlayer3D = $Audio/StartBeepAudio
+@onready var pre_start_beep_audio: AudioStreamPlayer3D = $Audio/PreStartBeepAudio
+@onready var finish_line_crossed_audio: AudioStreamPlayer3D = $Audio/FinishLineCrossedAudio
+
+
 
 var pre_start_timer_time: float = 5.0
 var start_timer_time: float = 10.0
@@ -31,21 +36,32 @@ func _ready() -> void:
 			player.server_lock_movement.rpc_id(int(player.name))
 
 @rpc("any_peer", "call_local", "reliable")
-func start_race_timer() -> void:
+func start_race_start_timer() -> void:
 	start_timer.start(start_timer_time)
+	pre_start_beep_audio.play()
 
 func _process(delta: float) -> void:
 	handle_start_timer_label()
+	handle_countdown_beeps(delta)
 	debug_imgui_race_window(delta)
 
-func handle_start_timer_label():
+func handle_start_timer_label() -> void:
 	if start_timer.time_left > 0.0:
 		start_timer_label_3d.text = "%f" % [ start_timer.time_left ]
+
+var handle_countdown_beeps_running_delta: float = 0.0
+## Beep on 1 second intervals from 5 seconds down to 1 second left
+func handle_countdown_beeps(delta: float) -> void:
+	if start_timer.time_left > 0.0 and start_timer.time_left <= 5.0:
+		handle_countdown_beeps_running_delta -= delta
+		if handle_countdown_beeps_running_delta <= 0.0:
+			pre_start_beep_audio.play()
+			handle_countdown_beeps_running_delta = 1.0
 
 func _on_pre_start_timer_timeout() -> void:
 	Logger.info("_on_pre_start_timer_timeout")
 	if GameInstance.networking.is_server():
-		start_race_timer.rpc()
+		start_race_start_timer.rpc()
 
 func _on_start_timer_timeout() -> void:
 	Logger.info("Start timer timeout! race starting!")
@@ -63,6 +79,7 @@ func start_race() -> void:
 	start_timer.stop()
 	pre_start_timer.stop()
 	start_timer_label_3d.text = "GO!"
+	start_beep_audio.play()
 
 func _on_finish_area_3d_body_entered(body: Node3D) -> void:
 	if GameInstance.networking.is_server():
@@ -71,6 +88,7 @@ func _on_finish_area_3d_body_entered(body: Node3D) -> void:
 			Logger.info("player: %s entered finish area3d" % [ str(player.name) ])
 			first_cross_finish_line.rpc(player.name)
 			first_cross_end_timer.start(first_cross_end_timer_time)
+			finish_line_crossed_audio.play()
 
 @rpc("authority", "call_local", "reliable")
 func first_cross_finish_line(player_name):

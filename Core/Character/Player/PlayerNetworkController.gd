@@ -213,49 +213,49 @@ var continuous_corner_collisions: int = 0
 ## Whenever the server is notified a client's pawn moved, try and simulate that move on the server
 ## to make sure the client is not clipping through geometry or fly/move speed hacking. Reconcile the
 ## client's position if it is out of a tolerance of where the server thinks the player should be.
-func server_handle_client_pawn_movement(peer_id: int, new_position: Vector3, rot_y_degrees: float, rot_x_degrees: float, inputs1: int, movement_status_bitmap: int):
+func server_handle_client_pawn_movement(_peer_id: int, new_position: Vector3, rot_y_degrees: float, rot_x_degrees: float, inputs1: int, movement_status_bitmap: int):
 	# If we just spawned in, ignore client pawn movement for a bit
 	if player.spawning_delay > 0.0:
 		return
 
-	var motion = new_position - server_last_valid_target_position
+	#var motion = new_position - server_last_valid_target_position
 	# TODO: simulate the move on a physics tick? also move all this to PlayerNetworking class
-	var collision: KinematicCollision3D = player.move_and_collide(motion, true)
-	# TODO: speed and fly hack checking
-	if collision:
-		var distance = player.network_controller.server_last_valid_target_position.distance_to(new_position)
-		# If the collision is with another player, ignore it
-		if collision.get_collider() is Player:
-			pass
-		# if a really low angel and low col depth, assume floor collision and ignore unless it continues for awhile, then reconcile up
-		elif collision.get_angle() < 1.0 and collision.get_depth() < 0.01:
-			continuous_floor_collisions += 1
-			if continuous_floor_collisions >= 100:
-				Logger.info("server_handle_client_pawn_movement: 100+ floor collisions! pushing client up 10cm from last valid position.")
-				server_handle_client_pawn_movement_reconciliation(peer_id, server_last_valid_on_ground_target_position + Vector3(0.0, 0.1, 0.0))
-			return
-		# if just low depth, assume it's clipping a corner on some geometry
-		# TODO: this breaks the 3m x 3m x 3m server side only box collision when jumping through it
-		elif collision.get_depth() < 0.01 and distance < 0.1:
-			continuous_corner_collisions += 1
-			if continuous_corner_collisions >= 100:
-				Logger.info("server_handle_client_pawn_movement: 100+ corner collisions? TODO: not sure.")
-			return
-		else:
-			Logger.info("server detected player %s collided: %s, dist: %f, depth: %f, angle: %f" % [ player.name, collision.get_collider(), distance, collision.get_depth(), collision.get_angle() ])
-			#Logger.info("Server detected collision for player: %s, dist: %f" % [player.name, distance])
-			if distance > 0.25:
-				Logger.info("Server detected collision for player and distance out of tolerance: %s, dist: %f, pos: %v" % [player.name, distance, player.global_position])
-				# TODO: rate limit?
-				# send message to move player back to last valid target position if they are out of tolerance (reconciliation)
-				#server_send_client_player_movement_reconciliation(from_peer_id, player.server_last_valid_target_position)
-				server_handle_client_pawn_movement_reconciliation(peer_id, server_last_valid_on_ground_target_position)
-				server_last_valid_target_position = server_last_valid_on_ground_target_position
-				# TODO: add a count of reconciliation events and do special stuff if the player is stuck or something weird
-			return
-	# Only allow server pawn to move if they are not colliding.
-	continuous_floor_collisions = 0
-	continuous_corner_collisions = 0
+	#var collision: KinematicCollision3D = player.move_and_collide(motion, true)
+	## TODO: speed and fly hack checking
+	#if collision:
+		#var distance = player.network_controller.server_last_valid_target_position.distance_to(new_position)
+		## If the collision is with another player, ignore it
+		#if collision.get_collider() is Player:
+			#pass
+		## if a really low angel and low col depth, assume floor collision and ignore unless it continues for awhile, then reconcile up
+		#elif collision.get_angle() < 1.0 and collision.get_depth() < 0.01:
+			#continuous_floor_collisions += 1
+			#if continuous_floor_collisions >= 100:
+				#Logger.info("server_handle_client_pawn_movement: 100+ floor collisions! pushing client up 10cm from last valid position.")
+				#server_handle_client_pawn_movement_reconciliation(peer_id, server_last_valid_on_ground_target_position + Vector3(0.0, 0.1, 0.0))
+			#return
+		## if just low depth, assume it's clipping a corner on some geometry
+		## TODO: this breaks the 3m x 3m x 3m server side only box collision when jumping through it
+		#elif collision.get_depth() < 0.01 and distance < 0.1:
+			#continuous_corner_collisions += 1
+			#if continuous_corner_collisions >= 100:
+				#Logger.info("server_handle_client_pawn_movement: 100+ corner collisions? TODO: not sure.")
+			#return
+		#else:
+			#Logger.info("server detected player %s collided: %s, dist: %f, depth: %f, angle: %f" % [ player.name, collision.get_collider(), distance, collision.get_depth(), collision.get_angle() ])
+			##Logger.info("Server detected collision for player: %s, dist: %f" % [player.name, distance])
+			#if distance > 0.25:
+				#Logger.info("Server detected collision for player and distance out of tolerance: %s, dist: %f, pos: %v" % [player.name, distance, player.global_position])
+				## TODO: rate limit?
+				## send message to move player back to last valid target position if they are out of tolerance (reconciliation)
+				##server_send_client_player_movement_reconciliation(from_peer_id, player.server_last_valid_target_position)
+				#server_handle_client_pawn_movement_reconciliation(peer_id, server_last_valid_on_ground_target_position)
+				#server_last_valid_target_position = server_last_valid_on_ground_target_position
+				## TODO: add a count of reconciliation events and do special stuff if the player is stuck or something weird
+			#return
+	## Only allow server pawn to move if they are not colliding.
+	#continuous_floor_collisions = 0
+	#continuous_corner_collisions = 0
 
 	# TODO: have both server_last_valid_target_position and server_last_valid_on_ground_target_position
 	# try and use server_last_valid_target_position first, then fall back to on_ground version if it fails?

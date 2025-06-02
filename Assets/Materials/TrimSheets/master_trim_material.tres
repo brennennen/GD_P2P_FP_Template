@@ -1,0 +1,15 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://bb8s1opec8q70"]
+
+[ext_resource type="Shader" uid="uid://dipiybgr55toj" path="res://Assets/Materials/TrimSheets/master_trim_material_shader.tres" id="1_1dkmk"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_1dkmk")
+shader_parameter/Albedo = 0.0
+shader_parameter/SubsetAlbedo = 0.0
+shader_parameter/Metallic = 0.0
+shader_parameter/SubsetMetallic = 0.0
+shader_parameter/Roughness = 0.0
+shader_parameter/SubsetRoughness = 0.0
+shader_parameter/GrungeRoughness = 0.0
+shader_parameter/AOBias = 0.0
