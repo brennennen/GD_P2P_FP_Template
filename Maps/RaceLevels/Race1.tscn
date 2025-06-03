@@ -339,21 +339,7 @@ bus = &"Ambient"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -80)
 stream = ExtResource("8_v8yre")
 
-[node name="SpinningWall20m" parent="."]
-_import_path = NodePath("")
-unique_name_in_owner = false
-process_mode = 0
-process_priority = 0
-process_physics_priority = 0
-process_thread_group = 0
-physics_interpolation_mode = 0
-auto_translate_mode = 0
-editor_description = ""
-transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 0, 0, -52)
-script = null
-
 [node name="SpinningWall20m2" parent="." instance=ExtResource("10_okrwc")]
 transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -1, 0, -52)
-rotation_amount = 0.005
 
 [connection signal="body_entered" from="FinishArea3D" to="." method="_on_finish_area_3d_body_entered"]

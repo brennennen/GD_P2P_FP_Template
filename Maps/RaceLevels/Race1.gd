@@ -47,7 +47,7 @@ func _process(delta: float) -> void:
 
 func handle_start_timer_label() -> void:
 	if start_timer.time_left > 0.0:
-		start_timer_label_3d.text = "%f" % [ start_timer.time_left ]
+		start_timer_label_3d.text = "%0.2f" % [ start_timer.time_left ]
 
 var handle_countdown_beeps_running_delta: float = 0.0
 ## Beep on 1 second intervals from 5 seconds down to 1 second left

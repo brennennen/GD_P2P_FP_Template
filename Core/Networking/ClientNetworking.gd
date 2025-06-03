@@ -80,30 +80,45 @@ var initial_synchronization = {
 	}
 }
 
-var client_tick: int = 0
-var out_of_sync_tolerance: int = 5
-var client_latency_ms: int = 0
+var tick_out_of_sync_tolerance: int = 5 # 5 * 15hz ~= 100ms off, might be too wide?
+var client_latency_ms: float = 0
 var client_latency_history_size: int = 10
-var client_latency_history: Array[int] = []
+var client_latency_history: Array[float] = []
 var client_latency_history_index: int = 0
+var client_latency_rolling_sum: float = 0.0
 
 var client_ping_running_delta: float = 5.0
 var client_process_running_delta: float = 0.0
 
 var server_peer_id_list: Array[int] = []
 
+var pings_sent: int = 0
+var pings_received: int = 0
+
 func _ready() -> void:
 	client_latency_history_size = 50
 	client_latency_history.resize(client_latency_history_size)
 
-func debug_imgui_append_client_networking_debug_window(_delta: float):
-	#if multiplayer.
+func debug_imgui_append_client_networking_debug_window(_delta: float) -> void:
 	ImGui.Text("client_id: %s (%d)" % [ networking.get_multiplayer_id(), multiplayer.get_unique_id() ]);
-	ImGui.Text("latency: %d ms" % [ client_latency_ms ]);
+	ImGui.Text("latency: %0.2f ms  (avg: %0.2f ms)" % [ client_latency_ms, get_latency_average() ]);
 	ImGui.PlotLines("latency", client_latency_history, client_latency_history_size);
 	ImGui.Text("server_peer_id_list: %s" % [ JSON.stringify(server_peer_id_list) ]);
 	ImGui.Text("init_sync_state: %s" % [ ClientSyncState_str(initial_synchronization.get("current_state", ClientSyncState.NONE)) ]);
 	# TODO: estimated packet loss?
+
+	if multiplayer.multiplayer_peer is ENetMultiplayerPeer:
+		debug_imgui_append_client_enet_statistics()
+	# TODO: SteamPeer stats?
+
+func debug_imgui_append_client_enet_statistics() -> void:
+	var enet_peer: ENetMultiplayerPeer = multiplayer.multiplayer_peer as ENetMultiplayerPeer
+	ImGui.Separator()
+	ImGui.Text("enet")
+	ImGui.Text("last lat: %0.2f ms" % [ enet_peer.get_peer(1).get_statistic(ENetPacketPeer.PeerStatistic.PEER_LAST_ROUND_TRIP_TIME) / 2.0 ])
+	ImGui.Text("mean lat: %0.2f ms" % [ enet_peer.get_peer(1).get_statistic(ENetPacketPeer.PeerStatistic.PEER_ROUND_TRIP_TIME) / 2.0 ])
+	ImGui.Text("pkt loss: %0.2f (scale: %d)" % [ enet_peer.get_peer(1).get_statistic(ENetPacketPeer.PeerStatistic.PEER_PACKET_LOSS), ENetPacketPeer.PACKET_LOSS_SCALE ])
+	ImGui.Separator()
 
 func initialize(p_networking: Networking):
 	networking = p_networking
@@ -141,7 +156,6 @@ func disconnect_from_server() -> void:
 	GameInstance.remove_all_players()
 
 func tick(delta: float) -> void:
-	client_tick += 1
 	if !done_initial_synchronization:
 		client_manage_initial_synchronization()
 	else:
@@ -161,12 +175,16 @@ func client_process_peer_packet(from_peer_id: int, packet: PackedByteArray):
 			on_receive_player_initial_state(from_peer_id, packet)
 		Networking.NetworkMessageId.SERVER_BROADCAST_TICK:
 			on_receive_server_tick(from_peer_id, packet)
+		#Networking.NetworkMessageId.SERVER_BROADCAST_TIME:
+		#	on_receive_server_time(from_peer_id, packet)
 		Networking.NetworkMessageId.SERVER_BROADCAST_PEER_IDS:
 			on_recieve_peer_ids(from_peer_id, packet)
 		Networking.NetworkMessageId.SERVER_BROADCAST_PLAYER_MOVEMENT:
 			on_recieve_player_movement(from_peer_id, packet)
 		Networking.NetworkMessageId.SERVER_SEND_CLIENT_PLAYER_MOVEMENT_RECONCILIATION:
 			on_receive_client_player_movement_reconciliation(from_peer_id, packet)
+		Networking.NetworkMessageId.PING:
+			networking.on_receive_ping(from_peer_id, packet)
 		Networking.NetworkMessageId.PING_RESPONSE:
 			on_receive_ping_response(from_peer_id, packet)
 		_:
@@ -213,11 +231,19 @@ func client_manage_initial_synchronization() -> void:
 		client_debug_log()
 
 func periodic_ping(delta):
-	#print("periodic_ping: %f" % [ client_ping_running_delta ])
 	client_ping_running_delta += delta
-	if client_ping_running_delta >= 5.0:
-		client_ping_running_delta = 0.0
-		networking.send_ping(1)
+	# If the match has just started and we haven't received enough pings to fill out our rolling latency buffer, 
+	# send pings a bit more frequently to speed up getting a more accurate average latency.
+	if pings_sent < client_latency_history_size:
+		if client_ping_running_delta >= 0.5:
+			client_ping_running_delta = 0.0
+			networking.send_ping(1)
+			pings_sent += 1
+	else:
+		if client_ping_running_delta >= 5.0:
+			client_ping_running_delta = 0.0
+			networking.send_ping(1)
+			pings_sent += 1
 
 func send_register_pawn_data():#pawn_data: Dictionary):
 	var pawn_data: Dictionary = GameInstance.my_pawn_data
@@ -387,14 +413,21 @@ func client_add_peer_player(peer_id: int, position: Vector3, rot_y_degrees: floa
 func on_receive_server_tick(_from_peer_id: int, packet: PackedByteArray):
 	var message_id = packet.decode_u8(0)
 	var server_tick = packet.decode_s32(1)
-	var net_tick_delta = abs(server_tick - networking.network_tick)
-	Logger.debug("received: %s, server_tick: %d, client_tick: %d, delta: %d" % [
-		Networking.NetworkMessageId_str(message_id), server_tick, networking.network_tick,
+	# Correct for latency
+	var corrected_server_tick = server_tick + int(get_latency_average() * networking.network_tick_rate)
+	var net_tick_delta = abs(corrected_server_tick - networking.network_tick)
+	Logger.info("received: %s, server_tick: %d (corrected: %d), client_tick: %d, delta: %d" % [
+		Networking.NetworkMessageId_str(message_id), server_tick, corrected_server_tick, networking.network_tick,
 		net_tick_delta
 	])
-	if net_tick_delta > out_of_sync_tolerance:
-		networking.network_tick = server_tick
+	if net_tick_delta > tick_out_of_sync_tolerance:
+		networking.network_tick = corrected_server_tick
 		Logger.info("CLIENT CORRECTION: net_tick_delta: %d" % net_tick_delta)
+
+#func on_receive_server_time(_from_peer_id: int, packet: PackedByteArray):
+	#var server_time_ms = packet.decode_s32(1)
+	#var corrected_server_time = server_time_ms + get_latency_average()
+	#var time_delta = abs(corrected_server_time - networking.network_time_ms)
 
 func on_recieve_peer_ids(_from_peer_id: int, packet: PackedByteArray):
 	# networking.NetworkMessageId.SERVER_BROADCAST_PEER_IDS
@@ -463,22 +496,39 @@ func on_receive_client_player_movement_reconciliation(_from_peer_id: int, packet
 		# TODO: increment reconciliations count?
 		pass
 
+
 func on_receive_ping_response(_from_peer_id: int, packet: PackedByteArray):
 	# TODO: consider using this, maybe create a rotating queue of 10 and take average to smooth out weirdnesses.
 	#var peer = (ENetMultiplayerPeer)Multiplayer.MultiplayerPeer;
-	#return peer.GetPeer(peerID).GetStatistic(ENetPacketPeer.PeerStatistic.LastRoundTripTime);
+	#return peer.GetPeer(peerID).GetStatistic(ENetPacketPeer.PeerStatistic.PEER_LAST_ROUND_TRIP_TIME);
 	# read timestamp in ping, calculate latency from that
 	var sent_tick = packet.decode_s32(1)
 	var current_tick = Time.get_ticks_msec()
 	var ping_delta = current_tick - sent_tick
+	pings_received += 1
 	Logger.debug("received: %s, current_tick: %d, sent_tick: %d, delta: %d" % [
 		Networking.NetworkMessageId_str(Networking.NetworkMessageId.PING_RESPONSE), current_tick, sent_tick, ping_delta
 	])
-	client_latency_ms = int(ping_delta / 2.0) # round trip ping, not the most accurate, but good enough for now
+	client_latency_ms = ping_delta / 2.0 # round trip ping, not the most accurate, but good enough for now
+	# if this is the first ping we've sent and received, flood the latency history for average calculations
+	if pings_received == 1:
+		seed_initial_latency_history(client_latency_ms)
+
 	if 1 in GameInstance.networking.peers:
 		GameInstance.networking.peers[1].ping = client_latency_ms
+	# Keep track of a rolling sum for averaging
+	client_latency_rolling_sum -= client_latency_history[client_latency_history_index]
+	client_latency_rolling_sum += client_latency_ms
 	client_latency_history[client_latency_history_index] = client_latency_ms
 	client_latency_history_index = (client_latency_history_index + 1) % (client_latency_history_size - 1)
+
+func seed_initial_latency_history(latency: float) -> void:
+	for i in range(0, client_latency_history_size):
+		client_latency_history[i] = latency
+		client_latency_rolling_sum += latency
+
+func get_latency_average() -> float:
+	return client_latency_rolling_sum / client_latency_history_size
 
 func client_send_player_movement(peer_id: int, position: Vector3, rotation_degrees_y: float, camera_rotation_degrees_x: float, inputs1: int, movement_states_bitmap: int):
 	var packet: PackedByteArray = [ Networking.NetworkMessageId.CLIENT_SEND_PLAYER_MOVEMENT,

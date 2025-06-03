@@ -19,7 +19,7 @@ func set_player_name(new_name: String) -> void:
 	name_label.text = new_name
 
 func set_ping(new_ping: float) -> void:
-	ping_label.text = "%f" % [new_ping]
+	ping_label.text = "%0.0f" % [new_ping]
 
 func show_kick_button() -> void:
 	kick_button.show()

@@ -36,7 +36,7 @@ func _ready() -> void:
 
 @rpc("any_peer", "call_local", "reliable")
 func change_movement_mode(new_movement_mode: MovementMode) -> void:
-	Logger.info("%s: change_movement_mode: %s -> %s" % [ player.name, MovementMode.keys()[movement_mode], MovementMode.keys()[new_movement_mode] ])
+	#Logger.info("%s: change_movement_mode: %s -> %s" % [ player.name, MovementMode.keys()[movement_mode], MovementMode.keys()[new_movement_mode] ])
 
 	match movement_mode:
 		MovementMode.SWINGING:

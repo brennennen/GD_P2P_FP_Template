@@ -27,7 +27,8 @@ var network_movement_status_bitmap: int
 
 func _ready() -> void:
 	# Needs to interpolate/reach the target by the next sync packet (received every network tick)
-	network_movement_interpolation_rate = (1.0 / Engine.physics_ticks_per_second) / GameInstance.networking.network_tick_rate
+	#network_movement_interpolation_rate = (1.0 / Engine.physics_ticks_per_second) / GameInstance.networking.network_tick_rate
+	network_movement_interpolation_rate = (1.0 / Engine.physics_ticks_per_second) / GameInstance.networking.network_player_tick_rate
 	network_movement_interpolation_rate *= 0.8 # still needs to be tinkered with emperically
 	set_debug_label_3d()
 

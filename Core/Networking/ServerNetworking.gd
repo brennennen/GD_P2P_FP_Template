@@ -52,7 +52,7 @@ func server_process_peer_packet(from_peer_id: int, packet: PackedByteArray):
 		Networking.NetworkMessageId.CLIENT_SEND_PLAYER_MOVEMENT:
 			on_receive_client_player_movement(from_peer_id, packet)
 		Networking.NetworkMessageId.PING:
-			on_receive_ping(from_peer_id, packet)
+			networking.on_receive_ping(from_peer_id, packet)
 		_:
 			Logger.warn("server_process_peer_packet: received unknown message! from: %d, message_id: %d" % [ from_peer_id, message_id ])
 
@@ -187,11 +187,22 @@ func on_receive_client_player_movement(from_peer_id: int, packet: PackedByteArra
 	var player: Player = networking.get_player(from_peer_id) # TODO: validate from_peer_id == peer_id?
 	player.network_controller.server_handle_client_pawn_movement(from_peer_id, new_position, rot_y_degrees, rot_x_degrees, inputs1, movement_status_bitmap)
 
-func on_receive_ping(from_peer_id: int, packet: PackedByteArray):
-	var ping_send_time = packet.decode_s32(1)
-	#var time_delta = Time.get_ticks_msec() - ping_send_time
-	# TODO: store time delta
-	networking.send_ping_response(from_peer_id, ping_send_time)
+func on_receive_ping_response(_from_peer_id: int, packet: PackedByteArray):
+	# TODO: consider using this, maybe create a rotating queue of 10 and take average to smooth out weirdnesses.
+	#var peer = (ENetMultiplayerPeer)Multiplayer.MultiplayerPeer;
+	#return peer.GetPeer(peerID).GetStatistic(ENetPacketPeer.PeerStatistic.LastRoundTripTime);
+	# read timestamp in ping, calculate latency from that
+	var sent_tick = packet.decode_s32(1)
+	var current_tick = Time.get_ticks_msec()
+	var ping_delta = current_tick - sent_tick
+	Logger.debug("received: %s, current_tick: %d, sent_tick: %d, delta: %d" % [
+		Networking.NetworkMessageId_str(Networking.NetworkMessageId.PING_RESPONSE), current_tick, sent_tick, ping_delta
+	])
+	#client_latency_ms = int(ping_delta / 2.0) # round trip ping, not the most accurate, but good enough for now
+	#if 1 in GameInstance.networking.peers:
+		#GameInstance.networking.peers[1].ping = client_latency_ms
+	#client_latency_history[client_latency_history_index] = client_latency_ms
+	#client_latency_history_index = (client_latency_history_index + 1) % (client_latency_history_size - 1)
 
 ##
 func server_synchronize_player_movement(delta: float) -> void:
@@ -220,8 +231,13 @@ func server_synchronize_player_movement(delta: float) -> void:
 func server_broadcast_network_tick(network_tick: int):
 	var packet: PackedByteArray = [ networking.NetworkMessageId.SERVER_BROADCAST_TICK,
 		0x00, 0x00, 0x00, 0x00 ]
-	packet.encode_s32(1, network_tick) # is this an int? maybe make it 8 bytes or unsigned?
+	packet.encode_u32(1, network_tick) # is this an int? maybe make it 8 bytes or unsigned?
 	networking.send_bytes(packet, 0, MultiplayerPeer.TRANSFER_MODE_UNRELIABLE, 0)
+
+#func server_broadcast_network_time(network_time_ms: int):
+	#var packet: PackedByteArray = [ networking.NetworkMessageId.SERVER_BROADCAST_TIME,
+		#0x00, 0x00, 0x00, 0x00 ]
+	#packet.encode_u32(1, network_time_ms) # is this an int? maybe make it 8 bytes or unsigned?
 
 func server_broadcast_peer_ids():
 	var packet: PackedByteArray = [ networking.NetworkMessageId.SERVER_BROADCAST_PEER_IDS,

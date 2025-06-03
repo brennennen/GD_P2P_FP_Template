@@ -48,6 +48,7 @@ enum NetworkMessageId {
 
 # MATCH IN PROGRESS MESSAGES
 	SERVER_BROADCAST_TICK,
+	#SERVER_BROADCAST_TIME,
 	PING,
 	PING_RESPONSE,
 	SERVER_BROADCAST_PEER_IDS,
@@ -79,13 +80,14 @@ var game_network_state = {
 }
 
 var network_tick: int = 0
-var network_tick_rate: float = 0.06666666666 # 0.06666666666 = 15 fps 0.03333333333 = 30 fps, 0.0166666 = 60 fps)
+var network_time_ms: int = 0 # don't need both net_tick and net_time_ms, but might be good to explore the trade offs between the two approaches
+var network_tick_rate: float = 0.016666666 # 0.06666666666 = 15 fps 0.03333333333 = 30 fps, 0.0166666 = 60 fps)
 var network_tick_running_delta: float = 0.0
 var network_tick_second_rollover: float = 0.0
 var network_player_tick_rate: float = 0.06666666666
 var network_fixed_physics_tick_rate: float = 5.0 # not important data
 
-# TODO: setup a network clock
+# Been using clumsy for most emulation these days, don't use any of this much.
 # TODO: setup packet loss emulation
 var debug_emulate_latency: bool = false
 var debug_emulate_latency_seconds: float = 0.500 # 500ms?
@@ -133,6 +135,7 @@ func debug_imgui_handle_network_window(delta: float) -> void:
 		client_networking.debug_imgui_append_client_networking_debug_window(delta)
 	ImGui.Text("peers %s" % [ JSON.stringify(peers.keys()) ]);
 	ImGui.Text("tick %d" % [ network_tick ]);
+	#ImGui.Text("mp_clock %d" % [ multiplayer.get_network_time_msec() ]);
 	# TODO: estimated packet loss?
 	# TODO: estimated download/receive byte count
 	# TODO: estimated
@@ -250,6 +253,8 @@ func send_bytes(bytes: PackedByteArray, id: int = 0, mode: MultiplayerPeer.Trans
 	this_second_bytes_sent += bytes.size()
 	scene_multiplayer.send_bytes(bytes, id, mode, channel)
 
+## The time sent in ping is only used in the ping response sent back from the receiver, so it can be
+## a relative time.
 func send_ping(peer_id: int):
 	var ping_send_ticks_ms = Time.get_ticks_msec()
 	Logger.debug("sending: %s, to: %d, initial_ping_send_time: %d" % [
@@ -261,6 +266,10 @@ func send_ping(peer_id: int):
 	]
 	packet_bytes.encode_s32(1, ping_send_ticks_ms)
 	send_bytes(packet_bytes, peer_id, MultiplayerPeer.TRANSFER_MODE_RELIABLE, 0)
+
+func on_receive_ping(from_peer_id: int, packet: PackedByteArray):
+	var ping_send_time = packet.decode_s32(1)
+	send_ping_response(from_peer_id, ping_send_time)
 
 func send_ping_response(peer_id: int, ping_send_time: int):
 	Logger.debug("sending: %s, to: %d, initial_ping_send_time: %d" % [
