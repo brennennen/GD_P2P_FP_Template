@@ -8,6 +8,7 @@ source = 5
 
 [sub_resource type="VisualShaderNodeTexture2DParameter" id="VisualShaderNodeTexture2DParameter_eb4so"]
 parameter_name = "Grunge"
+color_default = 1
 
 [sub_resource type="VisualShaderNodeMix" id="VisualShaderNodeMix_365vn"]
 default_input_values = [0, Vector3(0, 0, 0), 1, Vector3(1, 1, 1), 2, Vector3(0.5, 0.5, 0.5)]
@@ -16,7 +17,7 @@ op_type = 3
 [sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_mb4nk"]
 parameter_name = "GrungeRoughness"
 default_value_enabled = true
-default_value = 0.24
+default_value = 0.5
 
 [sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_vwhij"]
 parameter_name = "Roughness"
@@ -97,8 +98,8 @@ uniform float Metallic = 0.0;
 uniform float SubsetMetallic = 0.0;
 uniform float Roughness = 0.5;
 uniform float SubsetRoughness = 0.5;
-uniform float GrungeRoughness = 0.23999999463558;
-uniform sampler2D Grunge;
+uniform float GrungeRoughness = 0.5;
+uniform sampler2D Grunge : hint_default_black;
 uniform sampler2D TrimAO;
 uniform float AOBias = 0.5;
 uniform sampler2D TrimNormal : hint_normal;
@@ -204,6 +205,7 @@ void fragment() {
 
 }
 "
+graph_offset = Vector2(-1775.93, -671.052)
 nodes/fragment/0/position = Vector2(400, -240)
 nodes/fragment/2/node = SubResource("VisualShaderNodeTexture_n3880")
 nodes/fragment/2/position = Vector2(-640, 1420)
@@ -255,4 +257,4 @@ nodes/fragment/27/node = SubResource("VisualShaderNodeColorParameter_k5cmt")
 nodes/fragment/27/position = Vector2(-1640, -2200)
 nodes/fragment/28/node = SubResource("VisualShaderNodeColorParameter_qk30o")
 nodes/fragment/28/position = Vector2(-1640, -1960)
-nodes/fragment/connections = PackedInt32Array(3, 0, 2, 2, 4, 0, 2, 0, 2, 0, 0, 9, 6, 0, 5, 2, 8, 0, 5, 0, 5, 0, 9, 0, 7, 0, 9, 1, 9, 0, 0, 6, 12, 0, 11, 2, 10, 0, 11, 0, 14, 0, 13, 1, 16, 0, 13, 0, 11, 0, 13, 2, 15, 0, 16, 0, 17, 0, 16, 1, 20, 0, 19, 2, 18, 0, 19, 0, 19, 0, 16, 2, 21, 0, 23, 0, 22, 0, 23, 1, 19, 0, 23, 2, 19, 0, 26, 2, 26, 0, 0, 0, 23, 0, 0, 2, 13, 0, 0, 3, 27, 0, 26, 0, 28, 0, 26, 1)
+nodes/fragment/connections = PackedInt32Array(3, 0, 2, 2, 4, 0, 2, 0, 2, 0, 0, 9, 6, 0, 5, 2, 8, 0, 5, 0, 5, 0, 9, 0, 7, 0, 9, 1, 9, 0, 0, 6, 12, 0, 11, 2, 10, 0, 11, 0, 16, 0, 13, 0, 11, 0, 13, 2, 15, 0, 16, 0, 17, 0, 16, 1, 20, 0, 19, 2, 18, 0, 19, 0, 19, 0, 16, 2, 21, 0, 23, 0, 22, 0, 23, 1, 19, 0, 23, 2, 19, 0, 26, 2, 26, 0, 0, 0, 23, 0, 0, 2, 13, 0, 0, 3, 27, 0, 26, 0, 28, 0, 26, 1, 14, 0, 13, 1)

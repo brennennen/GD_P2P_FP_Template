@@ -8,7 +8,7 @@
 [resource]
 render_priority = 0
 shader = ExtResource("1_lear7")
-shader_parameter/Albedo = Color(0.843184, 0.843184, 0.843184, 1)
+shader_parameter/Albedo = Color(0.843137, 0.843137, 0.843137, 1)
 shader_parameter/SubsetAlbedo = Color(0.78, 0.78, 0.78, 1)
 shader_parameter/Subset = ExtResource("2_f23ut")
 shader_parameter/Metallic = 0.0

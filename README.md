@@ -83,4 +83,4 @@ platform wins.
   * `SteamLobby` - Handles steam lobbies (uses `steam-multiplayer-peer` and `godotsteam` addons).
 
 ### Levels
-All non-menu scenes that are intended to be loaded/played as top level levels (ex: the `Run Current Scene` button) need to inherit from the `Level` class and also call `GameInstance.initialize_level(...)`. This sets up a default camera and registers the spawn points that determine where the players will spawn in.
+All non-menu scenes that are intended to be loaded/played as top level levels (ex: the `Run Current Scene` button) need to inherit from the `Level` class and also call `super()` in the ready function or manually call `GameInstance.initialize_level(...)`. This sets up a default camera and registers the spawn points that determine where the players will spawn in.

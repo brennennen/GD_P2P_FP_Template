@@ -1,4 +1,4 @@
-[gd_scene load_steps=31 format=3 uid="uid://csmy5aw3v1gbq"]
+[gd_scene load_steps=29 format=3 uid="uid://csmy5aw3v1gbq"]
 
 [ext_resource type="PackedScene" uid="uid://dq3k1gmfnaxit" path="res://Core/Gameplay/SpawnPoint.tscn" id="1_46c6v"]
 [ext_resource type="Script" uid="uid://wqb1mmmb8bln" path="res://Maps/HUBLevel/HUBLevel.gd" id="1_kb0kb"]
@@ -11,35 +11,11 @@
 [ext_resource type="Resource" uid="uid://53f8bnjtbmvl" path="res://Core/Inventory/Items/SpeedPotion.tres" id="8_ghjng"]
 [ext_resource type="Resource" uid="uid://b8i08ee74phcc" path="res://Core/Inventory/Items/Fish.tres" id="9_fwcc3"]
 [ext_resource type="PackedScene" uid="uid://dmwwxvvuorton" path="res://Assets/Environment/Placeholder/Test/TrimSheetTestCube.glb" id="10_ca44i"]
+[ext_resource type="PackedScene" uid="uid://coq36aex43shh" path="res://Assets/Environment/GameShow/Platforms/Platform_20m/Platform20m.tscn" id="12_ghjng"]
+[ext_resource type="PackedScene" uid="uid://1r7yvg7sliri" path="res://Assets/Environment/GameShow/Fences/Fence_5mx1mx25cm/Fence_5mx1mx25cm.tscn" id="13_fwcc3"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1ro3f"]
 size = Vector3(2500, 50, 2500)
-
-[sub_resource type="PhysicalSkyMaterial" id="PhysicalSkyMaterial_kb0kb"]
-rayleigh_color = Color(0.137575, 0.200307, 0.317419, 1)
-mie_eccentricity = 0.99
-mie_color = Color(0.7958, 0.822937, 0.880384, 1)
-
-[sub_resource type="Sky" id="Sky_1ro3f"]
-sky_material = SubResource("PhysicalSkyMaterial_kb0kb")
-
-[sub_resource type="Environment" id="Environment_kb0kb"]
-background_mode = 2
-sky = SubResource("Sky_1ro3f")
-ambient_light_source = 3
-tonemap_mode = 4
-ssr_enabled = true
-ssao_enabled = true
-glow_enabled = true
-glow_intensity = 0.05
-glow_strength = 0.49
-volumetric_fog_density = 0.0001
-volumetric_fog_albedo = Color(0.895052, 0.995096, 0.976932, 1)
-
-[sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_84xh2"]
-dof_blur_far_enabled = true
-dof_blur_far_distance = 50.0
-dof_blur_amount = 0.01
 
 [sub_resource type="BoxMesh" id="BoxMesh_kb0kb"]
 size = Vector3(1, 0.5, 1)
@@ -64,16 +40,6 @@ size = Vector3(1, 2, 1)
 [sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_b0y6d"]
 data = PackedVector3Array(-0.5, 1, 0.5, 0.5, 1, 0.5, -0.5, -1, 0.5, 0.5, 1, 0.5, 0.5, -1, 0.5, -0.5, -1, 0.5, 0.5, 1, -0.5, -0.5, 1, -0.5, 0.5, -1, -0.5, -0.5, 1, -0.5, -0.5, -1, -0.5, 0.5, -1, -0.5, 0.5, 1, 0.5, 0.5, 1, -0.5, 0.5, -1, 0.5, 0.5, 1, -0.5, 0.5, -1, -0.5, 0.5, -1, 0.5, -0.5, 1, -0.5, -0.5, 1, 0.5, -0.5, -1, -0.5, -0.5, 1, 0.5, -0.5, -1, 0.5, -0.5, -1, -0.5, 0.5, 1, 0.5, -0.5, 1, 0.5, 0.5, 1, -0.5, -0.5, 1, 0.5, -0.5, 1, -0.5, 0.5, 1, -0.5, -0.5, -1, 0.5, 0.5, -1, 0.5, -0.5, -1, -0.5, 0.5, -1, 0.5, 0.5, -1, -0.5, -0.5, -1, -0.5)
 
-[sub_resource type="BoxMesh" id="BoxMesh_obda4"]
-size = Vector3(20, 0.5, 20)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kb0kb"]
-albedo_color = Color(0.099986, 0.099986, 0.099986, 1)
-roughness = 0.3
-
-[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_kb0kb"]
-data = PackedVector3Array(-10, 0.25, 10, 10, 0.25, 10, -10, -0.25, 10, 10, 0.25, 10, 10, -0.25, 10, -10, -0.25, 10, 10, 0.25, -10, -10, 0.25, -10, 10, -0.25, -10, -10, 0.25, -10, -10, -0.25, -10, 10, -0.25, -10, 10, 0.25, 10, 10, 0.25, -10, 10, -0.25, 10, 10, 0.25, -10, 10, -0.25, -10, 10, -0.25, 10, -10, 0.25, -10, -10, 0.25, 10, -10, -0.25, -10, -10, 0.25, 10, -10, -0.25, 10, -10, -0.25, -10, 10, 0.25, 10, -10, 0.25, 10, 10, 0.25, -10, -10, 0.25, 10, -10, 0.25, -10, 10, 0.25, -10, -10, -0.25, 10, 10, -0.25, 10, -10, -0.25, -10, 10, -0.25, 10, 10, -0.25, -10, -10, -0.25, -10)
-
 [sub_resource type="Resource" id="Resource_flsoh"]
 script = ExtResource("7_ca44i")
 inventory_item_data = ExtResource("8_ghjng")
@@ -91,36 +57,51 @@ script = ExtResource("6_sj7u5")
 slot_datas = Array[ExtResource("7_ca44i")]([SubResource("Resource_flsoh"), null, SubResource("Resource_1iu2m"), null, null, null])
 metadata/_custom_type_script = "uid://bybibu57hp37d"
 
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_ghjng"]
+sky_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
+ground_bottom_color = Color(0.662745, 0.670588, 0.686275, 1)
+ground_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
+
+[sub_resource type="Sky" id="Sky_qdw5l"]
+sky_material = SubResource("ProceduralSkyMaterial_ghjng")
+
+[sub_resource type="Environment" id="Environment_fwcc3"]
+background_mode = 2
+sky = SubResource("Sky_qdw5l")
+tonemap_mode = 2
+glow_enabled = true
+
 [node name="HubLevel" type="Node3D" node_paths=PackedStringArray("player_spawn_points", "default_level_camera")]
 script = ExtResource("1_kb0kb")
+game_mode_type = 1
 player_spawn_points = NodePath("SpawnPoints")
 default_level_camera = NodePath("DefaultLevelCamera")
 
 [node name="SpawnPoints" type="Node3D" parent="."]
 
 [node name="SpawnPoint2" parent="SpawnPoints" instance=ExtResource("1_46c6v")]
-transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 3, 0, 0)
+transform = Transform3D(1, 0, 1.06581e-14, 0, 1, 0, -1.06581e-14, 0, 1, 3, 0, 0)
 
 [node name="SpawnPoint6" parent="SpawnPoints" instance=ExtResource("1_46c6v")]
-transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 7, 0, 0)
+transform = Transform3D(1, 0, 1.06581e-14, 0, 1, 0, -1.06581e-14, 0, 1, 1, 0, 2)
 
 [node name="SpawnPoint" parent="SpawnPoints" instance=ExtResource("1_46c6v")]
-transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -3, 0, 0)
+transform = Transform3D(1, 0, -1.06581e-14, 0, 1, 0, 1.06581e-14, 0, 1, -3, 0, 0)
 
 [node name="SpawnPoint5" parent="SpawnPoints" instance=ExtResource("1_46c6v")]
-transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -6, 0, 0)
+transform = Transform3D(1, 0, -1.06581e-14, 0, 1, 0, 1.06581e-14, 0, 1, -1, 0, 2)
 
 [node name="SpawnPoint3" parent="SpawnPoints" instance=ExtResource("1_46c6v")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, 2)
 
 [node name="SpawnPoint8" parent="SpawnPoints" instance=ExtResource("1_46c6v")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 7)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 2)
 
 [node name="SpawnPoint4" parent="SpawnPoints" instance=ExtResource("1_46c6v")]
-transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, -3)
+transform = Transform3D(1, 0, 1.74846e-07, 0, 1, 0, -1.74846e-07, 0, 1, 1, 0, 0)
 
 [node name="SpawnPoint7" parent="SpawnPoints" instance=ExtResource("1_46c6v")]
-transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, -6)
+transform = Transform3D(1, 0, 1.74846e-07, 0, 1, 0, -1.74846e-07, 0, 1, -1, 0, 0)
 
 [node name="DefaultLevelCamera" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
@@ -152,37 +133,132 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3.2, -10)
 text = "Leaderboard:
 "
 
-[node name="EnvironmentAndAtmosphere" type="Node3D" parent="."]
-
-[node name="ReflectionProbe" type="ReflectionProbe" parent="EnvironmentAndAtmosphere"]
-size = Vector3(30, 30, 30)
-
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="EnvironmentAndAtmosphere"]
-transform = Transform3D(0.490524, -0.713526, 0.500266, 0, 0.574077, 0.818802, -0.871428, -0.401641, 0.281598, 0, 4.18616, 6)
-light_color = Color(0.977318, 0.916539, 0.885586, 1)
-light_energy = 10.0
-shadow_enabled = true
-
-[node name="WorldEnvironment" type="WorldEnvironment" parent="EnvironmentAndAtmosphere"]
-environment = SubResource("Environment_kb0kb")
-camera_attributes = SubResource("CameraAttributesPractical_84xh2")
-
 [node name="World" type="Node3D" parent="."]
+
+[node name="StartSection" type="Node3D" parent="World"]
+
+[node name="Fence5Mx1Mx25Cm" parent="World/StartSection" instance=ExtResource("13_fwcc3")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 9.5, 0, 0)
+
+[node name="Fence5Mx1Mx25Cm2" parent="World/StartSection" instance=ExtResource("13_fwcc3")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 9.5, 0, -6)
+
+[node name="Fence5Mx1Mx25Cm3" parent="World/StartSection" instance=ExtResource("13_fwcc3")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 9.5, 0, 6)
+
+[node name="Fence5Mx1Mx25Cm16" parent="World/StartSection" instance=ExtResource("13_fwcc3")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 9.5, 0, -20)
+
+[node name="Fence5Mx1Mx25Cm17" parent="World/StartSection" instance=ExtResource("13_fwcc3")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 9.5, 0, -26)
+
+[node name="Fence5Mx1Mx25Cm18" parent="World/StartSection" instance=ExtResource("13_fwcc3")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 9.5, 0, -14)
+
+[node name="Fence5Mx1Mx25Cm19" parent="World/StartSection" instance=ExtResource("13_fwcc3")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -30.5, 0, -20)
+
+[node name="Fence5Mx1Mx25Cm20" parent="World/StartSection" instance=ExtResource("13_fwcc3")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -30.5, 0, -26)
+
+[node name="Fence5Mx1Mx25Cm21" parent="World/StartSection" instance=ExtResource("13_fwcc3")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -30.5, 0, -14)
+
+[node name="Fence5Mx1Mx25Cm4" parent="World/StartSection" instance=ExtResource("13_fwcc3")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -9.5, 0, 0)
+
+[node name="Fence5Mx1Mx25Cm5" parent="World/StartSection" instance=ExtResource("13_fwcc3")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -9.5, 0, -6)
+
+[node name="Fence5Mx1Mx25Cm6" parent="World/StartSection" instance=ExtResource("13_fwcc3")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -9.5, 0, 6)
+
+[node name="Fence5Mx1Mx25Cm7" parent="World/StartSection" instance=ExtResource("13_fwcc3")]
+transform = Transform3D(1, 0, -5.96046e-08, 0, 1, 0, 5.96046e-08, 0, 1, 0, 0, 9.5)
+
+[node name="Fence5Mx1Mx25Cm8" parent="World/StartSection" instance=ExtResource("13_fwcc3")]
+transform = Transform3D(1, 0, -5.96046e-08, 0, 1, 0, 5.96046e-08, 0, 1, -6, 0, 9.5)
+
+[node name="Fence5Mx1Mx25Cm9" parent="World/StartSection" instance=ExtResource("13_fwcc3")]
+transform = Transform3D(1, 0, -5.96046e-08, 0, 1, 0, 5.96046e-08, 0, 1, 6, 0, 9.5)
+
+[node name="Fence5Mx1Mx25Cm10" parent="World/StartSection" instance=ExtResource("13_fwcc3")]
+transform = Transform3D(1, 0, -5.96046e-08, 0, 1, 0, 5.96046e-08, 0, 1, 0, 0, -29.5)
+
+[node name="Fence5Mx1Mx25Cm11" parent="World/StartSection" instance=ExtResource("13_fwcc3")]
+transform = Transform3D(1, 0, -5.96046e-08, 0, 1, 0, 5.96046e-08, 0, 1, -6, 0, -29.5)
+
+[node name="Fence5Mx1Mx25Cm12" parent="World/StartSection" instance=ExtResource("13_fwcc3")]
+transform = Transform3D(1, 0, -5.96046e-08, 0, 1, 0, 5.96046e-08, 0, 1, 6, 0, -29.5)
+
+[node name="Fence5Mx1Mx25Cm13" parent="World/StartSection" instance=ExtResource("13_fwcc3")]
+transform = Transform3D(1, 0, -5.96046e-08, 0, 1, 0, 5.96046e-08, 0, 1, -21, 0, -29.5)
+
+[node name="Fence5Mx1Mx25Cm14" parent="World/StartSection" instance=ExtResource("13_fwcc3")]
+transform = Transform3D(1, 0, -5.96046e-08, 0, 1, 0, 5.96046e-08, 0, 1, -27, 0, -29.5)
+
+[node name="Fence5Mx1Mx25Cm15" parent="World/StartSection" instance=ExtResource("13_fwcc3")]
+transform = Transform3D(1, 0, -5.96046e-08, 0, 1, 0, 5.96046e-08, 0, 1, -15, 0, -29.5)
+
+[node name="StartPlatform20m" parent="World/StartSection" instance=ExtResource("12_ghjng")]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 0, 0, 0)
+
+[node name="StartPlatform20m7" parent="World/StartSection" instance=ExtResource("12_ghjng")]
+transform = Transform3D(1.31134e-07, 0, -1, 0, 1, 0, 1, 0, 1.31134e-07, 0, 0, -20)
+
+[node name="StartPlatform20m17" parent="World/StartSection" instance=ExtResource("12_ghjng")]
+transform = Transform3D(1, 0, 1.74846e-07, 0, 1, 0, -1.74846e-07, 0, 1, -21, 0, -20)
+
+[node name="StartPlatform20m2" parent="World/StartSection" instance=ExtResource("12_ghjng")]
+transform = Transform3D(1.91069e-15, -1, -4.37114e-08, -4.37114e-08, -4.37114e-08, 1, -1, 0, -4.37114e-08, -11, 9, 0)
+
+[node name="StartPlatform20m8" parent="World/StartSection" instance=ExtResource("12_ghjng")]
+transform = Transform3D(-1, 4.37114e-08, -4.37114e-08, -4.37114e-08, -4.37114e-08, 1, 4.37114e-08, 1, 4.37114e-08, -21, 9, -9)
+
+[node name="StartPlatform20m9" parent="World/StartSection" instance=ExtResource("12_ghjng")]
+transform = Transform3D(1, 4.37114e-08, 4.37114e-08, -4.37114e-08, -4.37114e-08, 1, 4.37114e-08, -1, -4.37114e-08, -21, 9, 9)
+
+[node name="StartPlatform20m12" parent="World/StartSection" instance=ExtResource("12_ghjng")]
+transform = Transform3D(1, 4.37114e-08, 4.37114e-08, -4.37114e-08, -4.37114e-08, 1, 4.37114e-08, -1, -4.37114e-08, -21, -11, 9)
+
+[node name="StartPlatform20m13" parent="World/StartSection" instance=ExtResource("12_ghjng")]
+transform = Transform3D(-8.74228e-08, 1, 4.37114e-08, -4.37114e-08, -4.37114e-08, 1, 1, 8.74228e-08, 4.37114e-08, -31, -11, 0)
+
+[node name="StartPlatform20m10" parent="World/StartSection" instance=ExtResource("12_ghjng")]
+transform = Transform3D(-8.74228e-08, 1, 4.37114e-08, -4.37114e-08, -4.37114e-08, 1, 1, 8.74228e-08, 4.37114e-08, -31, 9, 0)
+
+[node name="StartPlatform20m11" parent="World/StartSection" instance=ExtResource("12_ghjng")]
+transform = Transform3D(1, 8.74228e-08, 8.74228e-08, -8.74228e-08, 1, -3.55271e-15, -8.74228e-08, -3.82137e-15, 1, -21, 20, 0)
+
+[node name="StartPlatform20m3" parent="World/StartSection" instance=ExtResource("12_ghjng")]
+transform = Transform3D(1.91069e-15, -1, -4.37114e-08, -4.37114e-08, -4.37114e-08, 1, -1, 0, -4.37114e-08, -11, -11, 0)
+
+[node name="StartPlatform20m16" parent="World/StartSection" instance=ExtResource("12_ghjng")]
+transform = Transform3D(-8.74228e-08, 1, 4.37114e-08, -4.37114e-08, -4.37114e-08, 1, 1, 8.74228e-08, 4.37114e-08, -10, -10, -20)
+
+[node name="StartPlatform20m4" parent="World/StartSection" instance=ExtResource("12_ghjng")]
+transform = Transform3D(-1, 4.37114e-08, -4.37114e-08, -4.37114e-08, -4.37114e-08, 1, 4.37114e-08, 1, 4.37114e-08, 0, -11, -29)
+
+[node name="StartPlatform20m14" parent="World/StartSection" instance=ExtResource("12_ghjng")]
+transform = Transform3D(-1, 4.37114e-08, -4.37114e-08, -4.37114e-08, -4.37114e-08, 1, 4.37114e-08, 1, 4.37114e-08, -21, -11, -9)
+
+[node name="StartPlatform20m5" parent="World/StartSection" instance=ExtResource("12_ghjng")]
+transform = Transform3D(3.55271e-15, -1, -4.37114e-08, -4.37114e-08, -4.37114e-08, 1, -1, 0, -4.37114e-08, 10, -11, 0)
+
+[node name="StartPlatform20m15" parent="World/StartSection" instance=ExtResource("12_ghjng")]
+transform = Transform3D(3.55271e-15, -1, -4.37114e-08, -4.37114e-08, -4.37114e-08, 1, -1, 0, -4.37114e-08, 10, -11, -20)
+
+[node name="StartPlatform20m6" parent="World/StartSection" instance=ExtResource("12_ghjng")]
+transform = Transform3D(1, 4.37114e-08, 4.37114e-08, -4.37114e-08, -4.37114e-08, 1, 4.37114e-08, -1, -4.37114e-08, 0, -11, 9)
 
 [node name="GrapplePoint" parent="World" instance=ExtResource("4_i8wm5")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 0)
-
-[node name="GrapplePoint2" parent="World" instance=ExtResource("4_i8wm5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 10, 0)
 
 [node name="GrapplePoint3" parent="World" instance=ExtResource("4_i8wm5")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 10, 0)
 
 [node name="GrapplePoint4" parent="World" instance=ExtResource("4_i8wm5")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 20, -10)
-
-[node name="GrapplePoint5" parent="World" instance=ExtResource("4_i8wm5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 20, -10)
 
 [node name="GrapplePoint6" parent="World" instance=ExtResource("4_i8wm5")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 20, -10)
@@ -229,17 +305,6 @@ skeleton = NodePath("../../..")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="World/Steps/MeshInstance3D5/StaticBody3D"]
 shape = SubResource("ConcavePolygonShape3D_b0y6d")
 
-[node name="Ground" type="MeshInstance3D" parent="World"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
-mesh = SubResource("BoxMesh_obda4")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_kb0kb")
-
-[node name="StaticBody3D" type="StaticBody3D" parent="World/Ground"]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="World/Ground/StaticBody3D"]
-shape = SubResource("ConcavePolygonShape3D_kb0kb")
-
 [node name="Chest" parent="World" instance=ExtResource("5_b0y6d")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 8)
 inventory_data = SubResource("Resource_e5dpf")
@@ -254,11 +319,6 @@ transform = Transform3D(1, 0, -4.37114e-08, 0, 1, 0, 4.37114e-08, 0, 1, -8, 0, -
 label_name = "Race1"
 scene_path = "res://Maps/RaceLevels/Race1.tscn"
 
-[node name="SwingRaceLevelTeleporter" parent="Teleporters" instance=ExtResource("3_84xh2")]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -10, 0, -6)
-label_name = "Swinging Race"
-scene_path = "res://Maps/RaceLevels/SwingingRace.tscn"
-
 [node name="Sumo1LevelTeleporter" parent="Teleporters" instance=ExtResource("3_84xh2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, -8)
 label_name = "SUMO!"
@@ -268,6 +328,16 @@ scene_path = "res://Maps/LastManLevels/LastMan1.tscn"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, -8)
 label_name = "Debug Sandbox"
 scene_path = "res://Maps/Sandboxes/DebugSandbox.tscn"
+
+[node name="DebugSandboxLevelTeleporter2" parent="Teleporters" instance=ExtResource("3_84xh2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -8)
+label_name = "Drop Down Race"
+scene_path = "res://Maps/RaceLevels/DropDown/DropDown.tscn"
+
+[node name="DebugSandboxLevelTeleporter3" parent="Teleporters" instance=ExtResource("3_84xh2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, -8)
+label_name = "Swinging Race"
+scene_path = "res://Maps/RaceLevels/SwingingRace/SwingingRace.tscn"
 
 [node name="FishingBananzaLevelTeleporter2" parent="Teleporters" instance=ExtResource("3_84xh2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -8)
@@ -279,3 +349,15 @@ scene_path = "res://Maps/FishingTournamentLevels/TropicalIslands/TropicalIslands
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="Audio"]
 volume_db = -8.0
 bus = &"Ambient"
+
+[node name="LightingAndAtmosphere" type="Node3D" parent="."]
+
+[node name="ReflectionProbe" type="ReflectionProbe" parent="LightingAndAtmosphere"]
+size = Vector3(30, 30, 30)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="LightingAndAtmosphere"]
+transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, 0, 0, 0)
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="LightingAndAtmosphere"]
+environment = SubResource("Environment_fwcc3")

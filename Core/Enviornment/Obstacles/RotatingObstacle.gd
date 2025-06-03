@@ -26,7 +26,7 @@ var client_sync_next_frame_server_net_tick: int = 0
 
 var sync_rate_ms: float = 0.0
 func _ready() -> void:
-	rotating_node.orthonormalize()
+	#rotating_node.orthonormalize()
 	if sync_rate_override:
 		sync_rate_ms = sync_rate_override_rate
 	else:

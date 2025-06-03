@@ -1,6 +1,6 @@
 [gd_scene load_steps=19 format=3 uid="uid://dv6tp86y16fl7"]
 
-[ext_resource type="Script" uid="uid://dn6kg8wabdokh" path="res://Maps/RaceLevels/Race1.gd" id="1_d5g3f"]
+[ext_resource type="Script" uid="uid://dn6kg8wabdokh" path="res://Maps/RaceLevels/Race1/Race1.gd" id="1_d5g3f"]
 [ext_resource type="PackedScene" uid="uid://dq3k1gmfnaxit" path="res://Core/Gameplay/SpawnPoint.tscn" id="2_djv4s"]
 [ext_resource type="PackedScene" uid="uid://b8lytvha5krpa" path="res://Core/Gameplay/LevelTeleporter.tscn" id="3_p34ok"]
 
@@ -63,11 +63,11 @@ data = PackedVector3Array(-0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0
 [sub_resource type="BoxShape3D" id="BoxShape3D_8gnua"]
 size = Vector3(20, 5, 5)
 
-[node name="Race1" type="Node3D" node_paths=PackedStringArray("player_spawn_points", "default_level_camera")]
+[node name="SwingingRace" type="Node3D" node_paths=PackedStringArray("player_spawn_points", "default_level_camera")]
 script = ExtResource("1_d5g3f")
+end_race_return_scene_path = "res://Maps/HUBLevel/HUBLevel.tscn"
 player_spawn_points = NodePath("SpawnPoints")
 default_level_camera = NodePath("DefaultLevelCamera")
-end_race_return_scene_path = "res://Maps/HUBLevel/HUBLevel.tscn"
 
 [node name="SpawnPoints" type="Node3D" parent="."]
 

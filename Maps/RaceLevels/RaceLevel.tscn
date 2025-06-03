@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://vf46ylwsuasq"]
+
+[ext_resource type="Script" uid="uid://b20pit1whey5b" path="res://Maps/RaceLevels/RaceLevel.gd" id="1_vnb3i"]
+
+[node name="RaceLevel" type="Node3D"]
+script = ExtResource("1_vnb3i")
+metadata/_custom_type_script = "uid://debel35y0yyc5"

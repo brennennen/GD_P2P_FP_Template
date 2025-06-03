@@ -1,0 +1,356 @@
+[gd_scene load_steps=19 format=3 uid="uid://blkn6jjy8jkor"]
+
+[ext_resource type="PackedScene" uid="uid://dq3k1gmfnaxit" path="res://Core/Gameplay/SpawnPoint.tscn" id="1_7nah0"]
+[ext_resource type="Script" uid="uid://dn6kg8wabdokh" path="res://Maps/RaceLevels/Race1/Race1.gd" id="1_8gnua"]
+[ext_resource type="PackedScene" uid="uid://coq36aex43shh" path="res://Assets/Environment/GameShow/Platforms/Platform_20m/Platform20m.tscn" id="3_a6jnn"]
+[ext_resource type="PackedScene" uid="uid://b4pwmguc4biwk" path="res://Assets/Environment/GameShow/Misc/GrapplePoint.tscn" id="3_qdw5l"]
+[ext_resource type="PackedScene" uid="uid://cp7xhlkwk8opm" path="res://Core/Gameplay/KillBox.tscn" id="4_3cn84"]
+[ext_resource type="PackedScene" uid="uid://cmu6iryj00p8w" path="res://Assets/Environment/GameShow/Platforms/Ring.tscn" id="5_x2hfb"]
+[ext_resource type="PackedScene" uid="uid://b3rouqtkedts3" path="res://Assets/Environment/GameShow/Platforms/Platform_10mx5mx1m/Platform_10mx5mx1m.tscn" id="7_64o0t"]
+[ext_resource type="PackedScene" uid="uid://1r7yvg7sliri" path="res://Assets/Environment/GameShow/Fences/Fence_5mx1mx25cm/Fence_5mx1mx25cm.tscn" id="7_odopd"]
+[ext_resource type="PackedScene" uid="uid://ixgka5mgscj0" path="res://Assets/Environment/GameShow/Obstacles/SpinningRing_20m/SpinningRing_20m.tscn" id="7_t21qs"]
+[ext_resource type="AudioStream" uid="uid://bunogafs7h0eb" path="res://Assets/Audio/Misc/GuitarNotes/a_sharp_harmonic.mp3" id="8_v8yre"]
+[ext_resource type="AudioStream" uid="uid://bc4cmw0iheacm" path="res://Assets/Audio/Misc/GuitarNotes/low_e_palm_mute.mp3" id="9_r7emc"]
+[ext_resource type="PackedScene" uid="uid://cv83dnadeebxi" path="res://Assets/Environment/GameShow/Obstacles/SpinningWall20m/SpinningWall20m.tscn" id="10_okrwc"]
+[ext_resource type="PackedScene" uid="uid://cmgflv7dtt0fx" path="res://Assets/Environment/GameShow/Displays/CountDownBox/CountDownBox.tscn" id="12_64o0t"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_x2hfb"]
+sky_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
+ground_bottom_color = Color(0.662745, 0.670588, 0.686275, 1)
+ground_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
+
+[sub_resource type="Sky" id="Sky_jr1iq"]
+sky_material = SubResource("ProceduralSkyMaterial_x2hfb")
+
+[sub_resource type="Environment" id="Environment_3fyvb"]
+background_mode = 2
+sky = SubResource("Sky_jr1iq")
+tonemap_mode = 2
+glow_enabled = true
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_8gnua"]
+size = Vector3(20, 5, 5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_x2hfb"]
+size = Vector3(2500, 50, 2500)
+
+[node name="Race1" type="Node3D" node_paths=PackedStringArray("start_beep_audio", "pre_start_beep_audio", "finish_line_crossed_audio", "player_spawn_points", "default_level_camera")]
+script = ExtResource("1_8gnua")
+end_race_return_scene_path = "res://Maps/HUBLevel/HUBLevel.tscn"
+start_beep_audio = NodePath("World/StartSection/StartBeepAudio")
+pre_start_beep_audio = NodePath("World/StartSection/PreStartBeepAudio")
+finish_line_crossed_audio = NodePath("World/EndSection/FinishLineCrossedAudio")
+game_mode_type = 2
+player_spawn_points = NodePath("SpawnPoints")
+default_level_camera = NodePath("DefaultLevelCamera")
+
+[node name="SpawnPoints" type="Node3D" parent="."]
+
+[node name="SpawnPoint2" parent="SpawnPoints" instance=ExtResource("1_7nah0")]
+transform = Transform3D(1, 0, 1.06581e-14, 0, 1, 0, -1.06581e-14, 0, 1, 3, 0, 0)
+
+[node name="SpawnPoint5" parent="SpawnPoints" instance=ExtResource("1_7nah0")]
+transform = Transform3D(1, 0, 1.06581e-14, 0, 1, 0, -1.06581e-14, 0, 1, 5, 0, 0)
+
+[node name="SpawnPoint7" parent="SpawnPoints" instance=ExtResource("1_7nah0")]
+transform = Transform3D(1, 0, 1.06581e-14, 0, 1, 0, -1.06581e-14, 0, 1, 7, 0, 0)
+
+[node name="SpawnPoint" parent="SpawnPoints" instance=ExtResource("1_7nah0")]
+transform = Transform3D(1, 0, -1.06581e-14, 0, 1, 0, 1.06581e-14, 0, 1, -3, 0, 0)
+
+[node name="SpawnPoint6" parent="SpawnPoints" instance=ExtResource("1_7nah0")]
+transform = Transform3D(1, 0, -1.06581e-14, 0, 1, 0, 1.06581e-14, 0, 1, -5, 0, 0)
+
+[node name="SpawnPoint8" parent="SpawnPoints" instance=ExtResource("1_7nah0")]
+transform = Transform3D(1, 0, -1.06581e-14, 0, 1, 0, 1.06581e-14, 0, 1, -7, 0, 0)
+
+[node name="SpawnPoint3" parent="SpawnPoints" instance=ExtResource("1_7nah0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0)
+
+[node name="SpawnPoint4" parent="SpawnPoints" instance=ExtResource("1_7nah0")]
+transform = Transform3D(1, 0, 1.74846e-07, 0, 1, 0, -1.74846e-07, 0, 1, -1, 0, 0)
+
+[node name="DefaultLevelCamera" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+
+[node name="LightingAndAtmosphere" type="Node3D" parent="."]
+
+[node name="ReflectionProbe" type="ReflectionProbe" parent="LightingAndAtmosphere"]
+size = Vector3(30, 30, 30)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="LightingAndAtmosphere"]
+transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, 0, 0, 0)
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="LightingAndAtmosphere"]
+environment = SubResource("Environment_3fyvb")
+
+[node name="World" type="Node3D" parent="."]
+
+[node name="StartSection" type="Node3D" parent="World"]
+
+[node name="StartPlatform20m" parent="World/StartSection" instance=ExtResource("3_a6jnn")]
+transform = Transform3D(1.31134e-07, 0, 1, 0, 1, 0, -1, 0, 1.31134e-07, 0, 0, 0)
+
+[node name="StartBeepAudio" type="AudioStreamPlayer3D" parent="World/StartSection"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.7, -10)
+stream = ExtResource("8_v8yre")
+bus = &"Ambient"
+
+[node name="PreStartBeepAudio" type="AudioStreamPlayer3D" parent="World/StartSection"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.7, -10)
+stream = ExtResource("9_r7emc")
+volume_db = -8.0
+bus = &"Ambient"
+
+[node name="CountDownBox" parent="World/StartSection" instance=ExtResource("12_64o0t")]
+transform = Transform3D(-1, 0, 8.74228e-08, 0, 1, 0, -8.74228e-08, 0, -1, 0, 5.1, -10)
+
+[node name="Label3D" type="Label3D" parent="World/StartSection"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.9, -10)
+text = "Race1
+(First player to the finish line wins!)"
+font_size = 128
+
+[node name="StartTimerLabel3D" type="Label3D" parent="World/StartSection"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.1, -10)
+text = "10"
+font_size = 128
+
+[node name="Fence5Mx1Mx25Cm" parent="World/StartSection" instance=ExtResource("7_odopd")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 9.5, 0, 0)
+
+[node name="Fence5Mx1Mx25Cm2" parent="World/StartSection" instance=ExtResource("7_odopd")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 9.5, 0, -6)
+
+[node name="Fence5Mx1Mx25Cm3" parent="World/StartSection" instance=ExtResource("7_odopd")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 9.5, 0, 6)
+
+[node name="Fence5Mx1Mx25Cm4" parent="World/StartSection" instance=ExtResource("7_odopd")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -9.5, 0, 0)
+
+[node name="Fence5Mx1Mx25Cm5" parent="World/StartSection" instance=ExtResource("7_odopd")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -9.5, 0, -6)
+
+[node name="Fence5Mx1Mx25Cm6" parent="World/StartSection" instance=ExtResource("7_odopd")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -9.5, 0, 6)
+
+[node name="Fence5Mx1Mx25Cm7" parent="World/StartSection" instance=ExtResource("7_odopd")]
+transform = Transform3D(1, 0, -5.96046e-08, 0, 1, 0, 5.96046e-08, 0, 1, 0, 0, 9.5)
+
+[node name="Fence5Mx1Mx25Cm8" parent="World/StartSection" instance=ExtResource("7_odopd")]
+transform = Transform3D(1, 0, -5.96046e-08, 0, 1, 0, 5.96046e-08, 0, 1, -6, 0, 9.5)
+
+[node name="Fence5Mx1Mx25Cm9" parent="World/StartSection" instance=ExtResource("7_odopd")]
+transform = Transform3D(1, 0, -5.96046e-08, 0, 1, 0, 5.96046e-08, 0, 1, 6, 0, 9.5)
+
+[node name="Section1" type="Node3D" parent="World"]
+
+[node name="Ring2" parent="World/Section1" instance=ExtResource("5_x2hfb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.96759, 4.76837e-07, -15.9838)
+rotation_per_frame = Vector3(0, -0.2, 0)
+
+[node name="Ring3" parent="World/Section1" instance=ExtResource("5_x2hfb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, -16)
+rotation_per_frame = Vector3(0, 0.2, 0)
+
+[node name="Ring" parent="World/Section1" instance=ExtResource("5_x2hfb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -25)
+rotation_per_frame = Vector3(0, 0.3, 0)
+
+[node name="GrapplePoint" parent="World/Section1" instance=ExtResource("3_qdw5l")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 8, -28)
+
+[node name="GrapplePoint2" parent="World/Section1" instance=ExtResource("3_qdw5l")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 8, -28)
+
+[node name="SpinningWall20m2" parent="World/Section1" instance=ExtResource("10_okrwc")]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 0, 0, -45.5)
+
+[node name="StartPlatform20m3" parent="World/Section1" instance=ExtResource("3_a6jnn")]
+transform = Transform3D(1.31134e-07, 0, 1, 0, 1, 0, -1, 0, 1.31134e-07, 0, -17, -35)
+
+[node name="StartPlatform20m4" parent="World/Section1" instance=ExtResource("3_a6jnn")]
+transform = Transform3D(1.31134e-07, 0, 1, 0, 1, 0, -1, 0, 1.31134e-07, 0, -17, -15)
+
+[node name="StartPlatform20m6" parent="World/Section1" instance=ExtResource("3_a6jnn")]
+transform = Transform3D(1.13565e-07, -0.5, 0.866025, 6.5567e-08, 0.866025, 0.5, -1, 0, 1.31134e-07, 18, -12, -15)
+
+[node name="StartPlatform20m7" parent="World/Section1" instance=ExtResource("3_a6jnn")]
+transform = Transform3D(1.13565e-07, -0.5, 0.866025, 6.5567e-08, 0.866025, 0.5, -1, 0, 1.31134e-07, 18, -12, 5)
+
+[node name="StartPlatform20m8" parent="World/Section1" instance=ExtResource("3_a6jnn")]
+transform = Transform3D(1.13565e-07, -0.5, 0.866025, 6.5567e-08, 0.866025, 0.5, -1, 0, 1.31134e-07, 18, -12, -35)
+
+[node name="StartPlatform20m9" parent="World/Section1" instance=ExtResource("3_a6jnn")]
+transform = Transform3D(1.13565e-07, 0.5, 0.866025, -6.5567e-08, 0.866025, -0.5, -1, -4.23516e-22, 1.31134e-07, -18, -12, -35)
+
+[node name="StartPlatform20m10" parent="World/Section1" instance=ExtResource("3_a6jnn")]
+transform = Transform3D(1.13565e-07, 0.5, 0.866025, -6.5567e-08, 0.866025, -0.5, -1, -4.23516e-22, 1.31134e-07, -18, -12, -15)
+
+[node name="StartPlatform20m11" parent="World/Section1" instance=ExtResource("3_a6jnn")]
+transform = Transform3D(1.13565e-07, 0.5, 0.866025, -6.5567e-08, 0.866025, -0.5, -1, -4.23516e-22, 1.31134e-07, -18, -12, 5)
+
+[node name="StartPlatform20m5" parent="World/Section1" instance=ExtResource("3_a6jnn")]
+transform = Transform3D(1.31134e-07, 0, 1, 0, 1, 0, -1, 0, 1.31134e-07, 0, -17, 5)
+
+[node name="Platform_10mx5mx1m" parent="World/Section1" instance=ExtResource("7_64o0t")]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 0, -2, -35.5)
+
+[node name="Platform_10mx5mx1m3" parent="World/Section1" instance=ExtResource("7_64o0t")]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -5, -2, -37.5)
+
+[node name="Platform_10mx5mx1m5" parent="World/Section1" instance=ExtResource("7_64o0t")]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -10, -2, -39.5)
+
+[node name="Platform_10mx5mx1m6" parent="World/Section1" instance=ExtResource("7_64o0t")]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -15, -2, -39.5)
+
+[node name="Platform_10mx5mx1m2" parent="World/Section1" instance=ExtResource("7_64o0t")]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 5, -2, -37.5)
+
+[node name="Platform_10mx5mx1m4" parent="World/Section1" instance=ExtResource("7_64o0t")]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 10, -2, -39.5)
+
+[node name="Platform_10mx5mx1m7" parent="World/Section1" instance=ExtResource("7_64o0t")]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 15, -2, -39.5)
+
+[node name="Fence5Mx1Mx25Cm10" parent="World/Section1" instance=ExtResource("7_odopd")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 17, -2, -41.5)
+
+[node name="Fence5Mx1Mx25Cm12" parent="World/Section1" instance=ExtResource("7_odopd")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, -2, -42.1)
+
+[node name="Fence5Mx1Mx25Cm13" parent="World/Section1" instance=ExtResource("7_odopd")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, -2, -42.1)
+
+[node name="Fence5Mx1Mx25Cm14" parent="World/Section1" instance=ExtResource("7_odopd")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2, -40.1)
+
+[node name="Fence5Mx1Mx25Cm11" parent="World/Section1" instance=ExtResource("7_odopd")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -17, -2, -41.5)
+
+[node name="Section2" type="Node3D" parent="World"]
+
+[node name="Platform_10mx5mx1m10" parent="World/Section2" instance=ExtResource("7_64o0t")]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -10, -2, -51.5)
+
+[node name="Platform_10mx5mx1m11" parent="World/Section2" instance=ExtResource("7_64o0t")]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -15, -2, -51.5)
+
+[node name="Platform_10mx5mx1m12" parent="World/Section2" instance=ExtResource("7_64o0t")]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 2.5, 8, -51.5)
+
+[node name="Platform_10mx5mx1m13" parent="World/Section2" instance=ExtResource("7_64o0t")]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -2.5, 8, -51.5)
+
+[node name="Platform_10mx5mx1m8" parent="World/Section2" instance=ExtResource("7_64o0t")]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 10, -2, -51.5)
+
+[node name="Platform_10mx5mx1m9" parent="World/Section2" instance=ExtResource("7_64o0t")]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 15, -2, -51.5)
+
+[node name="Platform_10mx5mx1m" parent="World/Section2" instance=ExtResource("7_64o0t")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 0, 7, -61.5)
+
+[node name="StartPlatform20m12" parent="World/Section2" instance=ExtResource("3_a6jnn")]
+transform = Transform3D(1.31134e-07, 0, 1, 0, 1, 0, -1, 0, 1.31134e-07, 0, -17, -96)
+
+[node name="StartPlatform20m13" parent="World/Section2" instance=ExtResource("3_a6jnn")]
+transform = Transform3D(1.31134e-07, 0, 1, 0, 1, 0, -1, 0, 1.31134e-07, 0, -17, -76)
+
+[node name="StartPlatform20m14" parent="World/Section2" instance=ExtResource("3_a6jnn")]
+transform = Transform3D(1.13565e-07, -0.5, 0.866025, 6.5567e-08, 0.866025, 0.5, -1, 0, 1.31134e-07, 18, -12, -76)
+
+[node name="StartPlatform20m15" parent="World/Section2" instance=ExtResource("3_a6jnn")]
+transform = Transform3D(1.13565e-07, -0.5, 0.866025, 6.5567e-08, 0.866025, 0.5, -1, 0, 1.31134e-07, 18, -12, -56)
+
+[node name="StartPlatform20m16" parent="World/Section2" instance=ExtResource("3_a6jnn")]
+transform = Transform3D(1.13565e-07, -0.5, 0.866025, 6.5567e-08, 0.866025, 0.5, -1, 0, 1.31134e-07, 18, -12, -96)
+
+[node name="StartPlatform20m17" parent="World/Section2" instance=ExtResource("3_a6jnn")]
+transform = Transform3D(1.13565e-07, 0.5, 0.866025, -6.5567e-08, 0.866025, -0.5, -1, -4.23516e-22, 1.31134e-07, -18, -12, -96)
+
+[node name="StartPlatform20m18" parent="World/Section2" instance=ExtResource("3_a6jnn")]
+transform = Transform3D(1.13565e-07, 0.5, 0.866025, -6.5567e-08, 0.866025, -0.5, -1, -4.23516e-22, 1.31134e-07, -18, -12, -76)
+
+[node name="StartPlatform20m19" parent="World/Section2" instance=ExtResource("3_a6jnn")]
+transform = Transform3D(1.13565e-07, 0.5, 0.866025, -6.5567e-08, 0.866025, -0.5, -1, -4.23516e-22, 1.31134e-07, -18, -12, -56)
+
+[node name="StartPlatform20m20" parent="World/Section2" instance=ExtResource("3_a6jnn")]
+transform = Transform3D(1.31134e-07, 0, 1, 0, 1, 0, -1, 0, 1.31134e-07, 0, -17, -56)
+
+[node name="SpinningRing20m" parent="World/Section2" instance=ExtResource("7_t21qs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, -4, -64)
+
+[node name="SpinningRing20m2" parent="World/Section2" instance=ExtResource("7_t21qs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, -4, -64)
+
+[node name="SpinningRing20m3" parent="World/Section2" instance=ExtResource("7_t21qs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -6, -78)
+
+[node name="Fence5Mx1Mx25Cm12" parent="World/Section2" instance=ExtResource("7_odopd")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 17, -2, -49.5)
+
+[node name="Fence5Mx1Mx25Cm13" parent="World/Section2" instance=ExtResource("7_odopd")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -17, -2, -49.5)
+
+[node name="Fence5Mx1Mx25Cm14" parent="World/Section2" instance=ExtResource("7_odopd")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -8, -2, -49.5)
+
+[node name="Fence5Mx1Mx25Cm15" parent="World/Section2" instance=ExtResource("7_odopd")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 8, -2, -49.5)
+
+[node name="Fence5Mx1Mx25Cm16" parent="World/Section2" instance=ExtResource("7_odopd")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 4.5, 8, -49.5)
+
+[node name="Fence5Mx1Mx25Cm17" parent="World/Section2" instance=ExtResource("7_odopd")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -4.5, 8, -49.5)
+
+[node name="EndSection" type="Node3D" parent="World"]
+
+[node name="Platform20m" parent="World/EndSection" instance=ExtResource("3_a6jnn")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 0, -6, -99)
+
+[node name="FinishArea3D" type="Area3D" parent="World/EndSection"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -4, -91.4)
+
+[node name="Label3D2" type="Label3D" parent="World/EndSection/FinishArea3D"]
+text = "Finish Line"
+font_size = 128
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="World/EndSection/FinishArea3D"]
+shape = SubResource("BoxShape3D_8gnua")
+
+[node name="FinishLineCrossedAudio" type="AudioStreamPlayer3D" parent="World/EndSection"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -6, -89)
+stream = ExtResource("8_v8yre")
+
+[node name="WinnerLabel3D" type="Label3D" parent="World/EndSection"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -5, -99)
+text = "Winner: ?"
+font_size = 128
+
+[node name="GameStartTimer" type="Timer" parent="."]
+process_callback = 0
+wait_time = 10.0
+one_shot = true
+
+[node name="GamePreStartTimer" type="Timer" parent="."]
+process_callback = 0
+wait_time = 30.0
+one_shot = true
+
+[node name="FirstCrossEndTimer" type="Timer" parent="."]
+process_callback = 0
+wait_time = 30.0
+one_shot = true
+
+[node name="KillBox" parent="." instance=ExtResource("4_3cn84")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -50, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="KillBox"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -50, 0)
+shape = SubResource("BoxShape3D_x2hfb")
+
+[connection signal="body_entered" from="World/EndSection/FinishArea3D" to="." method="_on_finish_area_3d_body_entered"]

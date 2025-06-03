@@ -1,21 +1,18 @@
 extends Level
 
-@export var player_spawn_points: Node3D
-@export var default_level_camera: Camera3D
 @export var end_race_return_scene_path: String
 
-@onready var start_timer_label_3d = $StartTimerLabel3D
+# # Audio
+@export var start_beep_audio: AudioStreamPlayer3D
+@export var pre_start_beep_audio: AudioStreamPlayer3D
+@export var finish_line_crossed_audio: AudioStreamPlayer3D
+
+# # Misc
+@onready var start_timer_label_3d = $World/StartSection/StartTimerLabel3D
 @onready var pre_start_timer = $GamePreStartTimer
 @onready var start_timer = $GameStartTimer
 @onready var first_cross_end_timer = $FirstCrossEndTimer
-
-@onready var winner_label3d = $WinnerLabel3D
-
-@onready var start_beep_audio: AudioStreamPlayer3D = $Audio/StartBeepAudio
-@onready var pre_start_beep_audio: AudioStreamPlayer3D = $Audio/PreStartBeepAudio
-@onready var finish_line_crossed_audio: AudioStreamPlayer3D = $Audio/FinishLineCrossedAudio
-
-
+@onready var winner_label3d = $World/EndSection/WinnerLabel3D
 
 var pre_start_timer_time: float = 5.0
 var start_timer_time: float = 10.0
