@@ -3,7 +3,7 @@
 [ext_resource type="PackedScene" uid="uid://dq3k1gmfnaxit" path="res://Core/Gameplay/SpawnPoint.tscn" id="1_nr2y3"]
 [ext_resource type="Script" uid="uid://cy8awcvjolqo" path="res://Maps/LastManLevels/LastMan1.gd" id="1_xbxkw"]
 [ext_resource type="PackedScene" uid="uid://b8lytvha5krpa" path="res://Core/Gameplay/LevelTeleporter.tscn" id="2_xbxkw"]
-[ext_resource type="PackedScene" uid="uid://cmu6iryj00p8w" path="res://Assets/Environment/GameShow/Platforms/Ring.tscn" id="3_butgl"]
+[ext_resource type="PackedScene" uid="uid://cmu6iryj00p8w" path="res://Assets/Environment/GameShow/Obstacles/SpinningRing_10m/SpinningRing_10m.tscn" id="3_butgl"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_s06he"]
 size = Vector3(1000, 10, 1000)
@@ -55,6 +55,7 @@ data = PackedVector3Array(-1.5, 0.25, 1.5, 1.5, 0.25, 1.5, -1.5, -0.25, 1.5, 1.5
 
 [node name="LastMan1" type="Node3D" node_paths=PackedStringArray("player_spawn_points", "default_level_camera")]
 script = ExtResource("1_xbxkw")
+game_mode_type = 3
 player_spawn_points = NodePath("SpawnPoints")
 default_level_camera = NodePath("DefaultLevelCamera")
 

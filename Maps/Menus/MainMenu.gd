@@ -49,7 +49,7 @@ func _on_error_panel_close_button_pressed() -> void:
 
 func _on_error_panel_gui_input(event: InputEvent) -> void:
 	if (event is InputEventMouseButton) and (event.button_index == MOUSE_BUTTON_LEFT):
-		Logger.info("error panel _on_error_panel_gui_input: %s" % [event.as_text()])
+		#Log.info("error panel _on_error_panel_gui_input: %s" % [event.as_text()])
 		GameInstance.menu_error_message = ""
 		error_panel.hide()
 

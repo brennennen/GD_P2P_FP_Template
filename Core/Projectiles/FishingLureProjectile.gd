@@ -31,13 +31,13 @@ func _on_player_collision_area_3d_body_entered(body: Node3D) -> void:
 	if GameInstance.networking.is_server():
 		if body is Player and body != owning_player:
 			var player_hit = body as Player
-			Logger.info("player: %s (%v) fishing lure hit player: %s (%v)" % [owning_player.name, owning_player.global_position, player_hit.name, player_hit.global_position])
+			Log.info("player: %s (%v) fishing lure hit player: %s (%v)" % [owning_player.name, owning_player.global_position, player_hit.name, player_hit.global_position])
 			player_hit.receive_fishing_lure_yoink.rpc(owning_player.global_position)
 			cleanup.rpc()
 
 @rpc("any_peer", "call_local", "reliable")
 func cleanup():
-	#Logger.info("FishingLureProjectile.cleanup")
+	#Log.info("FishingLureProjectile.cleanup")
 	# TODO: will this cause node not found desync issues? should multiplayer polling be disabled/turned off and then deleted after some delay? maybe just teleport to narnia for some time before deleting?
 	# TODO: or just pool 2 of these per player and swap between them, disabling/hiding the unused one?
 	queue_free()

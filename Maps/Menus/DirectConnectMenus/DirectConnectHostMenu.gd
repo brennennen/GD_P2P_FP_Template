@@ -21,14 +21,14 @@ func fade_in():
 
 func _on_host_button_pressed():
 	button_pressed_audio.play()
-	Logger.debug("_on_host_button_pressed")
+	#Log.debug("_on_host_button_pressed")
 	GameInstance.networking.set_multiplayer_mode(Networking.MultiplayerMode.DIRECT_CONNECT)
 	GameInstance.networking.direct_connect_lobby.port = int(port_line_edit.text)
 	var host_game_result = GameInstance.networking.host_game()
 	if host_game_result == Error.OK:
 		#GameInstance.load_and_change_scene("res://Maps/HUBLevel/HUBLevel.tscn")
 		fade_out_and_change_scene("res://Maps/HUBLevel/HUBLevel.tscn", 0.5)
-		
+
 
 func _on_back_button_pressed():
 	button_pressed_audio.play()

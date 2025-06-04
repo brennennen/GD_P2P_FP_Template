@@ -45,7 +45,7 @@ func set_debug_label_3d():
 
 ## The locally controlled player (controlled by the local game instance) is ready
 func authoritative_player_ready():
-	Logger.info("%s:authoritative_player_ready" % [player.name])
+	Log.info("%s:authoritative_player_ready" % [player.name])
 	player.camera.current = true
 	player.third_person.visible = false
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -55,12 +55,12 @@ func authoritative_player_ready():
 
 ## A peer player (not controlled by the local game instance) is ready
 func peer_player_ready():
-	Logger.info("%s:peer_player_ready" % [player.name])
+	Log.info("%s:peer_player_ready" % [player.name])
 	player.camera.current = false
 	player.first_person.visible = false
 	player.third_person.visible = true
 	player.hud.hide()
-	Logger.info("spawned %s's peer, sending rpc to start syncing" % [player.name])
+	Log.info("spawned %s's peer, sending rpc to start syncing" % [player.name])
 	player.notify_peer_their_player_is_spawned.rpc_id(str(player.name).to_int(), player.multiplayer.get_unique_id())
 
 const INPUTS1_FORWARD_MASK: int = 1 	# 1 << 0
@@ -90,7 +90,7 @@ func build_inputs1() -> int:
 		inputs1 += INPUTS1_LEAN_RIGHT_MASK
 	if player.is_leaning_left:
 		inputs1 += INPUTS1_LEAN_LEFT_MASK
-	#Logger.info("%f,%f - %d" % [last_input_dir.x, last_input_dir.y, inputs1])
+	#Log.info("%f,%f - %d" % [last_input_dir.x, last_input_dir.y, inputs1])
 	return inputs1
 
 const MOVEMENT_STATES_ON_GROUND_MASK: int = 1 	# 1 << 0
@@ -145,7 +145,7 @@ func remote_pawn_physics_process(_delta):
 	if !sprint:
 		ground_locomotion_blend_position = ground_locomotion_blend_position * 0.5
 
-	#Logger.debug("f: %s, b: %s, r: %s, l: %s " % [str(forward), str(back), str(right), str(left)])
+	#Log.debug("f: %s, b: %s, r: %s, l: %s " % [str(forward), str(back), str(right), str(left)])
 
 	#third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/on_ground", is_on_floor())
 	#if (!is_on_ground and player.third_person_animation_tree.get("parameters/LocomotionStateMachine/conditions/jump")):
@@ -153,7 +153,7 @@ func remote_pawn_physics_process(_delta):
 	if player.movement_controller.movement_mode == PlayerMovementController.MovementMode.HORSE_RIDING:
 		if player.horse_mount:
 
-			#Logger.info("y: %f" % [ground_locomotion_blend_position.y])
+			#Log.info("y: %f" % [ground_locomotion_blend_position.y])
 
 			#player.third_person_animation_tree.set("parameters/LocomotionStateMachine/WalkBlendSpace2D/blend_position", player.velocity.length())
 			if back:
@@ -165,7 +165,6 @@ func remote_pawn_physics_process(_delta):
 		player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/walk", is_on_ground and !input_crouch)
 		player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/on_ground", is_on_ground)
 		player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/crouch", input_crouch)
-
 		player.third_person_animation_tree.set("parameters/LocomotionStateMachine/WalkBlendSpace2D/blend_position", ground_locomotion_blend_position)
 		player.third_person_animation_tree.set("parameters/LocomotionStateMachine/CrouchBlendSpace2D/blend_position", ground_locomotion_blend_position)
 	# TODO: how to set falling blend position?
@@ -200,7 +199,7 @@ func client_send_move_data():
 	GameInstance.networking.client_networking.client_send_player_movement(name.to_int(),
 		player.global_position, player.global_rotation_degrees.y, player.camera.global_rotation_degrees.x,
 		inputs1, movement_states_bitmap)
-	#Logger.info("global_position: %v" % [ global_position ])
+	#Log.info("global_position: %v" % [ global_position ])
 	last_sent_location = global_position
 	last_sent_rotation_degrees_y = global_rotation_degrees.y
 	last_sent_velocity = player.velocity
@@ -232,7 +231,7 @@ func server_handle_client_pawn_movement(_peer_id: int, new_position: Vector3, ro
 		#elif collision.get_angle() < 1.0 and collision.get_depth() < 0.01:
 			#continuous_floor_collisions += 1
 			#if continuous_floor_collisions >= 100:
-				#Logger.info("server_handle_client_pawn_movement: 100+ floor collisions! pushing client up 10cm from last valid position.")
+				#Log.info("server_handle_client_pawn_movement: 100+ floor collisions! pushing client up 10cm from last valid position.")
 				#server_handle_client_pawn_movement_reconciliation(peer_id, server_last_valid_on_ground_target_position + Vector3(0.0, 0.1, 0.0))
 			#return
 		## if just low depth, assume it's clipping a corner on some geometry
@@ -240,13 +239,13 @@ func server_handle_client_pawn_movement(_peer_id: int, new_position: Vector3, ro
 		#elif collision.get_depth() < 0.01 and distance < 0.1:
 			#continuous_corner_collisions += 1
 			#if continuous_corner_collisions >= 100:
-				#Logger.info("server_handle_client_pawn_movement: 100+ corner collisions? TODO: not sure.")
+				#Log.info("server_handle_client_pawn_movement: 100+ corner collisions? TODO: not sure.")
 			#return
 		#else:
-			#Logger.info("server detected player %s collided: %s, dist: %f, depth: %f, angle: %f" % [ player.name, collision.get_collider(), distance, collision.get_depth(), collision.get_angle() ])
-			##Logger.info("Server detected collision for player: %s, dist: %f" % [player.name, distance])
+			#Log.info("server detected player %s collided: %s, dist: %f, depth: %f, angle: %f" % [ player.name, collision.get_collider(), distance, collision.get_depth(), collision.get_angle() ])
+			##Log.info("Server detected collision for player: %s, dist: %f" % [player.name, distance])
 			#if distance > 0.25:
-				#Logger.info("Server detected collision for player and distance out of tolerance: %s, dist: %f, pos: %v" % [player.name, distance, player.global_position])
+				#Log.info("Server detected collision for player and distance out of tolerance: %s, dist: %f, pos: %v" % [player.name, distance, player.global_position])
 				## TODO: rate limit?
 				## send message to move player back to last valid target position if they are out of tolerance (reconciliation)
 				##server_send_client_player_movement_reconciliation(from_peer_id, player.server_last_valid_target_position)
@@ -262,7 +261,7 @@ func server_handle_client_pawn_movement(_peer_id: int, new_position: Vector3, ro
 	# try and use server_last_valid_target_position first, then fall back to on_ground version if it fails?
 	server_last_valid_target_position = network_target_position # TODO: only set this when the player is on the ground
 	if (movement_status_bitmap & MOVEMENT_STATES_ON_GROUND_MASK) == 1:
-		#Logger.info("player: %s last on ground, updating server_last_valid_on_ground_target_position: %v" % [ str(from_peer_id), network_target_position ])
+		#Log.info("player: %s last on ground, updating server_last_valid_on_ground_target_position: %v" % [ str(from_peer_id), network_target_position ])
 		server_last_valid_on_ground_target_position = network_target_position
 	network_target_position = new_position
 	network_target_rotation_degrees_y = rot_y_degrees

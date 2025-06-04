@@ -156,9 +156,9 @@ func initialize_networking_signals():
 			scene_multiplayer = multiplayer as SceneMultiplayer
 			scene_multiplayer.peer_packet.connect(process_peer_packet)
 		elif MultiplayerAPI.get_default_interface() == "LevelMultiplayer":
-			Logger.error("TODO: LevelMultiplayer")
+			Log.error("TODO: LevelMultiplayer")
 		else:
-			Logger.error("UNSUPPORTED HIGH LEVEL MULTIPLAYER API!")
+			Log.error("UNSUPPORTED HIGH LEVEL MULTIPLAYER API!")
 
 func _process(delta):
 	multiplayer_poll(delta)
@@ -195,7 +195,7 @@ func host_game() -> Error:
 	new_peer.peer_id = 1
 	peers[1] = new_peer
 	#player_pawn_data[1] = GameInstance.my_pawn_data
-	Logger.info("host_game, peer_list: %s" % [JSON.stringify(multiplayer.get_peers())])
+	Log.info("host_game, peer_list: %s" % [JSON.stringify(multiplayer.get_peers())])
 	_is_server = true
 	if multiplayer_mode == MultiplayerMode.DIRECT_CONNECT:
 		return direct_connect_lobby.host_game()
@@ -206,7 +206,7 @@ func host_game() -> Error:
 	elif multiplayer_mode == MultiplayerMode.SINGLE_PLAYER:
 		pass # Don't do anything
 	else:
-		Logger.info("TODO: implement host game for other multiplayer game modes.")
+		Log.info("TODO: implement host game for other multiplayer game modes.")
 		return Error.FAILED
 	return Error.OK
 
@@ -225,7 +225,7 @@ func set_multiplayer_mode(mode: MultiplayerMode):
 	multiplayer_mode = mode
 
 func on_peer_connected(peer_id):
-	Logger.debug("peer_connected: %d" % [ peer_id ])
+	Log.debug("peer_connected: %d" % [ peer_id ])
 	if GameInstance.networking.is_server():
 		server_networking.on_peer_connected(peer_id)
 	else:
@@ -239,7 +239,7 @@ func on_peer_disconnected(peer_id):
 
 func process_peer_packet(from_peer_id: int, packet: PackedByteArray):
 	if packet.size() == 0:
-		Logger.error("got empty peer packet from peer_id: %d" % from_peer_id)
+		Log.error("got empty peer packet from peer_id: %d" % from_peer_id)
 		return
 	if GameInstance.networking.is_server():
 		server_networking.server_process_peer_packet(from_peer_id, packet)
@@ -257,7 +257,7 @@ func send_bytes(bytes: PackedByteArray, id: int = 0, mode: MultiplayerPeer.Trans
 ## a relative time.
 func send_ping(peer_id: int):
 	var ping_send_ticks_ms = Time.get_ticks_msec()
-	Logger.debug("sending: %s, to: %d, initial_ping_send_time: %d" % [
+	Log.debug("sending: %s, to: %d, initial_ping_send_time: %d" % [
 		Networking.NetworkMessageId.keys()[NetworkMessageId.PING], peer_id, ping_send_ticks_ms
 	])
 	var packet_bytes: PackedByteArray = [
@@ -272,7 +272,7 @@ func on_receive_ping(from_peer_id: int, packet: PackedByteArray):
 	send_ping_response(from_peer_id, ping_send_time)
 
 func send_ping_response(peer_id: int, ping_send_time: int):
-	Logger.debug("sending: %s, to: %d, initial_ping_send_time: %d" % [
+	Log.debug("sending: %s, to: %d, initial_ping_send_time: %d" % [
 		Networking.NetworkMessageId.keys()[NetworkMessageId.PING_RESPONSE], peer_id, ping_send_time
 	])
 	var packet_bytes: PackedByteArray = [
@@ -283,7 +283,7 @@ func send_ping_response(peer_id: int, ping_send_time: int):
 	send_bytes(packet_bytes, peer_id, MultiplayerPeer.TRANSFER_MODE_RELIABLE, 0)
 
 func add_peer(peer_id):
-	Logger.info("add_peer: peer_id: %s" % [str(peer_id)])
+	Log.info("add_peer: peer_id: %s" % [str(peer_id)])
 	#var player = GameInstance.game_mode.spawn_player(peer_id)
 	# TODO: switch from parallel arrays to something cleaner #peer_list.append()
 	var peer_metadata: PeerMetadata
@@ -294,7 +294,7 @@ func add_peer(peer_id):
 		peer_metadata.peer_id = peer_id
 		peers[peer_id] = peer_metadata
 	# TODO: notify game mode to spawn player?
-	
+
 	GameInstance.game_mode.handle_peer_join(peer_id)
 	#GameInstance.game_mode.spawn_player(peer_id)
 	#peer_metadata.player = GameInstance.game_mode.spawn_player(peer_id)

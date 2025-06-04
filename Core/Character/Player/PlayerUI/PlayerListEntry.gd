@@ -29,10 +29,10 @@ func show_mute_button() -> void:
 
 func _on_kick_button_pressed() -> void:
 	if GameInstance.networking.is_server():
-		Logger.info("_on_kick_button_pressed on server: %s" % [name_label.text])
+		Log.info("_on_kick_button_pressed on server: %s" % [name_label.text])
 		GameInstance.networking.kick_peer(peer_id)
 
 func _on_mute_button_pressed() -> void:
-	Logger.info("_on_mute_button_pressed: %s" % [name_label.text])
+	Log.info("_on_mute_button_pressed: %s" % [name_label.text])
 	# TODO
 	pass

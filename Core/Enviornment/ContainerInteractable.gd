@@ -15,6 +15,6 @@ func interact_local(player: Player) -> void:
 		opened = true
 
 func interact() -> void:
-	
-	Logger.info("ContainerInteractable.interact()")
+
+	Log.info("ContainerInteractable.interact()")
 	pass

@@ -37,12 +37,13 @@ func _on_join_button_pressed():
 	disable_buttons()
 	var address: String = address_text_box.text
 	var port: int = int(port_text_box.text)
-	Logger.debug("_on_join_button_pressed. address: %s, port: %d" % [ address, port ])
+	#Log.debug("_on_join_button_pressed. address: %s, port: %d" % [ address, port ])
 	GameInstance.networking.set_multiplayer_mode(Networking.MultiplayerMode.DIRECT_CONNECT)
 	var join_game_result = GameInstance.networking.direct_connect_lobby.join_game(address, port)
 	if join_game_result != Error.OK:
-		Logger.error("FAILED TO JOIN GAME!")
+		#Log.error("FAILED TO JOIN GAME!")
 		# TODO: display an error message modal?
+		pass
 
 func _on_back_button_pressed():
 	button_pressed_audio.play()

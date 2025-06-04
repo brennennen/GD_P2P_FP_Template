@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://b8lytvha5krpa" path="res://Core/Gameplay/LevelTeleporter.tscn" id="3_ftmlj"]
 [ext_resource type="PackedScene" uid="uid://bw2qospayyty4" path="res://Core/Character/NPC/Mountables/Horse/Horse.tscn" id="3_jl181"]
 [ext_resource type="PackedScene" uid="uid://cp7xhlkwk8opm" path="res://Core/Gameplay/KillBox.tscn" id="5_lnb8m"]
-[ext_resource type="PackedScene" uid="uid://cmu6iryj00p8w" path="res://Assets/Environment/GameShow/Platforms/Ring.tscn" id="6_8lsb3"]
+[ext_resource type="PackedScene" uid="uid://cmu6iryj00p8w" path="res://Assets/Environment/GameShow/Obstacles/SpinningRing_10m/SpinningRing_10m.tscn" id="6_8lsb3"]
 
 [sub_resource type="PhysicalSkyMaterial" id="PhysicalSkyMaterial_jl181"]
 rayleigh_color = Color(0.137575, 0.200307, 0.317419, 1)
@@ -88,10 +88,8 @@ data = PackedVector3Array(-10, 0.25, 10, 10, 0.25, 10, -10, -0.25, 10, 10, 0.25,
 [sub_resource type="BoxShape3D" id="BoxShape3D_8lsb3"]
 size = Vector3(2500, 50, 2500)
 
-[node name="DebugSandbox" type="Node3D" node_paths=PackedStringArray("player_spawn_points", "default_level_camera", "player_spawn_points", "default_level_camera")]
+[node name="DebugSandbox" type="Node3D" node_paths=PackedStringArray("player_spawn_points", "default_level_camera")]
 script = ExtResource("1_dmo41")
-player_spawn_points = NodePath("SpawnPoints")
-default_level_camera = NodePath("DefaultLevelCamera")
 player_spawn_points = NodePath("SpawnPoints")
 default_level_camera = NodePath("DefaultLevelCamera")
 

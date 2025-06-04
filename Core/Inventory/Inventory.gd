@@ -33,6 +33,6 @@ func clear_inventory_data() -> void:
 	inventory_data = null
 
 func slot_clicked(slot_index: int, event_index: int) -> void:
-	Logger.debug("inventory.slot_clicked: slot: %d" % [ slot_index ])
+	Log.debug("inventory.slot_clicked: slot: %d" % [ slot_index ])
 	if player_interface:
 		player_interface.slot_clicked(self, slot_index, event_index)

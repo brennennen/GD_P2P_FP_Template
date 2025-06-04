@@ -33,7 +33,7 @@ func _on_host_button_pressed() -> void:
 	button_pressed_audio.play()
 	var lobby_type: int = lobby_type_options.get_selected_id()
 	var max_players: int = int(max_players_line_edit.text)
-	Logger.debug("_on_host_button_pressed: lobby_name.text: %s, lobby_type: %d, max_members: %d" % [lobby_name.text, lobby_type, max_players])
+	#Log.debug("_on_host_button_pressed: lobby_name.text: %s, lobby_type: %d, max_members: %d" % [lobby_name.text, lobby_type, max_players])
 	GameInstance.networking.set_multiplayer_mode(Networking.MultiplayerMode.STEAM)
 	GameInstance.networking.steam_lobby.lobby_name = lobby_name.text
 	GameInstance.networking.steam_lobby.lobby_type = lobby_type as Steam.LobbyType
@@ -43,7 +43,7 @@ func _on_host_button_pressed() -> void:
 		#GameInstance.load_and_change_scene("res://Maps/HUBLevel/HUBLevel.tscn")
 		fade_out_and_change_scene("res://Maps/HUBLevel/HUBLevel.tscn", 0.5)
 	else:
-		Logger.error("%s: Failed to host steam game" % [ name ])
+		#Log.error("%s: Failed to host steam game" % [ name ])
 		GameInstance.networking.last_status_message = "Failed to host steam game: %d" % [host_game_result]
 
 func _on_back_button_pressed() -> void:

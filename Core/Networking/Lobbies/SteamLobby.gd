@@ -46,7 +46,7 @@ func steam_check_command_line() -> void:
 			if int(arguments[1]) > 0:
 				# At this point, you'll probably want to change scenes
 				# Something like a loading into lobby screen
-				Logger.info("%s:Command line lobby ID: %s" % [ name, arguments[1] ])
+				Log.info("%s:Command line lobby ID: %s" % [ name, arguments[1] ])
 				#join_lobby(int(arguments[1]))
 
 func initialize_steam():
@@ -55,15 +55,15 @@ func initialize_steam():
 	Steam.lobby_created.connect(_steam_on_lobby_created)
 	Steam.lobby_joined.connect(_steam_on_lobby_joined)
 	Steam.lobby_match_list.connect(_steam_on_lobby_match_list)
-	
+
 	var initialize_result: Dictionary = Steam.steamInitEx(480)
-	Logger.info("steamInitEx result: %s " % initialize_result)
+	Log.info("steamInitEx result: %s " % initialize_result)
 	if initialize_result["status"] == 0:
 		var is_on_steam_deck: bool = Steam.isSteamRunningOnSteamDeck()
 		var is_online: bool = Steam.loggedOn()
 		var is_owned: bool = Steam.isSubscribed()
 		steam_username = Steam.getPersonaName()
-		Logger.info("user: %s, online: %d, owned: %d, steamid: %d, steam_deck: %d" \
+		Log.info("user: %s, online: %d, owned: %d, steamid: %d, steam_deck: %d" \
 			% [ steam_username, int(is_online), int(is_owned), Steam.getSteamID(), int(is_on_steam_deck) ] )
 		#if is_owned == false:
 		#	print("User does not own this game")
@@ -81,12 +81,12 @@ func steam_peer_connection_status_changed(_x, _y, _z):
 	print("steam_peer_connection_status_changed?: x: ", typeof(_x))
 
 func host_game():
-	Logger.info("Creating steam lobby. type: %s, max_members: %d" % [steam_lobby_type_strings[lobby_type], max_members])
+	Log.info("Creating steam lobby. type: %s, max_members: %d" % [steam_lobby_type_strings[lobby_type], max_members])
 	if steam_lobby_id == 0:
 		Steam.createLobby(lobby_type, max_members)
 		var error = steam_peer.create_host(0)
 		if error != Error.OK:
-			Logger.error("%s:host_game error: %d" % [ name, error ])
+			Log.error("%s:host_game error: %d" % [ name, error ])
 			return error
 		multiplayer.multiplayer_peer = steam_peer
 		return Error.OK
@@ -114,7 +114,7 @@ func _steam_on_lobby_chat_update(_this_lobby_id: int, change_id: int, _making_ch
 func _steam_on_lobby_created(_connect: int, lobby_id: int) -> void:
 	if _connect == 1:
 		steam_lobby_id = lobby_id
-		Logger.info("Created a lobby: %s" % steam_lobby_id)
+		Log.info("Created a lobby: %s" % steam_lobby_id)
 
 		Steam.setLobbyJoinable(steam_lobby_id, true)
 		Steam.setLobbyData(steam_lobby_id, "name", "Test Lobby")
@@ -122,7 +122,7 @@ func _steam_on_lobby_created(_connect: int, lobby_id: int) -> void:
 		Steam.setLobbyData(steam_lobby_id, "game_unique_id", steam_game_unique_id)
 
 		var set_relay: bool = Steam.allowP2PPacketRelay(true)
-		Logger.info("Allowing Steam to be relay backup: %s" % set_relay)
+		Log.info("Allowing Steam to be relay backup: %s" % set_relay)
 
 func steam_send_p2p_packet(this_target: int, packet_data: Dictionary) -> void:
 	# Set the send_type and channel
@@ -149,7 +149,7 @@ func steam_make_p2p_handshake() -> void:
 	steam_send_p2p_packet(0, {"message": "handshake", "from": steam_id})
 
 func _steam_on_lobby_joined(this_lobby_id: int, _permissions: int, _locked: bool, response: int) -> void:
-	Logger.info("_steam_on_lobby_joined")
+	Log.info("_steam_on_lobby_joined")
 	if response == Steam.CHAT_ROOM_ENTER_RESPONSE_SUCCESS:
 		# Set this lobby ID as your lobby ID
 		steam_lobby_id = this_lobby_id
@@ -177,10 +177,10 @@ func _steam_on_lobby_joined(this_lobby_id: int, _permissions: int, _locked: bool
 			Steam.CHAT_ROOM_ENTER_RESPONSE_COMMUNITY_BAN: fail_reason = "This lobby is community locked."
 			Steam.CHAT_ROOM_ENTER_RESPONSE_MEMBER_BLOCKED_YOU: fail_reason = "A user in the lobby has blocked you from joining."
 			Steam.CHAT_ROOM_ENTER_RESPONSE_YOU_BLOCKED_MEMBER: fail_reason = "A user you have blocked is in the lobby."
-		Logger.error("Failed to join: %s" % fail_reason)
+		Log.error("Failed to join: %s" % fail_reason)
 
 func _steam_on_lobby_match_list(steam_lobbies: Array) -> void:
-	Logger.info("%s:lobby list matches found: %d" % [ name, steam_lobbies.size() ])
+	Log.info("%s:lobby list matches found: %d" % [ name, steam_lobbies.size() ])
 	if steam_lobby_match_list_callback != null and steam_lobby_match_list_callback.is_valid():
 		steam_lobby_match_list_callback.call(steam_lobbies)
 
@@ -194,13 +194,13 @@ func steam_get_lobby_members() -> void:
 		steam_lobby_members.append({"steam_id": member_steam_id, "steam_name": member_steam_name})
 
 func set_lobby_filters():
-	Logger.info("Setting steam lobby filters. game_unique_id: '%s'" % [steam_game_unique_id])
+	Log.info("Setting steam lobby filters. game_unique_id: '%s'" % [steam_game_unique_id])
 	Steam.addRequestLobbyListStringFilter("game_unique_id", steam_game_unique_id, Steam.LOBBY_COMPARISON_EQUAL)
 	Steam.addRequestLobbyListDistanceFilter(Steam.LOBBY_DISTANCE_FILTER_WORLDWIDE)
 
 func refresh_lobby_list() -> void:
 	set_lobby_filters()
-	Logger.info("%s:request refresh lobby list..." % [ name ])
+	Log.info("%s:request refresh lobby list..." % [ name ])
 	Steam.requestLobbyList()
 
 func join_lobby(lobby_id: int):

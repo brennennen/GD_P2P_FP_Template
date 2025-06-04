@@ -101,7 +101,7 @@ var vision_center_raycast_collider: Object = null
 # Functions
 
 func _enter_tree():
-	Logger.info("character enter tree. name: %s" % str(name))
+	Log.info("character enter tree. name: %s" % str(name))
 	set_multiplayer_authority(str(name).to_int(), true)
 	multiplayer_id = name.to_int()
 
@@ -118,8 +118,8 @@ func _ready():
 
 ## The locally controlled player (controlled by the local game instance) is ready
 func authoritative_player_ready():
-	Logger.info("%s:authoritative_player_ready" % [name])
-	$UI.hide() 
+	Log.info("%s:authoritative_player_ready" % [name])
+	$UI.hide()
 	camera.current = true
 	third_person.visible = false
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -130,19 +130,19 @@ func authoritative_player_ready():
 
 ## A peer player (not controlled by the local game instance) is ready
 func peer_player_ready():
-	Logger.info("%s:peer_player_ready" % [name])
+	Log.info("%s:peer_player_ready" % [name])
 	camera.current = false
 	first_person.visible = false
 	third_person.visible = true
 	hud.hide()
 	$UI.hide()
-	Logger.info("spawned %s's peer, sending rpc to start syncing" % name)
+	Log.info("spawned %s's peer, sending rpc to start syncing" % name)
 	third_person_animation_tree.set("parameters/UpperBlend2/blend_amount", 0.0)
 	notify_peer_their_player_is_spawned.rpc_id(str(name).to_int(), multiplayer.get_unique_id())
 
 @rpc("any_peer", "reliable")
 func notify_peer_their_player_is_spawned(spawned_peer_id):
-	Logger.info("notify_peer_their_player_is_spawned. arg: %d" % [ spawned_peer_id ])
+	Log.info("notify_peer_their_player_is_spawned. arg: %d" % [ spawned_peer_id ])
 
 #func setup_audio():
 	#if is_multiplayer_authority():
@@ -150,7 +150,7 @@ func notify_peer_their_player_is_spawned(spawned_peer_id):
 		#voice_input.play()
 		#audio_input_index = AudioServer.get_bus_index("Record")
 		#audio_input_effect = AudioServer.get_bus_effect(audio_input_index, 0)
-	#Logger.info("voice output has stream playback: %d" % int(voice_output.has_stream_playback()))
+	#Log.info("voice output has stream playback: %d" % int(voice_output.has_stream_playback()))
 	#voice_output_playback = voice_output.get_stream_playback()
 	#input_threshold = Options.voice_input_threshold
 
@@ -185,7 +185,7 @@ func change_equipment_mode(new_equipment_mode: EquipmentMode):
 			third_person_animation_tree.set("parameters/UpperBodyStateMachine/conditions/equip_fists", false)
 			third_person_animation_tree.set("parameters/UpperBlend2/blend_amount", 1.0)
 		_:
-			Logger.error("change_equipment_mode: '%s' not implemented" % str(new_equipment_mode))
+			Log.error("change_equipment_mode: '%s' not implemented" % str(new_equipment_mode))
 	equipment_mode = new_equipment_mode
 
 func set_health(new_health: float) -> void:
@@ -203,7 +203,7 @@ func set_stamina(new_stamina: float) -> void:
 
 @rpc("any_peer", "call_local", "reliable")
 func die():
-	Logger.info("%s player died." % [name])
+	Log.info("%s player died." % [name])
 	# TODO: hide all visuals, still allow rotating camera? spectating? etc?
 	velocity = Vector3(0.0, 0.0, 0.0)
 	if movement_controller.movement_mode == PlayerMovementController.MovementMode.HORSE_RIDING:
@@ -232,12 +232,12 @@ func _unhandled_input(event):
 func toggle_pause():
 	is_paused = !is_paused
 	if is_paused:
-		Logger.info("Pausing")
+		Log.info("Pausing")
 		load_player_list()
 		pause_menu.show()
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	else:
-		Logger.info("Unpausing")
+		Log.info("Unpausing")
 		pause_menu.hide()
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
@@ -251,12 +251,12 @@ func load_player_list():
 # ideally this would only be callable by the server, need to work through a way to handle this...
 @rpc("any_peer", "call_local", "reliable")
 func server_lock_movement() -> void:
-	Logger.info("server_lock_movement: %s" % [str(name)])
+	Log.info("server_lock_movement: %s" % [str(name)])
 	is_movement_locked = true
 
 @rpc("any_peer", "call_local", "reliable")
 func unlock_movement() -> void:
-	Logger.info("unlock_movement: %s" % [str(name)])
+	Log.info("unlock_movement: %s" % [str(name)])
 	is_movement_locked = false
 
 func ghost_level_camera() -> void:
@@ -284,7 +284,7 @@ func handle_system_inputs(event: InputEvent) -> void:
 	#if event.is_action_pressed("debug_console"):
 		#debug_console.toggle()
 	if event.is_action_pressed("debug_quit"):
-		Logger.info("debug_quit pressed")
+		Log.info("debug_quit pressed")
 		get_tree().quit()
 
 ## Handle gameplay related inputs (moving, interacting, etc.)
@@ -321,7 +321,7 @@ const horse_mount_scene = preload("res://Core/Character/NPC/Mountables/Horse/Hor
 var horse_mount: HorseMount
 
 func debug_misc():
-	Logger.info("debug_misc")
+	Log.info("debug_misc")
 	if movement_controller.movement_mode == PlayerMovementController.MovementMode.HORSE_RIDING:
 		unmount_horse.rpc()
 		movement_controller.change_movement_mode(PlayerMovementController.MovementMode.WALKING)
@@ -364,19 +364,23 @@ func set_spawn_rotation(new_rotation: Vector3):
 	mouse_rotation = Vector3(0.0, new_rotation.y, 0.0)
 
 func interact_action() -> void:
-	Logger.info("interact_action: colliding: %s" % [str(vision_center_raycast.is_colliding())])
+	Log.info("interact_action: colliding: %s" % [str(vision_center_raycast.is_colliding())])
 	if vision_center_raycast.is_colliding():
 		var collider: Object = vision_center_raycast.get_collider()
 		if collider is StaticBodyInteractable:
 			var static_body_interactable = collider as StaticBodyInteractable
 			static_body_interactable.interact_local(self) # TODO: rpc?
-		Logger.info("interact_action: %s" % [str(collider)])
+		Log.info("interact_action: %s" % [str(collider)])
 		if collider is Horse:
-			Logger.info("interact_action: horse!: %s" % [str(collider)])
+			Log.info("interact_action: horse!: %s" % [str(collider)])
 
+@onready var primary_action_debounce: Timer = $PrimaryActionDebounce
 
 func primary_action():
-	#Logger.info("primary_action: %s" % [name])
+	#Log.info("primary_action: %s" % [name])
+	if primary_action_debounce.time_left != 0.0:
+		return
+	primary_action_debounce.start(1.0)
 	primary_action_predictive() # perform visual feedback instantly if we predict the server will allow the input to make the client feel more responsive.
 	primary_action_server_request.rpc_id(1) # send the input request to the server.
 
@@ -384,7 +388,7 @@ func primary_action():
 ## server would allow it (aka: we "predict" the server will allow the input and respond
 ## accordingly.)
 func primary_action_predictive():
-	Logger.info("primary_action_predictive: %s" % [name])
+	Log.info("primary_action_predictive: %s" % [name])
 	match equipment_mode:
 		EquipmentMode.NONE:
 			pass
@@ -398,12 +402,13 @@ func primary_action_predictive():
 
 @rpc("any_peer", "call_local", "reliable")
 func primary_action_server_request():
-	#Logger.info("primary_action_server_request: from: %s" % [name])
+	#Log.info("primary_action_server_request: from: %s" % [name])
+	var from_peer_id: int = multiplayer.get_remote_sender_id()
 	match equipment_mode:
 		EquipmentMode.NONE:
 			pass
 		EquipmentMode.FISTS:
-			fists_punch_server_request()
+			fists_punch_server_request(from_peer_id)
 		EquipmentMode.FISHING_POLE:
 			fishing_primary_action_server_request()
 		_:
@@ -411,6 +416,7 @@ func primary_action_server_request():
 	pass
 
 func fists_punch_predictive():
+	$Audio/ThrowPunchAudio.play()
 	# TODO: play first person punch animation!
 	# TODO: maybe start the "hit" animation for the player in the hitbox?
 	pass
@@ -419,15 +425,18 @@ func fishing_primary_action_predictive():
 	# TODO: play fishing first person panimations!
 	pass
 
-func fists_punch_server_request():
-	Logger.info("fists_punch_server_request");
+func fists_punch_server_request(from_peer_id: int):
+	Log.info("fists_punch_server_request from peer: %d" % [from_peer_id]);
 	# TODO: determine if the punch is allowed or not?
-	fists_punch_third_person_visuals.rpc()
+	fists_punch_remote_client_feedback.rpc(from_peer_id)
 	for player in players_in_punch_hitbox:
 		player.receive_punch.rpc(global_position)
 
 @rpc("any_peer", "call_local", "reliable")
-func fists_punch_third_person_visuals():
+func fists_punch_remote_client_feedback(peer_punching_id: int):
+	if multiplayer.get_unique_id() == peer_punching_id: # nothing to do on peer that punched, it already acted "client prediction"
+		return
+	$Audio/ThrowPunchAudio.play()
 	third_person_animation_tree.set("parameters/UpperBodyStateMachine/conditions/punch", true)
 	var upper_body_state_machine_playback = third_person_animation_tree.get("parameters/UpperBodyStateMachine/playback") as AnimationNodeStateMachinePlayback
 	upper_body_state_machine_playback.travel("boxing-punch-right")
@@ -441,7 +450,8 @@ var hit_type: HitType = HitType.MELEE
 
 @rpc("any_peer", "call_local", "reliable")
 func receive_punch(puncher_position: Vector3):
-	Logger.info("receive_punch: me: %s" % [name])
+	Log.info("receive_punch: me: %s" % [name])
+	$Audio/ReceivePunchAudio.play()
 	#knocked_back = true
 	#knocked_back_source_position = puncher_position
 	#knocked_back_force = 25.0 # todo send this?
@@ -460,7 +470,7 @@ func fishing_primary_action_third_person_visuals():
 func fishing_primary_action_server_request():
 	if movement_controller.movement_mode == PlayerMovementController.MovementMode.SWINGING:
 		movement_controller.change_movement_mode.rpc(PlayerMovementController.MovementMode.FALLING)
-	#Logger.info("fishing_primary_action_server_request");
+	#Log.info("fishing_primary_action_server_request");
 	# TODO: spawn fishing lure projectile
 	spawn_fishing_lure_projectile.rpc()
 	# TODO: go to "fishing-idle" if we hit water, go to "carrying-fishing-pole-idle" if we didn't,
@@ -494,7 +504,7 @@ func fishing_cast_third_person_visuals():
 
 @rpc("any_peer", "call_local", "reliable")
 func receive_fishing_lure_yoink(yoinker_position: Vector3):
-	Logger.info("receive_fishing_lure_yoink: me: %s" % [name])
+	Log.info("receive_fishing_lure_yoink: me: %s" % [name])
 	handle_hit_next_physics_frame = true
 	hit_source_position = yoinker_position
 	hit_type = HitType.YOINK
@@ -509,7 +519,7 @@ func _process(delta) -> void:
 		## ????
 		#horse.global_position = global_position
 		#pass
-		
+
 
 func predictive_physics_process(_delta: float) -> void:
 	# TODO: move most of physics process into here
@@ -604,7 +614,7 @@ func process_vision_center_interactable() -> void:
 			if npc.interactions_enabled():
 				show_interaction_ui(collider, npc.interact_text)
 			pass
-			
+
 	else:
 		vision_center_raycast_collider = null
 		hide_interaction_ui()
@@ -640,7 +650,7 @@ func jump_action_pressed():
 
 @rpc("any_peer", "call_local", "reliable")
 func toggle_crouch():
-	Logger.info("%s:toggle_crouch: is_crouching: %d, crouch_shapecast: %d" % [name, int(is_crouching), int(crouch_shapecast.is_colliding())])
+	Log.info("%s:toggle_crouch: is_crouching: %d, crouch_shapecast: %d" % [name, int(is_crouching), int(crouch_shapecast.is_colliding())])
 
 	if movement_controller.movement_mode == PlayerMovementController.MovementMode.SWINGING:
 		movement_controller.change_movement_mode.rpc(PlayerMovementController.MovementMode.FALLING)
@@ -665,7 +675,7 @@ func toggle_inventory():
 
 	if $UI.visible:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-		
+
 	else:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
@@ -693,7 +703,7 @@ const SWING_ROPE = preload("res://Core/Misc/SwingRope/SwingRope.tscn")
 
 @rpc("any_peer", "call_local", "reliable")
 func start_swinging(hook_point: Vector3):
-	Logger.info("starting swing!")
+	Log.info("starting swing!")
 	grapple_hook_point = hook_point
 	movement_controller.start_swinging()
 
@@ -722,7 +732,7 @@ func respawn_as_spectator(respawn_position: Vector3, respawn_rot_y: float) -> vo
 
 @rpc("any_peer", "call_local", "reliable")
 func respawn(respawn_position: Vector3, respawn_rot_y: float, spectator: bool = false):
-	Logger.info("respawn() player: %s, pos: %v, rot_y: %f, spectator: %s" % [ name, respawn_position, respawn_rot_y, str(spectator) ])
+	Log.info("respawn() player: %s, pos: %v, rot_y: %f, spectator: %s" % [ name, respawn_position, respawn_rot_y, str(spectator) ])
 
 	if fishing_lure_projectile:
 		last_fishing_lure_projectile = fishing_lure_projectile
@@ -753,7 +763,7 @@ func respawn(respawn_position: Vector3, respawn_rot_y: float, spectator: bool = 
 
 var black_screen_tween: Tween = null
 func fade_from_black(duration: float):
-	Logger.info("fade_from_black: %f" % [duration])
+	Log.info("fade_from_black: %f" % [duration])
 	black_screen.visible = true
 	if black_screen_tween:
 		black_screen_tween.kill()
@@ -763,7 +773,7 @@ func fade_from_black(duration: float):
 	black_screen_tween.tween_callback(black_screen_tween_done)
 
 func fade_to_black(duration: float):
-	Logger.info("fade_to_black: %f" % [duration])
+	Log.info("fade_to_black: %f" % [duration])
 	if black_screen_tween:
 		black_screen_tween.kill()
 	black_screen_tween = create_tween()

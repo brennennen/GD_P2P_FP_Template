@@ -11,6 +11,6 @@ func _ready():
 	open_main_menu()
 
 func open_main_menu():
-	Logger.debug("open_main_menu")
+	#Log.debug("open_main_menu")
 	var menu = ResourceLoader.load("res://Maps/Menus/MainMenu.tscn")
 	GameInstance.change_scene(menu)

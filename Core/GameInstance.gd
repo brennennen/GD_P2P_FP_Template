@@ -49,7 +49,8 @@ func _ready() -> void:
 	if OS.is_debug_build():
 		$DebugLogTimer.wait_time = 10
 		$DebugLogTimer.start()
-	Logger.set_multiplayer_id(networking.get_multiplayer_id())
+	Log.set_multiplayer_id(networking.get_multiplayer_id())
+	#Log.set_multiplayer_id(networking.get_multiplayer_id())
 	fps_history.resize(60 * 10) # assume 60 fps for 10 seconds
 
 	initialize_game_mode()
@@ -91,7 +92,7 @@ func initialize_game_mode():
 		game_mode.set_owner(get_tree().get_edited_scene_root())
 
 func initialize_level(level_name: String, scene_path: String, game_mode_type: GameMode.GameModeType, spawn_points: Node3D, level_cam: Camera3D):
-	Logger.info("Initializing level: %s, net_mode: %s" % [scene_path, Networking.MultiplayerMode_str(networking.multiplayer_mode)])
+	Log.info("Initializing level: %s, net_mode: %s" % [scene_path, Networking.MultiplayerMode_str(networking.multiplayer_mode)])
 	runnable_scene_is_initialized = true
 	default_level_camera = level_cam
 	current_level_path = scene_path
@@ -109,7 +110,7 @@ func initialize_level(level_name: String, scene_path: String, game_mode_type: Ga
 	_on_debug_log_timer_timeout() # debug log right away
 
 func in_editor_run_multiple_instance_hack(level_name: String, scene_path: String):
-	Logger.info("Detected scene running directly via run-scene. Using InEditorLobby for mulitple run instances.")
+	Log.info("Detected scene running directly via run-scene. Using InEditorLobby for mulitple run instances.")
 	networking.multiplayer_mode = Networking.MultiplayerMode.IN_EDITOR
 	var main_node = load("res://Maps/Main/Main.tscn").instantiate()
 	get_window().add_child.call_deferred(main_node)
@@ -148,9 +149,9 @@ func debug_position_all_instance_windows():
 
 ## Changes to the loading scene and then loads the requested scene
 func load_and_change_scene(scene_path: String):
-	Logger.info("%s:load_and_change_scene: scene_path: '%s'" % [name, scene_path])
+	Log.info("%s:load_and_change_scene: scene_path: '%s'" % [name, scene_path])
 	if ResourceLoader.has_cached(scene_path):
-		Logger.info("cached: '%s'" % scene_path)
+		Log.info("cached: '%s'" % scene_path)
 		multiplayer.multiplayer_peer = GameInstance.mutliplayer_peer
 		var scene = ResourceLoader.load_threaded_get(scene_path)
 		change_scene(scene)
@@ -161,18 +162,18 @@ func load_and_change_scene(scene_path: String):
 
 ## Doesn't show a loading screen, just loads directly on the same thread, good for menu transitions
 func load_and_change_scene_blocking(scene_path: String):
-	Logger.info("%s:load_and_change_scene_blocking: scene_path: '%s'" % [name, scene_path])
+	Log.info("%s:load_and_change_scene_blocking: scene_path: '%s'" % [name, scene_path])
 	var scene = load(scene_path)
 	change_scene(scene)
 
 func change_scene(resource: Resource):
 	if !resource:
-		Logger.error("%s:change_scene: scene resource is null! Can't change scene." % [name])
+		Log.error("%s:change_scene: scene resource is null! Can't change scene." % [name])
 		return
 
-	Logger.info("%s:change_scene: '%s'" % [name, resource.resource_path])
+	Log.info("%s:change_scene: '%s'" % [name, resource.resource_path])
 	var node = resource.instantiate()
-	#Logger.debug("children: %s" % JSON.stringify(main.get_children()))
+	#Log.debug("children: %s" % JSON.stringify(main.get_children()))
 	var main: Node = get_tree().root.get_node("Main")
 	for child in main.get_children():
 		child.queue_free()
@@ -182,7 +183,7 @@ func go_to_main_menu_with_error(error: String):
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	menu_error_message = error
 	load_and_change_scene_blocking(main_menu_scene_path)
-	Logger.error("go_to_main_menu_with_error: %s" % error)
+	Log.error("go_to_main_menu_with_error: %s" % error)
 	# TODO: figure out displaying the error
 
 func lobby_load_and_change_scene(scene_path: String):
@@ -191,9 +192,9 @@ func lobby_load_and_change_scene(scene_path: String):
 
 @rpc("authority", "call_local", "reliable")
 func lobby_load_and_change_scene_rpc(scene_path: String):
-	Logger.info("%s:lobby_load_and_change_scene_rpc: scene_path: '%s'" % [name, scene_path])
+	Log.info("%s:lobby_load_and_change_scene_rpc: scene_path: '%s'" % [name, scene_path])
 	if ResourceLoader.has_cached(scene_path):
-		Logger.info("cached: '%s'" % scene_path)
+		Log.info("cached: '%s'" % scene_path)
 		multiplayer.multiplayer_peer = GameInstance.mutliplayer_peer
 		var scene = ResourceLoader.load_threaded_get(scene_path)
 		change_scene(scene)
@@ -216,22 +217,22 @@ func lobby_load_and_change_scene_rpc(scene_path: String):
 		#var player = inventory_owner as Player
 		#dropped_item_position = player.vision_start.global_position + (-1 * inventory_owner.vision_start.global_transform.basis.z * Vector3(0.5, 0.0, 0.5))
 	#interactable.global_position = dropped_item_position
-	#Logger.info("Spawning interactable: %s at %v" % [interactable.name, interactable.global_position])
+	#Log.info("Spawning interactable: %s at %v" % [interactable.name, interactable.global_position])
 	#interactable.set_owner(get_tree().get_edited_scene_root())
 
 func load_player_menu_scene_blocking(scene_path: String):
-	Logger.info("%s:load_player_menu_scene_blocking: scene_path: '%s'" % [name, scene_path])
+	Log.info("%s:load_player_menu_scene_blocking: scene_path: '%s'" % [name, scene_path])
 	var scene = load(scene_path)
 	change_player_sibling_menu_scene(scene)
 
 func change_player_sibling_menu_scene(resource: Resource) -> Node:
 	if !resource:
-		Logger.error("%s:change_scene: scene resource is null! Can't change scene." % [name])
+		Log.error("%s:change_scene: scene resource is null! Can't change scene." % [name])
 		return
 
-	Logger.info("%s:change_scene: '%s'" % [name, resource.resource_path])
+	Log.info("%s:change_scene: '%s'" % [name, resource.resource_path])
 	var node = resource.instantiate()
-	#Logger.debug("children: %s" % JSON.stringify(main.get_children()))
+	#Log.debug("children: %s" % JSON.stringify(main.get_children()))
 	# TODO: where to spawn this? main seems messy? need a sub folder? make it off of player?
 	#var x = get_tree().root.get_node_or_null("Main/PlayerMenus")
 	#if !x:
@@ -245,7 +246,7 @@ func change_player_sibling_menu_scene(resource: Resource) -> Node:
 
 ##
 ## Scene path is expected to inherit from node3d!
-## 
+##
 @rpc("any_peer", "call_local", "reliable")
 func spawn_item_3d_scene(scene_path: String, pos: Vector3) -> Node:
 	var resource: Resource = load(scene_path)
@@ -287,11 +288,11 @@ func log_system_data():
 		"language": OS.get_locale_language(),
 		"executable_path": OS.get_executable_path()
 	}
-	Logger.info("system: %s" % JSON.stringify(system_data))
+	Log.info("system: %s" % JSON.stringify(system_data))
 
 func log_debug_memory_usage():
 	if OS.is_debug_build():
-		Logger.info("memory usage: static: %d, peak: %d" % [ OS.get_static_memory_usage(), OS.get_static_memory_peak_usage() ])
+		Log.info("memory usage: static: %d, peak: %d" % [ OS.get_static_memory_usage(), OS.get_static_memory_peak_usage() ])
 
 func return_to_main_menu() -> void:
 	# TODO: save? tell multiplayer to disconnect peer gracefully?
@@ -348,7 +349,7 @@ var command_history: Array[String] = []
 func debug_console_command_execute(command: String, result_output: RichTextLabel):
 	command_history.append(command)
 	if command == "/help":
-		Logger.info("here")
+		Log.info("here")
 		print("HELP COMMAND SENT!")
 	#if command.contains("ai:"):
 		#var result = do_ai(command)
@@ -394,7 +395,7 @@ func _on_debug_log_timer_timeout() -> void:
 	#pass # Replace with function body.
 
 func kill_player(player_name: String):
-	Logger.info("killing player: %s" % player_name)
+	Log.info("killing player: %s" % player_name)
 	for player in get_players():
 		if player.name == player_name:
 			player.die()

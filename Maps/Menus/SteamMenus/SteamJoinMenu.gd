@@ -34,12 +34,12 @@ func _on_refresh_button_pressed() -> void:
 	GameInstance.networking.steam_lobby.refresh_lobby_list()
 
 func handle_updated_steam_lobby_match_list(steam_lobbies: Array):
-	Logger.info("%s:handle_updated_steam_lobby_match_list: lobbies count: %d" % [ name, steam_lobbies.size() ])
+	#Log.info("%s:handle_updated_steam_lobby_match_list: lobbies count: %d" % [ name, steam_lobbies.size() ])
 	refresh_button.set_disabled(false)
 
 	for steam_lobby in steam_lobbies:
 		# Pull lobby data from Steam, these are specific to our example
-		#Logger.info(steam_lobby)
+		#Log.info(steam_lobby)
 		var lobby_name: String = Steam.getLobbyData(steam_lobby, "name")
 		var lobby_mode: String = Steam.getLobbyData(steam_lobby, "mode")
 		var lobby_num_members: int = Steam.getNumLobbyMembers(steam_lobby)
@@ -47,7 +47,7 @@ func handle_updated_steam_lobby_match_list(steam_lobbies: Array):
 		var lobby_button: Button = Button.new()
 		#var lobby_string: String = "Lobby %s: %s [%] - %s Player(s)" % [steam_lobby, lobby_name, lobby_mode, lobby_num_members]
 		var lobby_string = "Lobby %s: %s [%s] - %s Player(s)" % [ str(lobby_name), str(lobby_name), str(lobby_mode), str(lobby_num_members) ]
-		#Logger.info("Found lobby: %s" % str(lobby_string))
+		#Log.info("Found lobby: %s" % str(lobby_string))
 		lobby_button.set_name("lobby_" + str(steam_lobby))
 		lobby_button.set_text_alignment(HORIZONTAL_ALIGNMENT_LEFT)
 		lobby_button.set_text(lobby_string)
@@ -61,7 +61,7 @@ func handle_updated_steam_lobby_match_list(steam_lobbies: Array):
 		refresh_button.set_disabled(false)
 
 func join_steam_lobby_callback(lobby_id: int):
-	Logger.info("Joining steam lobby: %s" % lobby_id)
+	#Log.info("Joining steam lobby: %s" % lobby_id)
 	GameInstance.networking.set_multiplayer_mode(Networking.MultiplayerMode.STEAM)
 	var join_game_result = GameInstance.networking.steam_lobby.join_lobby(lobby_id)
 

@@ -17,14 +17,14 @@ var player_scene: Resource
 
 func _init() -> void:
 	if OS.is_debug_build() and OS.has_feature("editor"):
-		Logger.debug("InEditorLobby.init()")
+		Log.debug("InEditorLobby.init()")
 		#GameInstance.process_command_line_arguments()
 		find_debug_run_instance_id()
 		enet_peer = ENetMultiplayerPeer.new()
 
 func _ready() -> void:
 	if OS.is_debug_build() and OS.has_feature("editor"):
-		Logger.debug("InEditorLobby.ready()")
+		Log.debug("InEditorLobby.ready()")
 
 func setup(node_name: String, new_networking: Networking):
 	if OS.is_debug_build() and OS.has_feature("editor"):
@@ -53,7 +53,7 @@ func find_debug_run_instance_id():
 	# open issue/feature request: https://github.com/godotengine/godot-proposals/issues/3357
 	# Janky work around: https://www.reddit.com/r/godot/comments/11ec4ju/get_instance_number_when_using_the_godot_4_run/
 	#if OS.is_debug_build() and OS.has_feature("editor"):
-		#Logger.debug("InEditorLobby.find_debug_run_instance_id")
+		#Log.debug("InEditorLobby.find_debug_run_instance_id")
 		#instance_socket = TCPServer.new()
 		#for n in range(1,9): # 1 based array to match server id being 1
 			#if instance_socket.listen(5000 + n) == OK:
@@ -66,7 +66,7 @@ func get_multiplayer_id():
 
 func manage_lobby():
 	find_debug_run_instance_id()
-	Logger.debug("InEditorLobby.manage_lobby(): %d" % instance_num)
+	Log.debug("InEditorLobby.manage_lobby(): %d" % instance_num)
 	if OS.is_debug_build() and OS.has_feature("editor"):
 		if instance_num == 1:
 			host_game()
@@ -76,7 +76,7 @@ func manage_lobby():
 
 func host_game() -> Error:
 	if OS.is_debug_build() and OS.has_feature("editor"):
-		Logger.debug("InEditorLobby.create_lobby(): instance: %d, mp_id: %d" % [ instance_num, multiplayer.get_unique_id() ])
+		Log.debug("InEditorLobby.create_lobby(): instance: %d, mp_id: %d" % [ instance_num, multiplayer.get_unique_id() ])
 		var result = enet_peer.create_server(port)
 		multiplayer.multiplayer_peer = enet_peer
 		return result
@@ -85,14 +85,14 @@ func host_game() -> Error:
 func join_lobby() -> Error:
 	if OS.is_debug_build() and OS.has_feature("editor"):
 		var peer = ENetMultiplayerPeer.new()
-		Logger.debug("InEditorLobby.join_lobby(): %d" % instance_num)
+		Log.debug("InEditorLobby.join_lobby(): %d" % instance_num)
 		var error = peer.create_client("127.0.0.1", port)
 		peer.get_peer(1).set_timeout(0, 0, 3000) # 3 second timeout # TODO: figure out what 1 is? does that need to be multiplyer id?
 		if error:
-			Logger.error("InEditorLobby join_game error: (%d) %s" % [error, error_string(error)])
+			Log.error("InEditorLobby join_game error: (%d) %s" % [error, error_string(error)])
 			return error
 		multiplayer.multiplayer_peer = peer
 		return Error.OK
 	else:
-		Logger.error("InEditorLobby join called from non-editor or non-debug build game instance!")
+		Log.error("InEditorLobby join called from non-editor or non-debug build game instance!")
 		return Error.FAILED

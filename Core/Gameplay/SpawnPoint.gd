@@ -13,9 +13,9 @@ func is_occupied() -> bool:
 func _on_area_3d_body_entered(body: Node3D) -> void:
 	if GameInstance.networking.is_server():
 		colliding_entries.append(body)
-		#Logger.info("SpawnPoint: %s area entered by %s (%s)" % [name, body.name, JSON.stringify(colliding_entries)])
+		#Log.info("SpawnPoint: %s area entered by %s (%s)" % [name, body.name, JSON.stringify(colliding_entries)])
 
 func _on_area_3d_body_exited(body: Node3D) -> void:
 	if GameInstance.networking.is_server():
 		colliding_entries.erase(body)
-		#Logger.info("SpawnPoint: %s area exited by %s (%s)" % [name, body.name, JSON.stringify(colliding_entries)])
+		#Log.info("SpawnPoint: %s area exited by %s (%s)" % [name, body.name, JSON.stringify(colliding_entries)])

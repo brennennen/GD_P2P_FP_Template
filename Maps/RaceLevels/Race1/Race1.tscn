@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://coq36aex43shh" path="res://Assets/Environment/GameShow/Platforms/Platform_20m/Platform20m.tscn" id="3_a6jnn"]
 [ext_resource type="PackedScene" uid="uid://b4pwmguc4biwk" path="res://Assets/Environment/GameShow/Misc/GrapplePoint.tscn" id="3_qdw5l"]
 [ext_resource type="PackedScene" uid="uid://cp7xhlkwk8opm" path="res://Core/Gameplay/KillBox.tscn" id="4_3cn84"]
-[ext_resource type="PackedScene" uid="uid://cmu6iryj00p8w" path="res://Assets/Environment/GameShow/Platforms/Ring.tscn" id="5_x2hfb"]
+[ext_resource type="PackedScene" uid="uid://cmu6iryj00p8w" path="res://Assets/Environment/GameShow/Obstacles/SpinningRing_10m/SpinningRing_10m.tscn" id="5_x2hfb"]
 [ext_resource type="PackedScene" uid="uid://b3rouqtkedts3" path="res://Assets/Environment/GameShow/Platforms/Platform_10mx5mx1m/Platform_10mx5mx1m.tscn" id="7_64o0t"]
 [ext_resource type="PackedScene" uid="uid://1r7yvg7sliri" path="res://Assets/Environment/GameShow/Fences/Fence_5mx1mx25cm/Fence_5mx1mx25cm.tscn" id="7_odopd"]
 [ext_resource type="PackedScene" uid="uid://ixgka5mgscj0" path="res://Assets/Environment/GameShow/Obstacles/SpinningRing_20m/SpinningRing_20m.tscn" id="7_t21qs"]

@@ -22,9 +22,9 @@ func _physics_process(_delta: float) -> void:
 		grabbed_slot.global_position = get_global_mouse_position() + Vector2(5.0, 5.0)
 
 func toggle_inventory_ui():
-	Logger.info("toggle_inventory_ui")
+	Log.info("toggle_inventory_ui")
 	if grabbed_slot_data:
-		Logger.info("toggle_inventory_ui: %s - %d" % [str(grabbed_slot_data), grabbed_slot_data_last_index])
+		Log.info("toggle_inventory_ui: %s - %d" % [str(grabbed_slot_data), grabbed_slot_data_last_index])
 		# TODO: handle grabbed item when the inventory is toggled off
 		#grabbed_slot_data = null
 		player_inventory.populate_item_grid()
@@ -34,7 +34,7 @@ func set_player_inventory_data(inventory_data: InventoryData) -> void:
 	player_inventory.set_inventory_data(inventory_data)
 
 func slot_clicked(inventory: Inventory, slot_index: int, event_index: int) -> void:
-	Logger.info("PlayerInventoryInterface.slot_clicked: slot: %d" % [ slot_index ])
+	Log.info("PlayerInventoryInterface.slot_clicked: slot: %d" % [ slot_index ])
 	if event_index == MOUSE_BUTTON_LEFT:
 		if grabbed_slot_data:
 			drop_or_swap_grabbed_slot(inventory, slot_index)
@@ -54,7 +54,7 @@ func grab_slot_data(inventory: Inventory, slot_index: int):
 		inventory.inventory_data.slot_datas[slot_index] = null
 
 	inventory.populate_item_grid()
-	Logger.info("grab_slot_data: %s" % [grabbed_slot_data])
+	Log.info("grab_slot_data: %s" % [grabbed_slot_data])
 	update_grabbed_slot()
 
 func drop_or_swap_grabbed_slot(inventory: Inventory, slot_index: int):
@@ -102,7 +102,7 @@ func drop_single(inventory: Inventory, slot_index: int):
 	update_grabbed_slot()
 
 func update_grabbed_slot() -> void:
-	Logger.info("update_grabbed_slot")
+	Log.info("update_grabbed_slot")
 	if grabbed_slot_data:
 		grabbed_slot.show()
 		grabbed_slot.set_slot_data(grabbed_slot_data)

@@ -47,7 +47,7 @@ func _physics_process(delta: float) -> void:
 		if client_side_extrapolation:
 			var net_tick_difference = GameInstance.networking.network_tick - client_sync_next_frame_server_net_tick
 			var net_tick_delta = net_tick_difference * GameInstance.networking.network_tick_rate
-			Logger.info("rot obs: tick diff: %d, delta: %f, physics frames delta: %f " % [ net_tick_difference, net_tick_delta, (net_tick_delta / 0.016667) ])
+			Log.info("rot obs: tick diff: %d, delta: %f, physics frames delta: %f " % [ net_tick_difference, net_tick_delta, (net_tick_delta / 0.016667) ])
 			rotating_node.rotate(rotation_axis, revolutions_per_second * net_tick_delta) #(net_tick_delta / 0.016667))
 		client_sync_next_frame = false
 
@@ -57,4 +57,4 @@ func sync_rotation(new_rotation: Vector3, server_net_tick: int):
 	client_sync_next_frame = true
 	client_sync_next_frame_rotation = new_rotation
 	client_sync_next_frame_server_net_tick = server_net_tick
-	Logger.info("sync_rotation: server net tick: %d, my tick: %d" % [server_net_tick, GameInstance.networking.network_tick])
+	Log.info("sync_rotation: server net tick: %d, my tick: %d" % [server_net_tick, GameInstance.networking.network_tick])

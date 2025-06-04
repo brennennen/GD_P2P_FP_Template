@@ -12,14 +12,14 @@ config_version=5
 
 config/name="GD_P2P_FP_Template"
 run/main_scene="uid://cyj4xovhso1m6"
-config/features=PackedStringArray("4.4", "Forward Plus")
+config/features=PackedStringArray("4.5", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]
 
 ControllerIcons="*res://addons/controller_icons/ControllerIcons.gd"
 ImGuiRoot="*res://addons/imgui-godot/data/ImGuiRoot.tscn"
-Logger="*res://Core/Infrastructure/Logger.gd"
+Log="*res://Core/Infrastructure/Log.gd"
 GameInstance="*res://Core/GameInstance.tscn"
 
 [editor_plugins]

@@ -117,5 +117,5 @@ func check_players_in_sight():
 
 @rpc("any_peer", "call_local", "reliable")
 func queue_free_networked():
-	Logger.info("%s:queue_free_networked" % [name])
+	Log.info("%s:queue_free_networked" % [name])
 	queue_free()

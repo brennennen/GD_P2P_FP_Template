@@ -10,7 +10,7 @@ func set_quantity(value: int) -> void:
 	quantity = value
 	if quantity > 1 and not inventory_item_data.stackable:
 		quantity = 1
-		Logger.error("%s is not stackable! setting quantity to 1" % [ inventory_item_data.name ])
+		Log.error("%s is not stackable! setting quantity to 1" % [ inventory_item_data.name ])
 
 func can_merge(other_slot_data: InventorySlotData) -> bool:
 	if inventory_item_data == other_slot_data.inventory_item_data \

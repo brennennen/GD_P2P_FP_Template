@@ -22,7 +22,7 @@ var finish_line_first_cross: bool = false
 
 func _ready() -> void:
 	super()
-	GameInstance.initialize_level(name, scene_file_path, GameMode.GameModeType.RACE, player_spawn_points, default_level_camera)
+	#GameInstance.initialize_level(name, scene_file_path, GameMode.GameModeType.RACE, player_spawn_points, default_level_camera)
 	pre_start_timer.connect("timeout", _on_pre_start_timer_timeout)
 	start_timer.connect("timeout", _on_start_timer_timeout)
 	first_cross_end_timer.connect("timeout", _on_first_cross_end_timer_timeout)
@@ -56,19 +56,19 @@ func handle_countdown_beeps(delta: float) -> void:
 			handle_countdown_beeps_running_delta = 1.0
 
 func _on_pre_start_timer_timeout() -> void:
-	Logger.info("_on_pre_start_timer_timeout")
+	Log.info("_on_pre_start_timer_timeout")
 	if GameInstance.networking.is_server():
 		start_race_start_timer.rpc()
 
 func _on_start_timer_timeout() -> void:
-	Logger.info("Start timer timeout! race starting!")
+	Log.info("Start timer timeout! race starting!")
 	if GameInstance.networking.is_server():
 		for player in GameInstance.get_players():
 			player.unlock_movement.rpc_id(int(player.name))
 	start_race.rpc()
 
 func _on_first_cross_end_timer_timeout() -> void:
-	Logger.info("_on_first_cross_end_timer_timeout")
+	Log.info("_on_first_cross_end_timer_timeout")
 	GameInstance.lobby_load_and_change_scene(end_race_return_scene_path)
 
 @rpc("any_peer", "call_local", "reliable")
@@ -82,7 +82,7 @@ func _on_finish_area_3d_body_entered(body: Node3D) -> void:
 	if GameInstance.networking.is_server():
 		if body is Player:
 			var player := body as Player
-			Logger.info("player: %s entered finish area3d" % [ str(player.name) ])
+			Log.info("player: %s entered finish area3d" % [ str(player.name) ])
 			first_cross_finish_line.rpc(player.name)
 			first_cross_end_timer.start(first_cross_end_timer_time)
 			finish_line_crossed_audio.play()

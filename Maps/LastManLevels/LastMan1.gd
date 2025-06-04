@@ -1,8 +1,5 @@
 extends Level
 
-@export var player_spawn_points: Node3D
-@export var default_level_camera: Camera3D
-
 @onready var pre_start_timer: Timer = $GamePreStartTimer
 @onready var start_timer: Timer = $GameStartTimer
 
@@ -13,7 +10,6 @@ var start_timer_time: float = 10.0
 
 func _ready() -> void:
 	super()
-	GameInstance.initialize_level(name, scene_file_path, GameMode.GameModeType.LAST_MAN_STANDING, player_spawn_points, default_level_camera)
 	pre_start_timer.connect("timeout", _on_pre_start_timer_timeout)
 	start_timer.connect("timeout", _on_start_timer_timeout)
 	if GameInstance.networking.is_server():
@@ -34,12 +30,12 @@ func handle_start_timer_label():
 		start_timer_label_3d.text = "%f" % [ start_timer.time_left ]
 
 func _on_pre_start_timer_timeout() -> void:
-	Logger.info("_on_pre_start_timer_timeout")
+	#Log.info("_on_pre_start_timer_timeout")
 	if GameInstance.networking.is_server():
 		start_game_start_timer.rpc()
 
 func _on_start_timer_timeout() -> void:
-	Logger.info("Start timer timeout! race starting!")
+	#Log.info("Start timer timeout! race starting!")
 	if GameInstance.networking.is_server():
 		for player in GameInstance.get_players():
 			player.unlock_movement.rpc()

@@ -9,5 +9,5 @@ func _on_kill_box_area_3d_body_entered(body: Node3D) -> void:
 	if GameInstance.networking.is_server():
 		if body is Player:
 			var player := body as Player
-			Logger.info("player: %s entered killbox" % [str(player.name)])
+			Log.info("player: %s entered killbox" % [str(player.name)])
 			player.die.rpc()

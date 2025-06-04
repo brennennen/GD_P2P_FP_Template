@@ -68,7 +68,7 @@ platform wins.
 
 ### Core Classes/Singletons
 (`/Core` and `/Core/Infrastructure`)
-* `Logger` - Top level singleton, used to print debug messages to console/file (`Logger.info("my message")`, `Logger.debug(...)`, etc.).
+* `Logger` - Top level singleton, used to print debug messages to console/file (`Log.info("my message")`, `Log.debug(...)`, etc.).
 * `GameInstance` - Top level singleton, handles admin responsibilities like changing levels and holding other admin classes.
   * `GameMode` - Responsible for handling score keeping, player deaths, respawning, etc.
   * `Networking` - Manages multiplayer lobbies and syncing peer pawns.

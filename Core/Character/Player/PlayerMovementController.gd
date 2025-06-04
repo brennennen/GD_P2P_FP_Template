@@ -36,7 +36,7 @@ func _ready() -> void:
 
 @rpc("any_peer", "call_local", "reliable")
 func change_movement_mode(new_movement_mode: MovementMode) -> void:
-	#Logger.info("%s: change_movement_mode: %s -> %s" % [ player.name, MovementMode.keys()[movement_mode], MovementMode.keys()[new_movement_mode] ])
+	#Log.info("%s: change_movement_mode: %s -> %s" % [ player.name, MovementMode.keys()[movement_mode], MovementMode.keys()[new_movement_mode] ])
 
 	match movement_mode:
 		MovementMode.SWINGING:
@@ -216,7 +216,7 @@ func horse_riding_movement_physics(delta: float, input_dir: Vector2, sprint_held
 		target_max_move_speed = horse_canter_speed
 		if current_actual_speed > (horse_canter_speed - 0.25):
 			target_max_move_speed = horse_gallop_speed
-	#Logger.info("current_actual_speed: %f" % [current_actual_speed])
+	#Log.info("current_actual_speed: %f" % [current_actual_speed])
 
 	var input_dir_z: float = input_dir.y
 	#var input_dir_z: float = Input.get_action_strength("move_forward") - Input.get_action_strength("move_backward")
@@ -300,7 +300,7 @@ func spectate_movement_physics(_delta: float) -> void:
 func falling_movement_physics(delta, _speed):
 	player.velocity.y -= player.gravity * delta
 	#velocity.y -= gravity * delta
-	#Logger.info("gravity: %f, y_veloc: %f" % [gravity, velocity.y])
+	#Log.info("gravity: %f, y_veloc: %f" % [gravity, velocity.y])
 	player.move_and_slide()
 
 func physics_process_handle_hit():
