@@ -21,6 +21,9 @@ static func EquipmentMode_str(_equipment_mode: EquipmentMode):
 @export_category("Misc")
 @export var inventory_data: InventoryData
 @onready var vision_center_raycast: RayCast3D = $CameraPivot/PlayerCamera/RayCast3D
+@onready var wall_check_high_ray_cast_3d: RayCast3D = $ThirdPerson/WallCheckHighRayCast3D
+@onready var wall_check_low_ray_cast_3d: RayCast3D = $ThirdPerson/WallCheckLowRayCast3D
+@onready var mantle_ray_cast_3d: RayCast3D = $ThirdPerson/MantleRayCast3D
 #@export_category("Misc")
 
 # Nodes
@@ -210,7 +213,8 @@ func die():
 		unmount_horse()
 	third_person.hide()
 	is_alive = false
-	movement_controller.change_movement_mode(PlayerMovementController.MovementMode.UNKNOWN)
+	movement_controller.transition_movement_mode_visuals(PlayerMovementController.MovementMode.UNKNOWN)
+	movement_controller.movement_mode = PlayerMovementController.MovementMode.UNKNOWN
 	if GameInstance.networking.is_server():
 		GameInstance.game_mode.handle_player_death(self)
 
@@ -324,21 +328,20 @@ func debug_misc():
 	Log.info("debug_misc")
 	if movement_controller.movement_mode == PlayerMovementController.MovementMode.HORSE_RIDING:
 		unmount_horse.rpc()
-		movement_controller.change_movement_mode(PlayerMovementController.MovementMode.WALKING)
+		movement_controller.transition_movement_mode_visuals(PlayerMovementController.MovementMode.WALKING)
+		movement_controller.movement_mode = PlayerMovementController.MovementMode.WALKING
 	else:
 		mount_horse.rpc()
-		#spawn_horse_mount.rpc()
-		#var new_horse_mount = horse_mount_scene.instantiate()
-		#add_child(new_horse_mount)
-		#horse_mount = new_horse_mount
-		#movement_controller.change_movement_mode(PlayerMovementController.MovementMode.HORSE_RIDING)
 
 @rpc("any_peer", "call_local", "reliable")
 func mount_horse():
 	spawn_horse_mount()
 	self.third_person.position.y += 0.5
+	self.third_person.position.z -= -0.2
 	self.camera_pivot.position.y += 0.5
-	movement_controller.change_movement_mode(PlayerMovementController.MovementMode.HORSE_RIDING)
+	self.camera_pivot.position.z -= -0.2
+	movement_controller.transition_movement_mode_visuals(PlayerMovementController.MovementMode.HORSE_RIDING)
+	movement_controller.movement_mode = PlayerMovementController.MovementMode.HORSE_RIDING
 	# TODO: move player up to slot attach points and play animation
 
 @rpc("any_peer", "call_local", "reliable")
@@ -346,7 +349,8 @@ func unmount_horse():
 	despawn_hourse_mount()
 	self.third_person.position.y -= 0.5
 	self.camera_pivot.position.y -= 0.5
-	movement_controller.change_movement_mode(PlayerMovementController.MovementMode.WALKING)
+	movement_controller.transition_movement_mode_visuals(PlayerMovementController.MovementMode.WALKING)
+	movement_controller.movement_mode = PlayerMovementController.MovementMode.WALKING
 
 func spawn_horse_mount():
 	var new_horse_mount = horse_mount_scene.instantiate()
@@ -366,6 +370,7 @@ func set_spawn_rotation(new_rotation: Vector3):
 func interact_action() -> void:
 	Log.info("interact_action: colliding: %s" % [str(vision_center_raycast.is_colliding())])
 	if vision_center_raycast.is_colliding():
+		
 		var collider: Object = vision_center_raycast.get_collider()
 		if collider is StaticBodyInteractable:
 			var static_body_interactable = collider as StaticBodyInteractable
@@ -373,6 +378,9 @@ func interact_action() -> void:
 		Log.info("interact_action: %s" % [str(collider)])
 		if collider is Horse:
 			Log.info("interact_action: horse!: %s" % [str(collider)])
+		
+		# TODO: start climbing?
+		
 
 @onready var primary_action_debounce: Timer = $PrimaryActionDebounce
 
@@ -469,7 +477,8 @@ func fishing_primary_action_third_person_visuals():
 
 func fishing_primary_action_server_request():
 	if movement_controller.movement_mode == PlayerMovementController.MovementMode.SWINGING:
-		movement_controller.change_movement_mode.rpc(PlayerMovementController.MovementMode.FALLING)
+		movement_controller.transition_movement_mode_visuals.rpc(PlayerMovementController.MovementMode.FALLING)
+		movement_controller.movement_mode = PlayerMovementController.MovementMode.FALLING
 	#Log.info("fishing_primary_action_server_request");
 	# TODO: spawn fishing lure projectile
 	spawn_fishing_lure_projectile.rpc()
@@ -520,12 +529,11 @@ func _process(delta) -> void:
 		#horse.global_position = global_position
 		#pass
 
-
 func predictive_physics_process(_delta: float) -> void:
 	# TODO: move most of physics process into here
 	pass
 
-func _physics_process(delta):
+func _physics_process(delta: float):
 	# If we just spawned in, ignore everything for a bit
 	if spawning_delay > 0.0:
 		spawning_delay -= delta
@@ -539,12 +547,11 @@ func _physics_process(delta):
 			delay_physics = false
 		return
 
-	var input_dir = Input.get_vector("move_left", "move_right", "move_backward", "move_forward") # forward = "+y", right = "+x"
+	var input_dir: Vector2 = Input.get_vector("move_left", "move_right", "move_backward", "move_forward") # forward = "+y", right = "+x"
 	last_input_dir = input_dir
 	if not self.is_alive: # If the player is dead, allow them to move the camera, but don't do much else.
 		update_camera(delta, input_dir)
 		return
-
 	update_rope()
 
 	if not is_multiplayer_authority():
@@ -553,6 +560,7 @@ func _physics_process(delta):
 
 	update_camera(delta, input_dir)
 	process_vision_center_raycast()
+	
 	network_controller.local_controlled_pawn_physics_process(delta)
 
 	if is_movement_locked:
@@ -569,7 +577,7 @@ var last_mouse_rotation: Vector3
 var last_mouse_rotation_delta: Vector2
 var last_mouse_y_rotation: float = 0.0
 
-func update_camera(delta, input_dir):
+func update_camera(delta: float, input_dir: Vector2):
 	mouse_rotation.x += tilt_input * delta * mouse_sensitivity
 	mouse_rotation.x = clamp(mouse_rotation.x, tilt_lower_limit, tilt_upper_limit)
 	mouse_rotation.y += rotation_input * delta * mouse_sensitivity
@@ -613,13 +621,12 @@ func process_vision_center_interactable() -> void:
 			var npc = collider as NPC
 			if npc.interactions_enabled():
 				show_interaction_ui(collider, npc.interact_text)
-			pass
-
 	else:
 		vision_center_raycast_collider = null
 		hide_interaction_ui()
 
 func show_interaction_ui(_collider: Object, text: String, _show_interact_button: bool = true) -> void:
+	Log.info("show_interaction_ui: %s" % [text])
 	interact_margin_container.show()
 	interact_action_label.text = text
 	reticle.hide()
@@ -642,7 +649,11 @@ func _on_animation_player_animation_started(anim_name):
 
 func jump_action_pressed():
 	if movement_controller.movement_mode == PlayerMovementController.MovementMode.SWINGING:
-		movement_controller.change_movement_mode.rpc(PlayerMovementController.MovementMode.FALLING)
+		movement_controller.transition_movement_mode_visuals.rpc(PlayerMovementController.MovementMode.FALLING)
+		movement_controller.movement_mode = PlayerMovementController.MovementMode.FALLING
+	if movement_controller.movement_mode == PlayerMovementController.MovementMode.CLIMBING:
+		movement_controller.transition_movement_mode_visuals.rpc(PlayerMovementController.MovementMode.FALLING)
+		movement_controller.movement_mode = PlayerMovementController.MovementMode.FALLING
 	# Jumping uncrouches
 	if is_crouching == true:
 		toggle_crouch.rpc()
@@ -653,7 +664,8 @@ func toggle_crouch():
 	Log.info("%s:toggle_crouch: is_crouching: %d, crouch_shapecast: %d" % [name, int(is_crouching), int(crouch_shapecast.is_colliding())])
 
 	if movement_controller.movement_mode == PlayerMovementController.MovementMode.SWINGING:
-		movement_controller.change_movement_mode.rpc(PlayerMovementController.MovementMode.FALLING)
+		movement_controller.transition_movement_mode_visuals.rpc(PlayerMovementController.MovementMode.FALLING)
+		movement_controller.movement_mode = PlayerMovementController.MovementMode.FALLING
 
 	if is_crouching == true:
 		if crouch_shapecast.is_colliding() == false:
@@ -666,7 +678,6 @@ func toggle_crouch():
 func toggle_inventory():
 	if !is_multiplayer_authority():
 		return
-
 	if is_paused:
 		return
 
@@ -675,7 +686,6 @@ func toggle_inventory():
 
 	if $UI.visible:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-
 	else:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
@@ -718,7 +728,8 @@ func update_rope():
 	swing_rope.scale = Vector3(1, 1, dist)
 
 func respawn_as_spectator(respawn_position: Vector3, respawn_rot_y: float) -> void:
-	movement_controller.change_movement_mode(PlayerMovementController.MovementMode.SPECTATE)
+	movement_controller.transition_movement_mode_visuals(PlayerMovementController.MovementMode.SPECTATE)
+	movement_controller.movement_mode = PlayerMovementController.MovementMode.SPECTATE
 	is_alive = false
 	collision_shape.visible = false
 	third_person.visible = false
@@ -743,7 +754,8 @@ func respawn(respawn_position: Vector3, respawn_rot_y: float, spectator: bool = 
 	if spectator:
 		respawn_as_spectator(respawn_position, respawn_rot_y)
 	else:
-		movement_controller.change_movement_mode(PlayerMovementController.MovementMode.WALKING)
+		movement_controller.transition_movement_mode_visuals(PlayerMovementController.MovementMode.WALKING)
+		movement_controller.movement_mode = PlayerMovementController.MovementMode.WALKING
 		collision_shape.visible = true
 		is_alive = true
 		set_health(100.0)

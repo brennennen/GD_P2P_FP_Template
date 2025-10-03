@@ -2,7 +2,7 @@ extends Node3D
 
 class_name PlayerMovementController
 
-enum MovementMode { UNKNOWN, WALKING, FALLING, SWIMMING, SWINGING, HORSE_RIDING, DEBUG_FLY, SPECTATE }
+enum MovementMode { UNKNOWN, WALKING, FALLING, CLIMBING, SWIMMING, SWINGING, HORSE_RIDING, DEBUG_FLY, SPECTATE }
 enum WalkingSubMovementMode { NONE, CROUCHING, SPRINTING }
 
 @onready var player: Player = $".."
@@ -27,7 +27,6 @@ var jump_velocity: float = 0.0
 
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 
-
 var movement_mode: MovementMode = MovementMode.WALKING
 var walking_sub_movement_mode: WalkingSubMovementMode = WalkingSubMovementMode.NONE
 
@@ -35,9 +34,39 @@ func _ready() -> void:
 	jump_velocity = sqrt(jump_height * gravity * 2)
 
 @rpc("any_peer", "call_local", "reliable")
-func change_movement_mode(new_movement_mode: MovementMode) -> void:
-	#Log.info("%s: change_movement_mode: %s -> %s" % [ player.name, MovementMode.keys()[movement_mode], MovementMode.keys()[new_movement_mode] ])
+func transition_movement_mode_visuals(new_movement_mode: MovementMode) -> void:
+	Log.info("%s: change_movement_mode: %s -> %s" % [ player.name, MovementMode.keys()[movement_mode], MovementMode.keys()[new_movement_mode] ])
 
+	if movement_mode == MovementMode.SWINGING:
+		if new_movement_mode == MovementMode.FALLING:
+			movement_mode_transition_swinging_to_falling()
+			pass
+		pass
+	elif movement_mode == MovementMode.FALLING:
+		pass
+	elif movement_mode == MovementMode.HORSE_RIDING:
+		if new_movement_mode == MovementMode.WALKING:
+			#movement_mode_transition_horse_riding_to_walking()
+			player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/walk", true)
+			player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/horse_riding", false)
+			player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/climbing", false)
+			pass
+		pass
+
+	if new_movement_mode == MovementMode.HORSE_RIDING:
+		player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/walk", false)
+		player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/horse_riding", true)
+		pass
+	if new_movement_mode == MovementMode.CLIMBING:
+		player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/climbing", true)
+		player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/walk", false)
+		pass
+	else:
+		pass
+	#movement_mode = new_movement_mode
+
+func change_movement_mode_old(new_movement_mode: MovementMode) -> void:
+	# this match stuff sucksss
 	match movement_mode:
 		MovementMode.SWINGING:
 			match new_movement_mode:
@@ -46,13 +75,22 @@ func change_movement_mode(new_movement_mode: MovementMode) -> void:
 				_:
 					pass
 			pass
-		_:
+		MovementMode.HORSE_RIDING:
+			match new_movement_mode:
+				MovementMode.WALKING:
+					#movement_mode_transition_horse_riding_to_walking()
+					player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/walk", true)
+					player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/horse_riding", false)
+				_:
+					pass
 			pass
 
 	match new_movement_mode:
 		MovementMode.HORSE_RIDING:
 			player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/walk", false)
 			player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/horse_riding", true)
+		MovementMode.CLIMBING:
+			pass
 	if movement_mode == MovementMode.SWINGING:
 		pass
 		#movement_controller.change_movement_mode(PlayerMovementController.MovementMode.FALLING)
@@ -119,20 +157,66 @@ func start_jump():
 	player.third_person.jump_third_person_visuals()
 	player.play_footstep_audio()
 
+@rpc("any_peer", "call_local", "reliable")
+func start_climb_jump():
+	player.velocity.y += jump_velocity
+	# todo: add velocity opposite of climb_normal?
+	# TODO: special jump backwards
+	player.third_person.jump_third_person_visuals()
+	player.play_footstep_audio()
+
+func start_climbing():
+	print("start climbing!")
+	movement_mode = MovementMode.CLIMBING
+	pass
+
+var max_floor_angle: float = 50.0
+@onready var climb_dot_threshold: float = cos(deg_to_rad(max_floor_angle))
+var climb_normal: Vector3 = Vector3.ZERO
+var wall_check_low_colliding: bool = false
+var can_start_climbing: bool = false
+var can_reclimb: bool = false
+
+func process_climbing_raycasts() -> void:
+	if player.wall_check_low_ray_cast_3d.is_colliding():
+		# todo get normal
+		var normal = player.wall_check_low_ray_cast_3d.get_collision_normal()
+		var dot = normal.dot(Vector3.UP)
+		if abs(dot) < climb_dot_threshold:
+			climb_normal = normal
+			can_start_climbing = true
+			wall_check_low_colliding = true
+		else:
+			can_start_climbing = false
+	else:
+		can_start_climbing = false
+		wall_check_low_colliding = false
+
 func player_physics_process(delta: float, input_dir: Vector2, sprint_held: bool, jump_pressed: bool) -> void:
+	process_climbing_raycasts()
 	#movement_mode = determine_movement_mode(delta, movement_mode)
 	if movement_mode == MovementMode.FALLING:
 		if player.is_on_floor():
-			change_movement_mode(MovementMode.WALKING)
+			transition_movement_mode_visuals(MovementMode.WALKING)
+			movement_mode = MovementMode.WALKING
+		# allow climbing if above some threshold of stamina 
+		if player.stamina >= 1.0 and can_start_climbing:
+			transition_movement_mode_visuals(MovementMode.CLIMBING)
+			movement_mode = MovementMode.CLIMBING
+			start_climbing()
 	if movement_mode == MovementMode.WALKING:
 		if !player.is_on_floor():
-			change_movement_mode(MovementMode.FALLING)
+			transition_movement_mode_visuals(MovementMode.FALLING)
+			movement_mode = MovementMode.FALLING
 
 	# Handle Jump.
 	if !player.is_paused:
 		#if movement_mode != PlayerMovementController.MovementMode.HORSE_RIDING:
-		if jump_pressed and player.is_on_floor():
-			start_jump.rpc() # TODO: this no longer makes sense to do in the physics frame given it's an rpc... need to rethink this...
+		if jump_pressed:
+			if player.is_on_floor():
+				start_jump.rpc() # TODO: this no longer makes sense to do in the physics frame given it's an rpc... need to rethink this...
+			if movement_mode == MovementMode.CLIMBING:
+				start_climb_jump.rpc() # todo: add backward velocity? not just forward?
 
 	# Handle Sprint
 	player.is_sprinting = false
@@ -145,8 +229,9 @@ func player_physics_process(delta: float, input_dir: Vector2, sprint_held: bool,
 				player.set_stamina(player.stamina - 0.25)
 		else:
 			# TODO: add delay before regen
-			if player.stamina < 100.0:
-				player.set_stamina(player.stamina + 0.25)
+			if movement_mode != MovementMode.CLIMBING:
+				if player.stamina < 100.0:
+					player.set_stamina(player.stamina + 0.25)
 
 	if player.handle_hit_next_physics_frame:
 		physics_process_handle_hit()
@@ -158,6 +243,8 @@ func player_physics_process(delta: float, input_dir: Vector2, sprint_held: bool,
 		if player.velocity.length() != 0:
 			player.footstep_animation_player.play("Walk")
 			player.head_bob_animation_player.play("HeadBob")
+	elif movement_mode == MovementMode.CLIMBING:
+		climbing_movement_physics(delta, move_speed, input_dir)
 	elif movement_mode == MovementMode.HORSE_RIDING:
 		horse_riding_movement_physics(delta, input_dir, sprint_held)
 	elif movement_mode == MovementMode.SWINGING:
@@ -182,6 +269,49 @@ func ground_movement_physics(delta: float, move_speed: float, input_dir: Vector2
 		player.velocity.z = move_toward(player.velocity.z, 0, move_speed)
 	player.move_and_slide()
 	move_colliding_rigid_bodies()
+
+const CLIMB_ACCELERATION = 10.0
+const STAMINA_HOLD_DRAIN = -1.5 # Stamina drained per second just for holding on
+const STAMINA_MOVE_DRAIN = -5.0 # Extra stamina drained per second while moving
+
+func climbing_movement_physics(delta: float, move_speed: float, input_dir: Vector2) -> void:
+	# drain some stamina while holding
+	#player.stamina -= 0.05
+	player.set_stamina(player.stamina + (STAMINA_HOLD_DRAIN * delta))
+	var wall_up = Vector3.UP.slide(climb_normal).normalized()
+	var wall_right = climb_normal.cross(wall_up).normalized()
+	var direction = (wall_right * input_dir.x) + (wall_up * input_dir.y)
+	#var direction = (player.transform.basis * Vector3(input_dir.x, 0, -input_dir.y)).normalized()
+	var target_velocity = Vector3.ZERO
+	
+	if direction:
+		var wall_direction = direction - direction.project(climb_normal)
+		target_velocity = wall_direction.normalized() * move_speed
+		player.set_stamina(player.stamina + (STAMINA_MOVE_DRAIN * delta))
+	
+	player.velocity = player.velocity.lerp(target_velocity, delta * CLIMB_ACCELERATION)
+	player.move_and_slide()
+	# todo: use player.climb_normal to move along the correct access
+	if player.stamina <= 0.0:
+		movement_mode = MovementMode.FALLING
+	if !wall_check_low_colliding:
+		#todo: start falling?
+		transition_movement_mode_visuals(MovementMode.FALLING)
+		movement_mode = MovementMode.FALLING
+	if movement_mode == MovementMode.CLIMBING \
+		and player.mantle_ray_cast_3d.is_colliding() \
+		and !player.wall_check_high_ray_cast_3d.is_colliding():
+		#and player.wall_check_low_ray_cast_3d.is_colliding():
+		# TODO: move the player up to where the mantle collided?
+		#var mantle_point_collider = player.mantle_ray_cast_3d.get_collider()
+		# TODO: check normal of thing collided, make sure it's something worth mantling up to
+		var target_point: Vector3 = player.mantle_ray_cast_3d.get_collision_point()
+		Log.info("mantling to point: %v" % [target_point])
+		# TODO: lerp to target point?
+		player.global_position = target_point
+		player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/walk", true)
+		var locomotion_state_machine_playback = player.third_person_animation_tree.get("parameters/LocomotionStateMachine/playback") as AnimationNodeStateMachinePlayback
+		locomotion_state_machine_playback.travel("climb-mantle")
 
 func handle_gravity(delta: float):
 	if player.is_on_floor():
@@ -255,7 +385,8 @@ var current_swing_radius: float = 0.0
 @export var swing_damping_factor: float = 1.0
 
 func start_swinging():
-	change_movement_mode.rpc(MovementMode.SWINGING)
+	transition_movement_mode_visuals.rpc(MovementMode.SWINGING)
+	movement_mode = MovementMode.SWINGING
 	#movement_mode = MovementMode.SWINGING
 	#current_swing_radius = (player.global_transform.origin - player.grapple_hook_point).length()
 	#var vector_to_anchor = player.grapple_hook_point - player.global_transform.origin

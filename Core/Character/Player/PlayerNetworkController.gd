@@ -63,14 +63,14 @@ func peer_player_ready():
 	Log.info("spawned %s's peer, sending rpc to start syncing" % [player.name])
 	player.notify_peer_their_player_is_spawned.rpc_id(str(player.name).to_int(), player.multiplayer.get_unique_id())
 
-const INPUTS1_FORWARD_MASK: int = 1 	# 1 << 0
-const INPUTS1_BACK_MASK: int = 2 		# 1 << 1
-const INPUTS1_RIGHT_MASK: int = 4		# 1 << 2
-const INPUTS1_LEFT_MASK: int = 8		# 1 << 3
-const INPUTS1_CROUCH_MASK: int = 16		# 1 << 4
-const INPUTS1_SPRINT_MASK: int = 32		# 1 << 5
-const INPUTS1_LEAN_RIGHT_MASK: int = 64		# 1 << 6
-const INPUTS1_LEAN_LEFT_MASK: int = 128		# 1 << 7
+const INPUTS1_FORWARD_MASK: int = 1
+const INPUTS1_BACK_MASK: int = (1 << 1)
+const INPUTS1_RIGHT_MASK: int = (1 << 2)
+const INPUTS1_LEFT_MASK: int = (1 << 3)
+const INPUTS1_CROUCH_MASK: int = (1 << 4)
+const INPUTS1_SPRINT_MASK: int = (1 << 5)
+const INPUTS1_LEAN_RIGHT_MASK: int = (1 << 6)
+const INPUTS1_LEAN_LEFT_MASK: int = (1 << 7)
 
 func build_inputs1() -> int:
 	var inputs1 = 0
@@ -104,6 +104,8 @@ func build_movement_states_bitmap():
 func local_controlled_pawn_physics_process(_delta):
 	network_inputs1 = build_inputs1()
 	network_movement_status_bitmap = build_movement_states_bitmap()
+
+var smoothed_velocity_length: float = 0.0
 
 func remote_pawn_physics_process(_delta):
 	if is_multiplayer_authority():
@@ -160,7 +162,8 @@ func remote_pawn_physics_process(_delta):
 				player.horse_mount.animation_tree.set("parameters/LocomotionStateMachine/LocomotionSpace1D/blend_position", -1.0)
 			else:
 				if player.velocity.length() != 0.0:
-					player.horse_mount.animation_tree.set("parameters/LocomotionStateMachine/LocomotionSpace1D/blend_position", player.velocity.length() / player.movement_controller.horse_gallop_speed)
+					smoothed_velocity_length = lerp(smoothed_velocity_length, player.velocity.length(), 0.1) # jittery on clients, smooth it out
+					player.horse_mount.animation_tree.set("parameters/LocomotionStateMachine/LocomotionSpace1D/blend_position", smoothed_velocity_length / player.movement_controller.horse_gallop_speed)
 	else:
 		player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/walk", is_on_ground and !input_crouch)
 		player.third_person_animation_tree.set("parameters/LocomotionStateMachine/conditions/on_ground", is_on_ground)
@@ -169,11 +172,10 @@ func remote_pawn_physics_process(_delta):
 		player.third_person_animation_tree.set("parameters/LocomotionStateMachine/CrouchBlendSpace2D/blend_position", ground_locomotion_blend_position)
 	# TODO: how to set falling blend position?
 	# third_person_animation_tree["parameters/LocomotionStateMachine/FallingBlendSpace2D/blend_position"] = ???
-
 	player.last_global_position = player.global_position
 
 var send_move_data_ticks: int = 0
-var sent_one_extra_no_move_data_packet: bool = false
+var sent_stop_move: bool = false
 func client_send_move_data():
 	var inputs1 = build_inputs1()
 	var movement_states_bitmap = build_movement_states_bitmap()
@@ -183,17 +185,14 @@ func client_send_move_data():
 			and player.velocity == last_sent_velocity \
 			and inputs1 == last_sent_inputs1 \
 			and movement_states_bitmap == last_sent_movement_status_bitmap \
-			and sent_one_extra_no_move_data_packet == true:
+			and sent_stop_move == true:
 		# player hasn't moved, don't waste the bandwidth
 		return
 
 	if global_position != last_sent_location:
-		sent_one_extra_no_move_data_packet = false
-
-	if sent_one_extra_no_move_data_packet == false and global_position == last_sent_location:
-		#print("sent sent_one_extra_no_move_data_packet")
-		sent_one_extra_no_move_data_packet = true
-		#inputs1 = inputs1 & 0x11110000 # zero out movement (forward/back/left/right) bits
+		sent_stop_move = false
+	if sent_stop_move == false and global_position == last_sent_location:
+		sent_stop_move = true
 		inputs1 = 0
 
 	GameInstance.networking.client_networking.client_send_player_movement(name.to_int(),
